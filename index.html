@@ -105,7 +105,7 @@
       <span class="text-[10px] text-slate-500 block" id="ind-selic-data">—</span>
     </div>
     <div class="card-glass rounded-xl p-3">
-      <span class="text-[10px] uppercase text-slate-400 block">IPCA 12m (BCB s.433)</span>
+      <span class="text-[10px] uppercase text-slate-400 block">IPCA 12m (BCB s.13522)</span>
       <span class="text-lg font-bold text-amber-400" id="ind-ipca">—%</span>
       <span class="text-[10px] text-slate-500 block" id="ind-ipca-data">—</span>
     </div>
@@ -315,8 +315,9 @@
       <button onclick="limparStorage()" class="w-full p-2.5 bg-rose-900/50 hover:bg-rose-900 text-rose-200 rounded-lg font-medium border border-rose-800">🗑 Limpar todos os dados</button>
     </div>
     <div class="text-[10px] text-slate-500 border-t border-slate-700 pt-3 space-y-1">
-      <p><strong>API BCB:</strong> Selic s.11 · IPCA s.433 (validação 6%–20% e 1,5%–15%)</p>
-      <p><strong>Service Worker:</strong> via arquivo <code>sw.js</code> real (não mais blob)</p>
+      <p><strong>API BCB:</strong> Selic s.11 · IPCA s.13522 (12m acum.) — via JSONP nativo</p>
+      <p><strong>Validação:</strong> Selic 6%–20% · IPCA 1,5%–15%</p>
+      <p><strong>Service Worker:</strong> via arquivo <code>sw.js</code> real</p>
       <p><strong>Sliders:</strong> Selic 10–14% · IPCA+ 8–12% (faixas realistas)</p>
       <p><strong>IR:</strong> incide apenas sobre rendimento do resgate</p>
     </div>
@@ -430,25 +431,20 @@ function setSWStatus(ativo, msg) {
 }
 
 async function registrarSW() {
-  // Não tenta registrar em file:// (origem null) — evita erro no console
   if (location.protocol === 'file:') {
     console.log('[SW] ignorado: file:// não suporta Service Worker');
     setSWStatus(false, 'sw off (file://)');
     return;
   }
-
   if (!('serviceWorker' in navigator)) {
     console.log('[SW] navegador não suporta Service Worker');
     setSWStatus(false, 'sw off');
     return;
   }
-
   try {
     const reg = await navigator.serviceWorker.register('./sw.js', { scope: './' });
     console.log('[SW] registrado com sucesso:', reg.scope);
     setSWStatus(true, 'sw on');
-
-    // Verifica se há atualização disponível
     reg.addEventListener('updatefound', () => {
       const newWorker = reg.installing;
       if (!newWorker) return;
@@ -483,33 +479,43 @@ async function forcarAtualizacaoSW() {
 }
 
 /* =========================================================
-   API BANCO CENTRAL (SGS)
+   API BANCO CENTRAL (SGS) — VIA JSONP (sem CORS, sem proxy)
 ========================================================= */
-async function fetchBCB(serie) {
-  const urlBCB = `https://api.bcb.gov.br/dados/serie/bcdata.sgs.${serie}/dados/ultimos/1?formato=json`;
-  const tentativas = [
-    { url: urlBCB, nome: 'direto' },
-    { url: `https://api.allorigins.win/raw?url=${encodeURIComponent(urlBCB)}`, nome: 'allorigins' },
-    { url: `https://corsproxy.io/?${encodeURIComponent(urlBCB)}`, nome: 'corsproxy' }
-  ];
-  for (const t of tentativas) {
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), CFG.API_TIMEOUT);
-    try {
-      const res = await fetch(t.url, { signal: ctrl.signal });
+function fetchBCB(serie) {
+  return new Promise((resolve) => {
+    const cbName = 'bcb_cb_' + serie + '_' + Date.now() + '_' + Math.floor(Math.random()*1e6);
+    const url = `https://api.bcb.gov.br/dados/serie/bcdata.sgs.${serie}/dados/ultimos/1?formato=json&callback=${cbName}`;
+    const script = document.createElement('script');
+    const timer = setTimeout(() => {
+      cleanup();
+      console.warn(`[BCB] série ${serie} timeout (JSONP)`);
+      resolve(null);
+    }, CFG.API_TIMEOUT);
+
+    function cleanup() {
       clearTimeout(timer);
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const json = await res.json();
-      if (!json.length) throw new Error('vazio');
-      console.log(`[BCB] série ${serie} OK via ${t.nome}`);
-      return { valor: parseFloat(json[0].valor.replace(',', '.')), data: json[0].data };
-    } catch (e) {
-      clearTimeout(timer);
-      console.warn(`[BCB] série ${serie} falhou via ${t.nome}:`, e.message);
+      try { delete window[cbName]; } catch(_) { window[cbName] = undefined; }
+      if (script.parentNode) script.parentNode.removeChild(script);
     }
-  }
-  console.error(`[BCB] série ${serie} — todas as tentativas falharam`);
-  return null;
+
+    window[cbName] = (json) => {
+      cleanup();
+      if (!json || !json.length) { resolve(null); return; }
+      resolve({
+        valor: parseFloat(String(json[0].valor).replace(',', '.')),
+        data: json[0].data
+      });
+    };
+
+    script.onerror = () => {
+      cleanup();
+      console.warn(`[BCB] série ${serie} falhou (JSONP)`);
+      resolve(null);
+    };
+
+    script.src = url;
+    document.head.appendChild(script);
+  });
 }
 
 async function atualizarDadosBCB() {
@@ -518,23 +524,31 @@ async function atualizarDadosBCB() {
   dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-400 badge-live';
   label.textContent = 'carregando...';
 
-  const [selic, ipca] = await Promise.all([fetchBCB(11), fetchBCB(433)]);
+  // Série 11 = Selic meta anual | Série 13522 = IPCA acumulado 12 meses
+  const [selic, ipca] = await Promise.all([fetchBCB(11), fetchBCB(13522)]);
 
   const selicValida = selic && selic.valor >= CFG.VALIDACAO.selicMin && selic.valor <= CFG.VALIDACAO.selicMax;
   const ipcaValido  = ipca  && ipca.valor  >= CFG.VALIDACAO.ipcaMin  && ipca.valor  <= CFG.VALIDACAO.ipcaMax;
 
-  if (selicValida || ipcaValido) {
+  // Status: distingue "offline" (nenhuma resposta) de "parcial" (respondeu mas fora da faixa)
+  if (selic || ipca) {
     dadosBCB.online = true;
-    dadosBCB.valido = true;
-    dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-400';
-    label.textContent = 'BCB online';
+    dadosBCB.valido = selicValida && ipcaValido;
+    if (selicValida && ipcaValido) {
+      dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-400';
+      label.textContent = 'BCB online';
+    } else {
+      dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-400';
+      label.textContent = 'BCB parcial';
+    }
   } else {
     dadosBCB.online = false;
     dadosBCB.valido = false;
     dot.className = 'w-1.5 h-1.5 rounded-full bg-rose-400';
-    label.textContent = 'BCB fallback';
+    label.textContent = 'BCB offline';
   }
 
+  // ---- Selic ----
   if (selicValida) {
     dadosBCB.selic = selic.valor;
     dadosBCB.selicData = selic.data;
@@ -548,13 +562,16 @@ async function atualizarDadosBCB() {
   } else {
     dadosBCB.selic = CFG.FALLBACK.selic;
     document.getElementById('ind-selic').textContent = CFG.FALLBACK.selic.toFixed(2) + '%*';
-    document.getElementById('ind-selic-data').textContent = '*fallback (API inválida)';
+    document.getElementById('ind-selic-data').textContent = selic
+      ? '*fora da faixa (' + selic.valor.toFixed(2) + '%)'
+      : '*sem conexão c/ BCB';
     if (!estado?.inputs?.rentSelicManual) {
       document.getElementById('input-rent-selic').value = CFG.FALLBACK.rentSelicLiq;
       document.getElementById('val-rent-selic').textContent = CFG.FALLBACK.rentSelicLiq.toFixed(1) + '%';
     }
   }
 
+  // ---- IPCA ----
   if (ipcaValido) {
     dadosBCB.ipca = ipca.valor;
     dadosBCB.ipcaData = ipca.data;
@@ -568,7 +585,9 @@ async function atualizarDadosBCB() {
   } else {
     dadosBCB.ipca = CFG.FALLBACK.ipca;
     document.getElementById('ind-ipca').textContent = CFG.FALLBACK.ipca.toFixed(2) + '%*';
-    document.getElementById('ind-ipca-data').textContent = '*fallback (API inválida)';
+    document.getElementById('ind-ipca-data').textContent = ipca
+      ? '*fora da faixa (' + ipca.valor.toFixed(2) + '%)'
+      : '*sem conexão c/ BCB';
     if (!estado?.inputs?.rentIPCAManual) {
       document.getElementById('input-rent-ipca').value = CFG.FALLBACK.rentIPCALiq;
       document.getElementById('val-rent-ipca').textContent = CFG.FALLBACK.rentIPCALiq.toFixed(1) + '%';
