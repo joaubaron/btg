@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Gestão Patrimonial R$ 32M — v2.2</title>
+<title>Gestão Patrimonial R$ 32M — v2.3</title>
 
 <meta name="theme-color" content="#0f172a">
 <meta name="mobile-web-app-capable" content="yes">
@@ -38,7 +37,7 @@
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
       </div>
       <div class="min-w-0">
-        <h1 class="font-bold text-base sm:text-lg leading-tight text-white truncate">Gestão Patrimonial <span class="text-emerald-400">v2.2</span></h1>
+        <h1 class="font-bold text-base sm:text-lg leading-tight text-white truncate">Gestão Patrimonial <span class="text-emerald-400">v2.3</span></h1>
         <p class="text-[11px] text-slate-400 truncate">Base: R$ 32.000.000 · <span id="header-data">--/--/----</span></p>
       </div>
     </div>
@@ -46,6 +45,10 @@
       <div id="api-status" class="text-[10px] px-2 py-1 rounded-full bg-slate-800 text-slate-400 border border-slate-700 flex items-center gap-1">
         <span class="w-1.5 h-1.5 rounded-full bg-slate-500" id="api-dot"></span>
         <span id="api-label">offline</span>
+      </div>
+      <div id="sw-status" class="hidden text-[10px] px-2 py-1 rounded-full bg-slate-800 text-slate-400 border border-slate-700 items-center gap-1">
+        <span class="w-1.5 h-1.5 rounded-full bg-slate-500" id="sw-dot"></span>
+        <span id="sw-label">sw</span>
       </div>
       <button onclick="abrirConfig()" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700" title="Configurações">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
@@ -72,7 +75,7 @@
     </div>
   </section>
 
-  <!-- ============ PAINEL DE AJUSTE (só aparece quando há problema) ============ -->
+  <!-- ============ PAINEL DE AJUSTE ============ -->
   <section id="painel-ajuste" class="hidden card-glass rounded-2xl p-5 shadow-xl border border-amber-500/30 bg-amber-950/10">
     <div class="flex items-start gap-3">
       <div class="p-2 bg-amber-500/20 text-amber-400 rounded-lg shrink-0 mt-0.5">
@@ -81,23 +84,13 @@
       <div class="flex-1 min-w-0">
         <h3 class="font-bold text-amber-300 text-base">Como resolver</h3>
         <p class="text-xs text-slate-300 mt-1" id="ajuste-motivo">—</p>
-
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4" id="ajuste-opcoes">
-          <!-- Preenchido dinamicamente -->
-        </div>
-
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4" id="ajuste-opcoes"></div>
         <div class="mt-4 pt-3 border-t border-amber-500/20">
           <p class="text-[11px] text-slate-400 mb-2">⚙️ Ajuste manual direto:</p>
           <div class="flex flex-wrap gap-2">
-            <button onclick="aplicarFix('rendimento')" class="btn-fix text-[11px] px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-lg font-medium">
-              Usar rendimento padrão do PDF (11,5% + 9,5%)
-            </button>
-            <button onclick="aplicarFix('saque')" class="btn-fix text-[11px] px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium">
-              Reduzir saque para o máximo sustentável
-            </button>
-            <button onclick="aplicarFix('meta')" class="btn-fix text-[11px] px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-medium">
-              Reduzir meta Selic (emergência)
-            </button>
+            <button onclick="aplicarFix('rendimento')" class="btn-fix text-[11px] px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-lg font-medium">Usar rendimento padrão do PDF (11,5% + 9,5%)</button>
+            <button onclick="aplicarFix('saque')" class="btn-fix text-[11px] px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium">Reduzir saque para o máximo sustentável</button>
+            <button onclick="aplicarFix('meta')" class="btn-fix text-[11px] px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-medium">Reduzir meta Selic (emergência)</button>
           </div>
         </div>
       </div>
@@ -130,13 +123,11 @@
 
   <!-- ============ SIMULADOR ============ -->
   <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
     <div class="card-glass rounded-2xl p-5 space-y-4 lg:col-span-1">
       <h3 class="font-bold text-slate-200 text-base border-b border-slate-700 pb-2 flex items-center justify-between">
         Parâmetros
         <button onclick="resetarTudo()" class="text-xs text-indigo-400 hover:text-indigo-300">Resetar</button>
       </h3>
-
       <div>
         <label class="block text-xs font-medium text-slate-300 mb-1">Cenário de Saque Mensal Líquido</label>
         <select id="select-saque" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:ring-2 focus:ring-indigo-500 outline-none">
@@ -145,42 +136,30 @@
           <option value="custom">Outro valor</option>
         </select>
       </div>
-
       <div id="div-saque-custom" class="hidden">
         <label class="block text-xs font-medium text-slate-300 mb-1">Valor Personalizado (R$/mês)</label>
         <input type="number" id="input-saque-custom" value="200000" step="5000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
       </div>
-
       <div>
-        <label class="block text-xs font-medium text-slate-300 mb-1">
-          Rentabilidade Selic <span class="text-[9px] text-emerald-400">(líquida % a.a.)</span>
-        </label>
+        <label class="block text-xs font-medium text-slate-300 mb-1">Rentabilidade Selic <span class="text-[9px] text-emerald-400">(líquida % a.a.)</span></label>
         <div class="flex items-center gap-2">
           <input type="range" id="input-rent-selic" min="10" max="14" step="0.1" value="11.5" class="w-full accent-sky-500">
           <span id="val-rent-selic" class="text-sm font-bold text-sky-400 w-14 text-right">11.5%</span>
         </div>
         <span class="text-[10px] text-slate-400 block mt-0.5">Faixa realista: 10% – 14% líquida</span>
       </div>
-
       <div>
-        <label class="block text-xs font-medium text-slate-300 mb-1">
-          Rentabilidade IPCA+ <span class="text-[9px] text-emerald-400">(líquida % a.a.)</span>
-        </label>
+        <label class="block text-xs font-medium text-slate-300 mb-1">Rentabilidade IPCA+ <span class="text-[9px] text-emerald-400">(líquida % a.a.)</span></label>
         <div class="flex items-center gap-2">
           <input type="range" id="input-rent-ipca" min="8" max="12" step="0.1" value="9.5" class="w-full accent-purple-500">
           <span id="val-rent-ipca" class="text-sm font-bold text-purple-400 w-14 text-right">9.5%</span>
         </div>
         <span class="text-[10px] text-slate-400 block mt-0.5">Faixa realista: 8% – 12% nominal líquida</span>
       </div>
-
       <div>
-        <label class="block text-xs font-medium text-slate-300 mb-1">
-          Meta Reserva Selic
-          <span class="text-[9px] text-amber-400 font-normal">(a definir com BTG)</span>
-        </label>
+        <label class="block text-xs font-medium text-slate-300 mb-1">Meta Reserva Selic <span class="text-[9px] text-amber-400 font-normal">(a definir com BTG)</span></label>
         <input type="number" id="input-meta-selic" value="12000000" step="500000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
       </div>
-
       <div class="pt-2 border-t border-slate-700/50">
         <label class="block text-xs font-medium text-amber-400 mb-1">Saque Extraordinário (pontual)</label>
         <div class="grid grid-cols-2 gap-2 mb-2">
@@ -193,11 +172,8 @@
             <input type="number" id="input-extra-outros" value="0" step="50000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white">
           </div>
         </div>
-        <button onclick="carregarExemploPDF()" class="w-full text-xs py-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-lg hover:bg-amber-500/20 transition">
-          Carregar Exemplo PDF (R$ 3,5Mi)
-        </button>
+        <button onclick="carregarExemploPDF()" class="w-full text-xs py-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-lg hover:bg-amber-500/20 transition">Carregar Exemplo PDF (R$ 3,5Mi)</button>
       </div>
-
       <div class="pt-2 border-t border-slate-700/50">
         <label class="block text-xs font-medium text-slate-300 mb-1">Data-base da simulação</label>
         <input type="date" id="input-data-base" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
@@ -205,7 +181,6 @@
     </div>
 
     <div class="card-glass rounded-2xl p-5 lg:col-span-2 flex flex-col justify-between space-y-4">
-
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
           <span class="text-[10px] uppercase tracking-wider text-slate-400 block">Rend. Líq. Total</span>
@@ -226,63 +201,30 @@
       </div>
 
       <div class="bg-slate-900/40 border border-slate-800 p-4 rounded-xl">
-        <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-          Resgate Bruto vs Líquido
-          <span class="text-[9px] text-emerald-400 font-normal normal-case">(IR só sobre rendimento)</span>
-        </h4>
+        <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Resgate Bruto vs Líquido <span class="text-[9px] text-emerald-400 font-normal normal-case">(IR só sobre rendimento)</span></h4>
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
-          <div class="p-2 bg-slate-800/80 rounded-lg">
-            <span class="text-[10px] text-slate-400 block">Alíquota IR</span>
-            <span class="text-sm font-bold text-rose-400" id="ir-aliquota">—</span>
-          </div>
-          <div class="p-2 bg-slate-800/80 rounded-lg">
-            <span class="text-[10px] text-slate-400 block">IR Mensal</span>
-            <span class="text-sm font-bold text-rose-400" id="ir-valor">—</span>
-          </div>
-          <div class="p-2 bg-slate-800/80 rounded-lg">
-            <span class="text-[10px] text-slate-400 block">Custos BTG</span>
-            <span class="text-sm font-bold text-orange-400" id="custos-btg">—</span>
-          </div>
-          <div class="p-2 bg-slate-800/80 rounded-lg">
-            <span class="text-[10px] text-slate-400 block">Resgate Bruto</span>
-            <span class="text-sm font-bold text-white" id="resgate-bruto">—</span>
-          </div>
+          <div class="p-2 bg-slate-800/80 rounded-lg"><span class="text-[10px] text-slate-400 block">Alíquota IR</span><span class="text-sm font-bold text-rose-400" id="ir-aliquota">—</span></div>
+          <div class="p-2 bg-slate-800/80 rounded-lg"><span class="text-[10px] text-slate-400 block">IR Mensal</span><span class="text-sm font-bold text-rose-400" id="ir-valor">—</span></div>
+          <div class="p-2 bg-slate-800/80 rounded-lg"><span class="text-[10px] text-slate-400 block">Custos BTG</span><span class="text-sm font-bold text-orange-400" id="custos-btg">—</span></div>
+          <div class="p-2 bg-slate-800/80 rounded-lg"><span class="text-[10px] text-slate-400 block">Resgate Bruto</span><span class="text-sm font-bold text-white" id="resgate-bruto">—</span></div>
         </div>
       </div>
 
       <div class="bg-slate-900/40 border border-slate-800 p-4 rounded-xl">
         <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Cupons Semestrais IPCA+ (15/02 e 15/08)</h4>
         <div class="grid grid-cols-3 gap-2 text-center">
-          <div class="p-2 bg-slate-800/80 rounded-lg">
-            <span class="text-[10px] text-slate-400 block">Cupom Líquido</span>
-            <span class="text-sm font-bold text-purple-300" id="cupom-valor">—</span>
-          </div>
-          <div class="p-2 bg-slate-800/80 rounded-lg">
-            <span class="text-[10px] text-slate-400 block">Próx. Pagamento</span>
-            <span class="text-xs font-bold text-slate-200" id="cupom-prox">—</span>
-          </div>
-          <div class="p-2 bg-slate-800/80 rounded-lg">
-            <span class="text-[10px] text-slate-400 block">Destino</span>
-            <span class="text-[10px] font-bold text-emerald-400" id="cupom-destino">—</span>
-          </div>
+          <div class="p-2 bg-slate-800/80 rounded-lg"><span class="text-[10px] text-slate-400 block">Cupom Líquido</span><span class="text-sm font-bold text-purple-300" id="cupom-valor">—</span></div>
+          <div class="p-2 bg-slate-800/80 rounded-lg"><span class="text-[10px] text-slate-400 block">Próx. Pagamento</span><span class="text-xs font-bold text-slate-200" id="cupom-prox">—</span></div>
+          <div class="p-2 bg-slate-800/80 rounded-lg"><span class="text-[10px] text-slate-400 block">Destino</span><span class="text-[10px] font-bold text-emerald-400" id="cupom-destino">—</span></div>
         </div>
       </div>
 
       <div class="bg-slate-900/40 border border-slate-800 p-4 rounded-xl">
         <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Divisão Mensal (76% / 12% / 12%)</h4>
         <div class="grid grid-cols-3 gap-2 text-center">
-          <div class="p-2 bg-slate-800/80 rounded-lg">
-            <span class="text-[10px] text-slate-400 block">Casa</span>
-            <span class="text-sm font-bold text-white" id="dist-casa">—</span>
-          </div>
-          <div class="p-2 bg-slate-800/80 rounded-lg">
-            <span class="text-[10px] text-slate-400 block">Esposa</span>
-            <span class="text-sm font-bold text-purple-300" id="dist-esposa">—</span>
-          </div>
-          <div class="p-2 bg-slate-800/80 rounded-lg">
-            <span class="text-[10px] text-slate-400 block">Marido</span>
-            <span class="text-sm font-bold text-blue-300" id="dist-marido">—</span>
-          </div>
+          <div class="p-2 bg-slate-800/80 rounded-lg"><span class="text-[10px] text-slate-400 block">Casa</span><span class="text-sm font-bold text-white" id="dist-casa">—</span></div>
+          <div class="p-2 bg-slate-800/80 rounded-lg"><span class="text-[10px] text-slate-400 block">Esposa</span><span class="text-sm font-bold text-purple-300" id="dist-esposa">—</span></div>
+          <div class="p-2 bg-slate-800/80 rounded-lg"><span class="text-[10px] text-slate-400 block">Marido</span><span class="text-sm font-bold text-blue-300" id="dist-marido">—</span></div>
         </div>
       </div>
 
@@ -310,7 +252,6 @@
 
   <!-- ============ REGRAS + FLUXO + TIMELINE ============ -->
   <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
-
     <div class="card-glass rounded-2xl p-5 space-y-3">
       <h3 class="font-bold text-slate-200 text-base border-b border-slate-700 pb-2 flex items-center gap-2">
         <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
@@ -330,15 +271,9 @@
         Fluxo Mensal
       </h3>
       <div class="space-y-2 text-xs">
-        <div class="p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 flex justify-between">
-          <span>1. Resgate Selic (BTG)</span>
-          <span class="text-rose-400 font-mono" id="fluxo-bruto">—</span>
-        </div>
+        <div class="p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 flex justify-between"><span>1. Resgate Selic (BTG)</span><span class="text-rose-400 font-mono" id="fluxo-bruto">—</span></div>
         <div class="text-center text-slate-500">↓</div>
-        <div class="p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 flex justify-between">
-          <span>2. Conta BTG (líquido)</span>
-          <span class="text-emerald-400 font-mono" id="fluxo-total">—</span>
-        </div>
+        <div class="p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 flex justify-between"><span>2. Conta BTG (líquido)</span><span class="text-emerald-400 font-mono" id="fluxo-total">—</span></div>
         <div class="text-center text-slate-500">↓ 3 TED/Pix</div>
         <div class="grid grid-cols-3 gap-1.5 text-center text-[11px]">
           <div class="p-2 rounded bg-indigo-950/40 border border-indigo-800/40"><span class="block text-slate-400">Casa</span><strong class="text-indigo-300" id="fluxo-casa">—</strong></div>
@@ -354,18 +289,10 @@
         Timeline Real (Pergunta 2)
       </h3>
       <div class="space-y-2 text-xs">
-        <div class="flex justify-between items-center p-2 rounded bg-slate-900/80 border border-slate-800">
-          <span>D+0 · Reunião BTG</span><span class="text-slate-400">decisão</span>
-        </div>
-        <div class="flex justify-between items-center p-2 rounded bg-slate-900/80 border border-slate-800">
-          <span>D+1 a D+5 · Abertura/procuração</span><span class="text-slate-400">documentos</span>
-        </div>
-        <div class="flex justify-between items-center p-2 rounded bg-slate-900/80 border border-slate-800">
-          <span>D+5 a D+10 · Aporte/investimento</span><span class="text-slate-400">liquidação</span>
-        </div>
-        <div class="flex justify-between items-center p-2 rounded bg-emerald-950/40 border border-emerald-800/40">
-          <span>D+10 a D+15 · 1º saque disponível</span><span class="text-emerald-400">✓</span>
-        </div>
+        <div class="flex justify-between items-center p-2 rounded bg-slate-900/80 border border-slate-800"><span>D+0 · Reunião BTG</span><span class="text-slate-400">decisão</span></div>
+        <div class="flex justify-between items-center p-2 rounded bg-slate-900/80 border border-slate-800"><span>D+1 a D+5 · Abertura/procuração</span><span class="text-slate-400">documentos</span></div>
+        <div class="flex justify-between items-center p-2 rounded bg-slate-900/80 border border-slate-800"><span>D+5 a D+10 · Aporte/investimento</span><span class="text-slate-400">liquidação</span></div>
+        <div class="flex justify-between items-center p-2 rounded bg-emerald-950/40 border border-emerald-800/40"><span>D+10 a D+15 · 1º saque disponível</span><span class="text-emerald-400">✓</span></div>
         <p class="text-[10px] text-slate-500 pt-1">Prazos estimados. Confirmar com BTG antes da operação.</p>
       </div>
     </div>
@@ -396,13 +323,14 @@
         <input type="file" accept=".json" onchange="importarJSON(event)" class="hidden">
       </label>
       <button onclick="forcarAtualizacaoAPI()" class="w-full p-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium">🔄 Atualizar dados BCB</button>
+      <button onclick="forcarAtualizacaoSW()" class="w-full p-2.5 bg-sky-600 hover:bg-sky-500 text-white rounded-lg font-medium">⚙ Forçar atualização do SW</button>
       <button onclick="limparStorage()" class="w-full p-2.5 bg-rose-900/50 hover:bg-rose-900 text-rose-200 rounded-lg font-medium border border-rose-800">🗑 Limpar todos os dados</button>
     </div>
     <div class="text-[10px] text-slate-500 border-t border-slate-700 pt-3 space-y-1">
-      <p><strong>API BCB:</strong> Selic s.11 · IPCA s.433 (validação 6%–20% e −1%–15%)</p>
+      <p><strong>API BCB:</strong> Selic s.11 · IPCA s.433 (validação 6%–20% e 1,5%–15%)</p>
+      <p><strong>Service Worker:</strong> via arquivo <code>sw.js</code> real (não mais blob)</p>
       <p><strong>Sliders:</strong> Selic 10–14% · IPCA+ 8–12% (faixas realistas)</p>
       <p><strong>IR:</strong> incide apenas sobre rendimento do resgate</p>
-      <p><strong>Custos BTG:</strong> 0,3% a.a. estimado</p>
     </div>
     <button onclick="fecharConfig()" class="w-full p-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm">Fechar</button>
   </div>
@@ -424,19 +352,17 @@ const CFG = {
     { maxDias: 720, aliq: 0.175 },
     { maxDias: Infinity, aliq: 0.15 }
   ],
-  // Validação de valores da API (rejeita absurdos)
-VALIDACAO: {
-  selicMin: 6, selicMax: 20,
-  ipcaMin: 1.5, ipcaMax: 15
-},
-  // Fallback quando API falha
+  VALIDACAO: {
+    selicMin: 6, selicMax: 20,
+    ipcaMin: 1.5, ipcaMax: 15
+  },
   FALLBACK: {
     selic: 12.0,
     ipca: 4.5,
     rentSelicLiq: 11.5,
     rentIPCALiq: 9.5
   },
-  STORAGE_KEY: 'gestao32m_v22',
+  STORAGE_KEY: 'gestao32m_v23',
   API_TIMEOUT: 8000
 };
 
@@ -498,38 +424,102 @@ function importarJSON(ev) {
 }
 
 /* =========================================================
-   API BANCO CENTRAL (SGS) — com validação
+   SERVICE WORKER — VIA ARQUIVO REAL sw.js
+========================================================= */
+function setSWStatus(ativo, msg) {
+  const wrap = document.getElementById('sw-status');
+  const dot = document.getElementById('sw-dot');
+  const label = document.getElementById('sw-label');
+  wrap.classList.remove('hidden');
+  wrap.classList.add('flex');
+  if (ativo) {
+    dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-400';
+    label.textContent = msg || 'sw on';
+  } else {
+    dot.className = 'w-1.5 h-1.5 rounded-full bg-slate-500';
+    label.textContent = msg || 'sw off';
+  }
+}
+
+async function registrarSW() {
+  // Não tenta registrar em file:// (origem null) — evita erro no console
+  if (location.protocol === 'file:') {
+    console.log('[SW] ignorado: file:// não suporta Service Worker');
+    setSWStatus(false, 'sw off (file://)');
+    return;
+  }
+
+  if (!('serviceWorker' in navigator)) {
+    console.log('[SW] navegador não suporta Service Worker');
+    setSWStatus(false, 'sw off');
+    return;
+  }
+
+  try {
+    const reg = await navigator.serviceWorker.register('./sw.js', { scope: './' });
+    console.log('[SW] registrado com sucesso:', reg.scope);
+    setSWStatus(true, 'sw on');
+
+    // Verifica se há atualização disponível
+    reg.addEventListener('updatefound', () => {
+      const newWorker = reg.installing;
+      if (!newWorker) return;
+      newWorker.addEventListener('statechange', () => {
+        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+          console.log('[SW] nova versão disponível — recarregue para atualizar');
+          setSWStatus(true, 'sw update');
+        }
+      });
+    });
+  } catch (e) {
+    console.warn('[SW] falha ao registrar:', e.message);
+    setSWStatus(false, 'sw off');
+  }
+}
+
+async function forcarAtualizacaoSW() {
+  if (!('serviceWorker' in navigator)) { fecharConfig(); return; }
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    if (reg) {
+      await reg.update();
+      console.log('[SW] atualização forçada');
+      alert('Atualização do SW solicitada. Recarregue a página.');
+    } else {
+      alert('Nenhum SW registrado.');
+    }
+  } catch (e) {
+    alert('Erro ao atualizar SW: ' + e.message);
+  }
+  fecharConfig();
+}
+
+/* =========================================================
+   API BANCO CENTRAL (SGS)
 ========================================================= */
 async function fetchBCB(serie) {
   const urlBCB = `https://api.bcb.gov.br/dados/serie/bcdata.sgs.${serie}/dados/ultimos/1?formato=json`;
-  
-  // Tenta primeiro direto (rápido quando CORS libera)
-  // Se falhar, usa proxy CORS público (allorigins)
   const tentativas = [
     { url: urlBCB, nome: 'direto' },
-    { url: `https://api.allorigins.win/raw?url=${encodeURIComponent(urlBCB)}`, nome: 'proxy allorigins' },
-    { url: `https://corsproxy.io/?${encodeURIComponent(urlBCB)}`, nome: 'proxy corsproxy' }
+    { url: `https://api.allorigins.win/raw?url=${encodeURIComponent(urlBCB)}`, nome: 'allorigins' },
+    { url: `https://corsproxy.io/?${encodeURIComponent(urlBCB)}`, nome: 'corsproxy' }
   ];
-  
-  for (const tentativa of tentativas) {
+  for (const t of tentativas) {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), CFG.API_TIMEOUT);
     try {
-      const res = await fetch(tentativa.url, { signal: ctrl.signal });
+      const res = await fetch(t.url, { signal: ctrl.signal });
       clearTimeout(timer);
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const json = await res.json();
       if (!json.length) throw new Error('vazio');
-      console.log(`[BCB] série ${serie} OK via ${tentativa.nome}`);
+      console.log(`[BCB] série ${serie} OK via ${t.nome}`);
       return { valor: parseFloat(json[0].valor.replace(',', '.')), data: json[0].data };
     } catch (e) {
       clearTimeout(timer);
-      console.warn(`[BCB] série ${serie} falhou via ${tentativa.nome}:`, e.message);
-      // Continua para a próxima tentativa
+      console.warn(`[BCB] série ${serie} falhou via ${t.nome}:`, e.message);
     }
   }
-  
-  // Todas as tentativas falharam
   console.error(`[BCB] série ${serie} — todas as tentativas falharam`);
   return null;
 }
@@ -542,7 +532,6 @@ async function atualizarDadosBCB() {
 
   const [selic, ipca] = await Promise.all([fetchBCB(11), fetchBCB(433)]);
 
-  // ===== VALIDAÇÃO: descarta valores absurdos =====
   const selicValida = selic && selic.valor >= CFG.VALIDACAO.selicMin && selic.valor <= CFG.VALIDACAO.selicMax;
   const ipcaValido  = ipca  && ipca.valor  >= CFG.VALIDACAO.ipcaMin  && ipca.valor  <= CFG.VALIDACAO.ipcaMax;
 
@@ -555,10 +544,9 @@ async function atualizarDadosBCB() {
     dadosBCB.online = false;
     dadosBCB.valido = false;
     dot.className = 'w-1.5 h-1.5 rounded-full bg-rose-400';
-    label.textContent = 'BCB fora do ar (fallback)';
+    label.textContent = 'BCB fallback';
   }
 
-  // Selic
   if (selicValida) {
     dadosBCB.selic = selic.valor;
     dadosBCB.selicData = selic.data;
@@ -579,7 +567,6 @@ async function atualizarDadosBCB() {
     }
   }
 
-  // IPCA
   if (ipcaValido) {
     dadosBCB.ipca = ipca.valor;
     dadosBCB.ipcaData = ipca.data;
@@ -681,7 +668,6 @@ function atualizarSimulacao() {
 
   const saqueMensal = inputs.saqueSelect === 'custom' ? inputs.saqueCustom : parseFloat(inputs.saqueSelect);
 
-  // Sliders JÁ SÃO LÍQUIDOS
   const rendSelicLiq = CFG.SELIC_INICIAL * (inputs.rentSelic / 100);
   const rendIPCALiq = CFG.TESOURO_IPCA * (inputs.rentIPCA / 100);
   const rendTotalLiq = rendSelicLiq + rendIPCALiq;
@@ -689,7 +675,6 @@ function atualizarSimulacao() {
   const totalExtra = inputs.extraImovel + inputs.extraOutros;
   const saldoSelicAtual = Math.max(0, CFG.SELIC_INICIAL - totalExtra);
 
-  // IR sobre rendimento proporcional
   const dataBase = inputs.dataBase ? new Date(inputs.dataBase + 'T12:00:00') : new Date();
   const aliqIR = calcularIR(800);
   const rendMensalTotal = rendTotalLiq / 12;
@@ -702,7 +687,6 @@ function atualizarSimulacao() {
   const saqueAnual = saqueMensal * 12;
   const sobraAnual = rendTotalLiq - saqueAnual;
 
-  // Cupom IPCA+
   const ipcaProjetado = dadosBCB.ipca || CFG.FALLBACK.ipca;
   const rentIPCAReal = Math.max(0, ((1 + inputs.rentIPCA/100) / (1 + ipcaProjetado/100)) - 1);
   const cupomLiq = calcularCupomIPCA(CFG.TESOURO_IPCA, rentIPCAReal);
@@ -712,7 +696,6 @@ function atualizarSimulacao() {
   const vEsposa = saqueMensal * CFG.RATEIO.esposa;
   const vMarido = saqueMensal * CFG.RATEIO.marido;
 
-  /* ---------- UI ---------- */
   document.getElementById('header-data').textContent = dataBase.toLocaleDateString('pt-BR');
   document.getElementById('ind-rend-selic').textContent = formatarMoeda(rendSelicLiq) + '/ano';
   document.getElementById('ind-rend-ipca').textContent = formatarMoeda(rendIPCALiq) + '/ano';
@@ -789,7 +772,7 @@ function renderizarProjecao(saldoSelic, meta, rendSelicAnual, cupomSemestral, sa
 }
 
 /* =========================================================
-   DIAGNÓSTICO / AÇÃO — com painel de ajuste
+   DIAGNÓSTICO / AÇÃO
 ========================================================= */
 function avaliarRegraAcao(saqueMensal, sobraAnual, saldoSelic, metaSelic, resgateBruto, rendTotalLiq) {
   const banner = document.getElementById('action-banner');
@@ -798,10 +781,8 @@ function avaliarRegraAcao(saqueMensal, sobraAnual, saldoSelic, metaSelic, resgat
   const rec = document.getElementById('rec-saque');
   const painel = document.getElementById('painel-ajuste');
 
-  // Oculta painel por padrão
   painel.classList.add('hidden');
 
-  // 1. Selic abaixo da meta
   if (saldoSelic < metaSelic) {
     const def = metaSelic - saldoSelic;
     banner.className = 'card-glass rounded-2xl p-5 sm:p-6 shadow-xl border-l-4 border-amber-500 bg-amber-950/20';
@@ -814,7 +795,6 @@ function avaliarRegraAcao(saqueMensal, sobraAnual, saldoSelic, metaSelic, resgat
     return;
   }
 
-  // 2. Rendimento insuficiente
   if (sobraAnual < 0) {
     banner.className = 'card-glass rounded-2xl p-5 sm:p-6 shadow-xl border-l-4 border-red-500 bg-red-950/20';
     title.textContent = '✗ REDUZIR SAQUE MENSAL';
@@ -827,7 +807,6 @@ function avaliarRegraAcao(saqueMensal, sobraAnual, saldoSelic, metaSelic, resgat
     return;
   }
 
-  // 3. Teto liberado
   if (saqueMensal >= 250000 && sobraAnual >= 0) {
     banner.className = 'card-glass rounded-2xl p-5 sm:p-6 shadow-xl border-l-4 border-indigo-500 bg-indigo-950/20';
     title.textContent = '✓ TETO LIBERADO (R$ 250k/mês)';
@@ -838,7 +817,6 @@ function avaliarRegraAcao(saqueMensal, sobraAnual, saldoSelic, metaSelic, resgat
     return;
   }
 
-  // 4. Estável
   banner.className = 'card-glass rounded-2xl p-5 sm:p-6 shadow-xl border-l-4 border-emerald-500 bg-emerald-950/20';
   title.textContent = '✓ CENÁRIO ESTÁVEL';
   title.className = 'text-xl sm:text-2xl font-bold text-emerald-400 mt-1';
@@ -848,7 +826,7 @@ function avaliarRegraAcao(saqueMensal, sobraAnual, saldoSelic, metaSelic, resgat
 }
 
 /* =========================================================
-   PAINEL DE AJUSTE DINÂMICO
+   PAINEL DE AJUSTE
 ========================================================= */
 function mostrarPainelAjuste(tipo, dados) {
   const painel = document.getElementById('painel-ajuste');
@@ -859,75 +837,48 @@ function mostrarPainelAjuste(tipo, dados) {
 
   if (tipo === 'reduzir') {
     const deficitAnual = Math.abs(dados.sobraAnual);
-    const deficitMensal = deficitAnual / 12;
     const reducaoNecessaria = dados.saqueMensal - dados.saqueMax;
 
-    motivo.innerHTML = `Seu rendimento líquido cobre apenas <strong>${formatarMoeda(dados.saqueMax)}/mês</strong>, mas você tenta sacar <strong>${formatarMoeda(dados.saqueMensal)}/mês</strong>. <u>Déficit de ${formatarMoeda(deficitAnual)}/ano.</u> Escolha uma ação:`;
+    motivo.innerHTML = `Seu rendimento líquido cobre apenas <strong>${formatarMoeda(dados.saqueMax)}/mês</strong>, mas você tenta sacar <strong>${formatarMoeda(dados.saqueMensal)}/mês</strong>. <u>Déficit de ${formatarMoeda(deficitAnual)}/ano.</u>`;
 
     opcoes.innerHTML = `
       <button onclick="aplicarFix('reduzirSaque', ${dados.saqueMax})" class="btn-fix text-left p-3 bg-emerald-900/30 hover:bg-emerald-900/50 border border-emerald-700/50 rounded-xl">
-        <div class="flex items-start gap-2">
-          <span class="text-emerald-400 text-lg">✓</span>
-          <div>
-            <div class="text-xs font-bold text-emerald-300">Reduzir saque</div>
-            <div class="text-[10px] text-slate-400 mt-0.5">Ajustar para ${formatarMoeda(dados.saqueMax)}/mês</div>
-            <div class="text-[10px] text-emerald-500 mt-1">−${formatarMoeda(reducaoNecessaria)}/mês</div>
-          </div>
-        </div>
+        <div class="flex items-start gap-2"><span class="text-emerald-400 text-lg">✓</span>
+          <div><div class="text-xs font-bold text-emerald-300">Reduzir saque</div>
+          <div class="text-[10px] text-slate-400 mt-0.5">Ajustar para ${formatarMoeda(dados.saqueMax)}/mês</div>
+          <div class="text-[10px] text-emerald-500 mt-1">−${formatarMoeda(reducaoNecessaria)}/mês</div></div></div>
       </button>
       <button onclick="aplicarFix('rendimento')" class="btn-fix text-left p-3 bg-sky-900/30 hover:bg-sky-900/50 border border-sky-700/50 rounded-xl">
-        <div class="flex items-start gap-2">
-          <span class="text-sky-400 text-lg">⚙</span>
-          <div>
-            <div class="text-xs font-bold text-sky-300">Ajustar rendimento</div>
-            <div class="text-[10px] text-slate-400 mt-0.5">Usar padrão do PDF (11,5% + 9,5%)</div>
-            <div class="text-[10px] text-sky-500 mt-1">Se a API do BCB trouxe valores ruins</div>
-          </div>
-        </div>
+        <div class="flex items-start gap-2"><span class="text-sky-400 text-lg">⚙</span>
+          <div><div class="text-xs font-bold text-sky-300">Ajustar rendimento</div>
+          <div class="text-[10px] text-slate-400 mt-0.5">Usar padrão do PDF (11,5% + 9,5%)</div>
+          <div class="text-[10px] text-sky-500 mt-1">Se a API do BCB trouxe valores ruins</div></div></div>
       </button>
       <button onclick="aplicarFix('meta')" class="btn-fix text-left p-3 bg-purple-900/30 hover:bg-purple-900/50 border border-purple-700/50 rounded-xl">
-        <div class="flex items-start gap-2">
-          <span class="text-purple-400 text-lg">⚡</span>
-          <div>
-            <div class="text-xs font-bold text-purple-300">Reduzir meta Selic</div>
-            <div class="text-[10px] text-slate-400 mt-0.5">Libera pressão sobre a reserva</div>
-            <div class="text-[10px] text-purple-500 mt-1">Emergência: meta → R$ 6M</div>
-          </div>
-        </div>
+        <div class="flex items-start gap-2"><span class="text-purple-400 text-lg">⚡</span>
+          <div><div class="text-xs font-bold text-purple-300">Reduzir meta Selic</div>
+          <div class="text-[10px] text-slate-400 mt-0.5">Libera pressão sobre a reserva</div>
+          <div class="text-[10px] text-purple-500 mt-1">Emergência: meta → R$ 6M</div></div></div>
       </button>
     `;
   } else if (tipo === 'selic_abaixo') {
-    motivo.innerHTML = `Reserva Selic está em <strong>${formatarMoeda(dados.saldoSelic)}</strong>, abaixo da meta de <strong>${formatarMoeda(dados.metaSelic)}</strong>. Faltam <strong>${formatarMoeda(dados.def)}</strong>. Enquanto isso, cupons IPCA+ vão 100% para recompor.`;
+    motivo.innerHTML = `Reserva Selic está em <strong>${formatarMoeda(dados.saldoSelic)}</strong>, abaixo da meta de <strong>${formatarMoeda(dados.metaSelic)}</strong>. Faltam <strong>${formatarMoeda(dados.def)}</strong>.`;
 
     opcoes.innerHTML = `
       <button onclick="aplicarFix('meta')" class="btn-fix text-left p-3 bg-purple-900/30 hover:bg-purple-900/50 border border-purple-700/50 rounded-xl">
-        <div class="flex items-start gap-2">
-          <span class="text-purple-400 text-lg">⚡</span>
-          <div>
-            <div class="text-xs font-bold text-purple-300">Reduzir meta Selic</div>
-            <div class="text-[10px] text-slate-400 mt-0.5">Aceitar meta menor</div>
-            <div class="text-[10px] text-purple-500 mt-1">Realista se o BTG concordar</div>
-          </div>
-        </div>
+        <div class="flex items-start gap-2"><span class="text-purple-400 text-lg">⚡</span>
+          <div><div class="text-xs font-bold text-purple-300">Reduzir meta Selic</div>
+          <div class="text-[10px] text-slate-400 mt-0.5">Aceitar meta menor</div></div></div>
       </button>
       <button onclick="aplicarFix('semExtra')" class="btn-fix text-left p-3 bg-amber-900/30 hover:bg-amber-900/50 border border-amber-700/50 rounded-xl">
-        <div class="flex items-start gap-2">
-          <span class="text-amber-400 text-lg">↩</span>
-          <div>
-            <div class="text-xs font-bold text-amber-300">Remover saque extraordinário</div>
-            <div class="text-[10px] text-slate-400 mt-0.5">Restaura Selic para R$ 12M</div>
-            <div class="text-[10px] text-amber-500 mt-1">Se o extra ainda não foi feito</div>
-          </div>
-        </div>
+        <div class="flex items-start gap-2"><span class="text-amber-400 text-lg">↩</span>
+          <div><div class="text-xs font-bold text-amber-300">Remover saque extraordinário</div>
+          <div class="text-[10px] text-slate-400 mt-0.5">Restaura Selic para R$ 12M</div></div></div>
       </button>
       <button onclick="aplicarFix('rendimento')" class="btn-fix text-left p-3 bg-sky-900/30 hover:bg-sky-900/50 border border-sky-700/50 rounded-xl">
-        <div class="flex items-start gap-2">
-          <span class="text-sky-400 text-lg">⚙</span>
-          <div>
-            <div class="text-xs font-bold text-sky-300">Ajustar rendimento</div>
-            <div class="text-[10px] text-slate-400 mt-0.5">Padrão PDF (11,5% + 9,5%)</div>
-          </div>
-        </div>
+        <div class="flex items-start gap-2"><span class="text-sky-400 text-lg">⚙</span>
+          <div><div class="text-xs font-bold text-sky-300">Ajustar rendimento</div>
+          <div class="text-[10px] text-slate-400 mt-0.5">Padrão PDF (11,5% + 9,5%)</div></div></div>
       </button>
     `;
   }
@@ -946,7 +897,6 @@ function aplicarFix(tipo, valor) {
     atualizarSimulacao();
     return;
   }
-
   if (tipo === 'rendimento') {
     estado.inputs.rentSelicManual = true;
     estado.inputs.rentIPCAManual = true;
@@ -957,7 +907,6 @@ function aplicarFix(tipo, valor) {
     atualizarSimulacao();
     return;
   }
-
   if (tipo === 'saque') {
     const rendTotal = CFG.SELIC_INICIAL * (estado.inputs.rentSelic/100) + CFG.TESOURO_IPCA * (estado.inputs.rentIPCA/100);
     const maxMensal = Math.floor(rendTotal / 12 / 1000) * 1000;
@@ -967,13 +916,11 @@ function aplicarFix(tipo, valor) {
     atualizarSimulacao();
     return;
   }
-
   if (tipo === 'meta') {
     document.getElementById('input-meta-selic').value = 6000000;
     atualizarSimulacao();
     return;
   }
-
   if (tipo === 'semExtra') {
     document.getElementById('input-extra-imovel').value = 0;
     document.getElementById('input-extra-outros').value = 0;
@@ -1056,7 +1003,6 @@ function atualizarGrafico(saldoSelic, meta) {
     labels.push(d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }));
     data.push(Math.max(0, saldo));
     metaLine.push(inputs.metaSelic);
-
     saldo += rentSelicAnual / 12;
     if (m % 6 === 5) saldo += cupom;
     saldo -= resgateBrutoMensal;
@@ -1102,42 +1048,6 @@ function resetarTudo() {
 
 function abrirConfig() { document.getElementById('modal-config').classList.remove('hidden'); }
 function fecharConfig() { document.getElementById('modal-config').classList.add('hidden'); }
-
-/* =========================================================
-   SERVICE WORKER
-========================================================= */
-function registrarSW() {
-  if (!('serviceWorker' in navigator)) return;
-  const swCode = `
-    const CACHE = 'gestao32m-v22';
-    const ASSETS = ['./', './index.html'];
-    self.addEventListener('install', e => {
-      self.skipWaiting();
-      e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS).catch(()=>{})));
-    });
-    self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
-    self.addEventListener('fetch', e => {
-      const url = new URL(e.request.url);
-      if (url.hostname.includes('bcb.gov.br')) {
-        e.respondWith(fetch(e.request).then(r => {
-          const clone = r.clone();
-          caches.open(CACHE).then(c => c.put(e.request, clone));
-          return r;
-        }).catch(() => caches.match(e.request)));
-        return;
-      }
-      e.respondWith(caches.match(e.request).then(cached => cached || fetch(e.request).then(r => {
-        if (e.request.method === 'GET' && r.ok) {
-          const clone = r.clone();
-          caches.open(CACHE).then(c => c.put(e.request, clone));
-        }
-        return r;
-      }).catch(() => caches.match('./index.html'))));
-    });
-  `;
-  const blob = new Blob([swCode], { type: 'text/javascript' });
-  navigator.serviceWorker.register(URL.createObjectURL(blob)).then(r => r.update()).catch(e => console.log('SW:', e));
-}
 
 /* =========================================================
    INIT
