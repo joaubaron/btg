@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Gestão Patrimonial v2.3</title>
+<title>Gestão Patrimonial v2.4</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
 
 <meta name="theme-color" content="#0f172a">
@@ -14,11 +14,10 @@
 
 <link rel="manifest" id="app-manifest">
 <script>
-  // URL absoluta baseada na localização real da página (resolve start_url inválido)
   const base = location.origin + location.pathname.replace(/[^/]*$/, '');
   const manifest = {
-    name: "Gestão Patrimonial R$32M",
-    short_name: "Gestão32M",
+    name: "Gestão Patrimonial",
+    short_name: "Gestão",
     start_url: base,
     scope: base,
     display: "standalone",
@@ -59,8 +58,8 @@
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
       </div>
       <div class="min-w-0">
-        <h1 class="font-bold text-base sm:text-lg leading-tight text-white truncate">Gestão Patrimonial <span class="text-emerald-400">v2.3</span></h1>
-        <p class="text-[11px] text-slate-400 truncate">Base: R$ 32.000.000 · <span id="header-data">--/--/----</span></p>
+        <h1 class="font-bold text-base sm:text-lg leading-tight text-white truncate">Gestão Patrimonial <span class="text-emerald-400">v2.4</span></h1>
+        <p class="text-[11px] text-slate-400 truncate">Base: <span id="header-base">R$ 32.000.000</span> · <span id="header-data">--/--/----</span></p>
       </div>
     </div>
     <div class="flex items-center gap-2">
@@ -134,12 +133,12 @@
     <div class="card-glass rounded-xl p-3">
       <span class="text-[10px] uppercase text-slate-400 block">Rend. Selic (líq.)</span>
       <span class="text-lg font-bold text-emerald-400" id="ind-rend-selic">—</span>
-      <span class="text-[10px] text-slate-500 block">R$ 12M · já c/ IR</span>
+      <span class="text-[10px] text-slate-500 block" id="ind-rend-selic-base">— · já c/ IR</span>
     </div>
     <div class="card-glass rounded-xl p-3">
       <span class="text-[10px] uppercase text-slate-400 block">Rend. IPCA+ (líq.)</span>
       <span class="text-lg font-bold text-purple-400" id="ind-rend-ipca">—</span>
-      <span class="text-[10px] text-slate-500 block">R$ 20M · já c/ IR</span>
+      <span class="text-[10px] text-slate-500 block" id="ind-rend-ipca-base">— · já c/ IR</span>
     </div>
   </section>
 
@@ -150,6 +149,31 @@
         Parâmetros
         <button onclick="resetarTudo()" class="text-xs text-indigo-400 hover:text-indigo-300">Resetar</button>
       </h3>
+
+      <!-- ===== PATRIMÔNIO EDITÁVEL ===== -->
+      <div class="pt-1 pb-2 border-b border-slate-700/50 space-y-3">
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1">Patrimônio Total (R$)</label>
+          <input type="number" id="input-patrimonio" value="32000000" step="500000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
+          <span class="text-[10px] text-slate-400 block mt-0.5">Base total da carteira</span>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Reserva Selic (R$)</label>
+            <input type="number" id="input-selic-inicial" value="12000000" step="500000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Tesouro IPCA+ (R$)</label>
+            <input type="number" id="input-ipca-inicial" value="20000000" step="500000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
+          </div>
+        </div>
+        <div class="flex items-center justify-between text-[10px]">
+          <span class="text-slate-400">Soma alocada: <span id="soma-alocada" class="text-slate-200 font-mono">R$ 32.000.000</span></span>
+          <span id="aviso-soma" class="text-emerald-400">✓ ok</span>
+        </div>
+        <button onclick="igualarAlocacaoTotal()" class="w-full text-[10px] py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700">Ajustar IPCA+ = Total − Selic</button>
+      </div>
+
       <div>
         <label class="block text-xs font-medium text-slate-300 mb-1">Cenário de Saque Mensal Líquido</label>
         <select id="select-saque" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:ring-2 focus:ring-indigo-500 outline-none">
@@ -373,7 +397,7 @@ const CFG = {
     rentSelicLiq: 11.5,
     rentIPCALiq: 9.5
   },
-  STORAGE_KEY: 'gestao32m_v23',
+  STORAGE_KEY: 'gestao32m_v24',
   API_TIMEOUT: 8000
 };
 
@@ -411,7 +435,7 @@ function exportarJSON() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `gestao32m_${new Date().toISOString().slice(0,10)}.json`;
+  a.download = `gestao_${new Date().toISOString().slice(0,10)}.json`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -435,7 +459,7 @@ function importarJSON(ev) {
 }
 
 /* =========================================================
-   SERVICE WORKER — VIA ARQUIVO REAL sw.js
+   SERVICE WORKER
 ========================================================= */
 function setSWStatus(ativo, msg) {
   const wrap = document.getElementById('sw-status');
@@ -454,31 +478,26 @@ function setSWStatus(ativo, msg) {
 
 async function registrarSW() {
   if (location.protocol === 'file:') {
-    console.log('[SW] ignorado: file:// não suporta Service Worker');
     setSWStatus(false, 'sw off (file://)');
     return;
   }
   if (!('serviceWorker' in navigator)) {
-    console.log('[SW] navegador não suporta Service Worker');
     setSWStatus(false, 'sw off');
     return;
   }
   try {
     const reg = await navigator.serviceWorker.register('./sw.js', { scope: './' });
-    console.log('[SW] registrado com sucesso:', reg.scope);
     setSWStatus(true, 'sw on');
     reg.addEventListener('updatefound', () => {
       const newWorker = reg.installing;
       if (!newWorker) return;
       newWorker.addEventListener('statechange', () => {
         if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-          console.log('[SW] nova versão disponível — recarregue para atualizar');
           setSWStatus(true, 'sw update');
         }
       });
     });
   } catch (e) {
-    console.warn('[SW] falha ao registrar:', e.message);
     setSWStatus(false, 'sw off');
   }
 }
@@ -489,7 +508,6 @@ async function forcarAtualizacaoSW() {
     const reg = await navigator.serviceWorker.getRegistration();
     if (reg) {
       await reg.update();
-      console.log('[SW] atualização forçada');
       alert('Atualização do SW solicitada. Recarregue a página.');
     } else {
       alert('Nenhum SW registrado.');
@@ -501,7 +519,7 @@ async function forcarAtualizacaoSW() {
 }
 
 /* =========================================================
-   API BANCO CENTRAL (SGS) — VIA FETCH (CORS liberado pelo BCB)
+   API BANCO CENTRAL
 ========================================================= */
 async function fetchBCB(serie) {
   const url = `https://api.bcb.gov.br/dados/serie/bcdata.sgs.${serie}/dados/ultimos/1?formato=json`;
@@ -517,7 +535,6 @@ async function fetchBCB(serie) {
       data: json[0].data
     };
   } catch (e) {
-    console.warn(`[BCB] série ${serie} falhou:`, e.message);
     return null;
   } finally {
     clearTimeout(timer);
@@ -552,7 +569,6 @@ async function atualizarDadosBCB() {
     label.textContent = 'BCB offline';
   }
 
-  // ---- Selic ----
   if (selicValida) {
     dadosBCB.selic = selic.valor;
     dadosBCB.selicData = selic.data;
@@ -575,7 +591,6 @@ async function atualizarDadosBCB() {
     }
   }
 
-  // ---- IPCA ----
   if (ipcaValido) {
     dadosBCB.ipca = ipca.valor;
     dadosBCB.ipcaData = ipca.data;
@@ -641,6 +656,9 @@ function proximoPagamentoCupom(dataBase) {
 function coletarInputs() {
   const sel = document.getElementById('select-saque').value;
   return {
+    patrimonioTotal: parseFloat(document.getElementById('input-patrimonio').value) || CFG.PATRIMONIO_TOTAL,
+    selicInicial: parseFloat(document.getElementById('input-selic-inicial').value) || CFG.SELIC_INICIAL,
+    ipcaInicial: parseFloat(document.getElementById('input-ipca-inicial').value) || CFG.TESOURO_IPCA,
     saqueSelect: sel,
     saqueCustom: parseFloat(document.getElementById('input-saque-custom').value) || 200000,
     rentSelic: parseFloat(document.getElementById('input-rent-selic').value),
@@ -656,6 +674,9 @@ function coletarInputs() {
 
 function aplicarInputs(inp) {
   if (!inp) return;
+  document.getElementById('input-patrimonio').value = inp.patrimonioTotal || CFG.PATRIMONIO_TOTAL;
+  document.getElementById('input-selic-inicial').value = inp.selicInicial || CFG.SELIC_INICIAL;
+  document.getElementById('input-ipca-inicial').value = inp.ipcaInicial || CFG.TESOURO_IPCA;
   document.getElementById('select-saque').value = inp.saqueSelect || '200000';
   document.getElementById('input-saque-custom').value = inp.saqueCustom || 200000;
   document.getElementById('input-rent-selic').value = inp.rentSelic || 11.5;
@@ -667,6 +688,39 @@ function aplicarInputs(inp) {
   document.getElementById('div-saque-custom').classList.toggle('hidden', inp.saqueSelect !== 'custom');
   document.getElementById('val-rent-selic').textContent = (inp.rentSelic || 11.5).toFixed(1) + '%';
   document.getElementById('val-rent-ipca').textContent = (inp.rentIPCA || 9.5).toFixed(1) + '%';
+  atualizarSomaAlocada();
+}
+
+/* =========================================================
+   HELPERS DE ALOCAÇÃO
+========================================================= */
+function atualizarSomaAlocada() {
+  const total = parseFloat(document.getElementById('input-patrimonio').value) || 0;
+  const selic = parseFloat(document.getElementById('input-selic-inicial').value) || 0;
+  const ipca  = parseFloat(document.getElementById('input-ipca-inicial').value) || 0;
+  const soma  = selic + ipca;
+  const elSoma = document.getElementById('soma-alocada');
+  const elAviso = document.getElementById('aviso-soma');
+  elSoma.textContent = formatarMoeda(soma);
+  if (Math.abs(soma - total) < 1) {
+    elAviso.textContent = '✓ ok';
+    elAviso.className = 'text-emerald-400';
+  } else if (soma > total) {
+    elAviso.textContent = '⚠ excede total';
+    elAviso.className = 'text-rose-400';
+  } else {
+    elAviso.textContent = '⚠ falta ' + formatarMoeda(total - soma);
+    elAviso.className = 'text-amber-400';
+  }
+}
+
+function igualarAlocacaoTotal() {
+  const total = parseFloat(document.getElementById('input-patrimonio').value) || 0;
+  const selic = parseFloat(document.getElementById('input-selic-inicial').value) || 0;
+  const ipcaNovo = Math.max(0, total - selic);
+  document.getElementById('input-ipca-inicial').value = Math.round(ipcaNovo);
+  atualizarSomaAlocada();
+  atualizarSimulacao();
 }
 
 /* =========================================================
@@ -677,39 +731,50 @@ function atualizarSimulacao() {
   estado = estado || { inputs: {} };
   estado.inputs = { ...estado.inputs, ...inputs };
 
+  atualizarSomaAlocada();
+
+  const patrimonioTotal = inputs.patrimonioTotal;
+  const selicBase = inputs.selicInicial;
+  const ipcaBase = inputs.ipcaInicial;
+  const metaSelic = inputs.metaSelic;
+
   const saqueMensal = inputs.saqueSelect === 'custom' ? inputs.saqueCustom : parseFloat(inputs.saqueSelect);
 
-  const rendSelicLiq = CFG.SELIC_INICIAL * (inputs.rentSelic / 100);
-  const rendIPCALiq = CFG.TESOURO_IPCA * (inputs.rentIPCA / 100);
+  const rendSelicLiq = selicBase * (inputs.rentSelic / 100);
+  const rendIPCALiq = ipcaBase * (inputs.rentIPCA / 100);
   const rendTotalLiq = rendSelicLiq + rendIPCALiq;
 
   const totalExtra = inputs.extraImovel + inputs.extraOutros;
-  const saldoSelicAtual = Math.max(0, CFG.SELIC_INICIAL - totalExtra);
+  const saldoSelicAtual = Math.max(0, selicBase - totalExtra);
 
   const dataBase = inputs.dataBase ? new Date(inputs.dataBase + 'T12:00:00') : new Date();
   const aliqIR = calcularIR(800);
   const rendMensalTotal = rendTotalLiq / 12;
-  const propRendimento = rendMensalTotal / (CFG.PATRIMONIO_TOTAL + rendMensalTotal);
+  const propRendimento = rendMensalTotal / (patrimonioTotal + rendMensalTotal);
   const rendimentoNoResgate = saqueMensal * propRendimento;
   const irMensal = rendimentoNoResgate * aliqIR;
   const resgateBruto = saqueMensal + irMensal;
-  const custoMensal = CFG.PATRIMONIO_TOTAL * (CFG.CUSTO_BTG_AA / 12);
+  const custoMensal = patrimonioTotal * (CFG.CUSTO_BTG_AA / 12);
 
   const saqueAnual = saqueMensal * 12;
   const sobraAnual = rendTotalLiq - saqueAnual;
 
   const ipcaProjetado = dadosBCB.ipca || CFG.FALLBACK.ipca;
   const rentIPCAReal = Math.max(0, ((1 + inputs.rentIPCA/100) / (1 + ipcaProjetado/100)) - 1);
-  const cupomLiq = calcularCupomIPCA(CFG.TESOURO_IPCA, rentIPCAReal);
+  const cupomLiq = calcularCupomIPCA(ipcaBase, rentIPCAReal);
   const proxCupom = proximoPagamentoCupom(dataBase);
 
   const vCasa = saqueMensal * CFG.RATEIO.casa;
   const vEsposa = saqueMensal * CFG.RATEIO.esposa;
   const vMarido = saqueMensal * CFG.RATEIO.marido;
 
+  document.getElementById('header-base').textContent = formatarMoeda(patrimonioTotal);
   document.getElementById('header-data').textContent = dataBase.toLocaleDateString('pt-BR');
+
   document.getElementById('ind-rend-selic').textContent = formatarMoeda(rendSelicLiq) + '/ano';
+  document.getElementById('ind-rend-selic-base').textContent = formatarMoeda(selicBase) + ' · já c/ IR';
   document.getElementById('ind-rend-ipca').textContent = formatarMoeda(rendIPCALiq) + '/ano';
+  document.getElementById('ind-rend-ipca-base').textContent = formatarMoeda(ipcaBase) + ' · já c/ IR';
 
   document.getElementById('metric-rendimento').textContent = formatarMoeda(rendTotalLiq) + '/ano';
   document.getElementById('metric-saque-anual').textContent = formatarMoeda(saqueAnual) + '/ano';
@@ -726,7 +791,7 @@ function atualizarSimulacao() {
 
   document.getElementById('cupom-valor').textContent = formatarMoeda(cupomLiq);
   document.getElementById('cupom-prox').textContent = proxCupom.toLocaleDateString('pt-BR');
-  const selicAbaixoMeta = saldoSelicAtual < inputs.metaSelic;
+  const selicAbaixoMeta = saldoSelicAtual < metaSelic;
   document.getElementById('cupom-destino').textContent = selicAbaixoMeta ? '⚠ Recompor Selic' : 'Reinvestir/Livre';
   document.getElementById('cupom-destino').className = 'text-[10px] font-bold ' + (selicAbaixoMeta ? 'text-amber-400' : 'text-emerald-400');
 
@@ -742,9 +807,9 @@ function atualizarSimulacao() {
 
   document.getElementById('rec-saque-bruto').textContent = 'bruto: ' + formatarMoeda(resgateBruto);
 
-  renderizarProjecao(saldoSelicAtual, inputs.metaSelic, rendSelicLiq, cupomLiq, saqueMensal, dataBase);
-  avaliarRegraAcao(saqueMensal, sobraAnual, saldoSelicAtual, inputs.metaSelic, resgateBruto, rendTotalLiq);
-  atualizarGrafico(saldoSelicAtual, inputs.metaSelic);
+  renderizarProjecao(saldoSelicAtual, metaSelic, rendSelicLiq, cupomLiq, saqueMensal, dataBase);
+  avaliarRegraAcao(saqueMensal, sobraAnual, saldoSelicAtual, metaSelic, resgateBruto, rendTotalLiq);
+  atualizarGrafico(saldoSelicAtual, metaSelic, selicBase, ipcaBase, patrimonioTotal);
   salvarEstado();
 }
 
@@ -884,7 +949,7 @@ function mostrarPainelAjuste(tipo, dados) {
       <button onclick="aplicarFix('semExtra')" class="btn-fix text-left p-3 bg-amber-900/30 hover:bg-amber-900/50 border border-amber-700/50 rounded-xl">
         <div class="flex items-start gap-2"><span class="text-amber-400 text-lg">↩</span>
           <div><div class="text-xs font-bold text-amber-300">Remover saque extraordinário</div>
-          <div class="text-[10px] text-slate-400 mt-0.5">Restaura Selic para R$ 12M</div></div></div>
+          <div class="text-[10px] text-slate-400 mt-0.5">Restaura Selic para o valor base</div></div></div>
       </button>
       <button onclick="aplicarFix('rendimento')" class="btn-fix text-left p-3 bg-sky-900/30 hover:bg-sky-900/50 border border-sky-700/50 rounded-xl">
         <div class="flex items-start gap-2"><span class="text-sky-400 text-lg">⚙</span>
@@ -919,7 +984,9 @@ function aplicarFix(tipo, valor) {
     return;
   }
   if (tipo === 'saque') {
-    const rendTotal = CFG.SELIC_INICIAL * (estado.inputs.rentSelic/100) + CFG.TESOURO_IPCA * (estado.inputs.rentIPCA/100);
+    const selicBase = estado.inputs.selicInicial || CFG.SELIC_INICIAL;
+    const ipcaBase = estado.inputs.ipcaInicial || CFG.TESOURO_IPCA;
+    const rendTotal = selicBase * (estado.inputs.rentSelic/100) + ipcaBase * (estado.inputs.rentIPCA/100);
     const maxMensal = Math.floor(rendTotal / 12 / 1000) * 1000;
     document.getElementById('select-saque').value = 'custom';
     document.getElementById('div-saque-custom').classList.remove('hidden');
@@ -989,18 +1056,18 @@ function initCharts() {
   });
 }
 
-function atualizarGrafico(saldoSelic, meta) {
+function atualizarGrafico(saldoSelic, meta, selicBase, ipcaBase, patrimonioTotal) {
   if (chartAlocacao) {
-    chartAlocacao.data.datasets[0].data = [saldoSelic, meta, CFG.TESOURO_IPCA];
+    chartAlocacao.data.datasets[0].data = [saldoSelic, meta, ipcaBase];
     chartAlocacao.update('none');
   }
   if (!estado || !chartProjecao) return;
 
   const inputs = estado.inputs;
-  const rentSelicAnual = CFG.SELIC_INICIAL * (inputs.rentSelic / 100);
+  const rentSelicAnual = (selicBase || CFG.SELIC_INICIAL) * (inputs.rentSelic / 100);
   const ipcaProjetado = dadosBCB.ipca || CFG.FALLBACK.ipca;
   const rentIPCAReal = Math.max(0, ((1 + inputs.rentIPCA/100) / (1 + ipcaProjetado/100)) - 1);
-  const cupom = calcularCupomIPCA(CFG.TESOURO_IPCA, rentIPCAReal);
+  const cupom = calcularCupomIPCA(ipcaBase || CFG.TESOURO_IPCA, rentIPCAReal);
   const saqueMensal = inputs.saqueSelect === 'custom' ? inputs.saqueCustom : parseFloat(inputs.saqueSelect);
   const resgateBrutoMensal = saqueMensal * 1.02;
 
@@ -1013,7 +1080,7 @@ function atualizarGrafico(saldoSelic, meta) {
     d.setMonth(d.getMonth() + m);
     labels.push(d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }));
     data.push(Math.max(0, saldo));
-    metaLine.push(inputs.metaSelic);
+    metaLine.push(meta);
     saldo += rentSelicAnual / 12;
     if (m % 6 === 5) saldo += cupom;
     saldo -= resgateBrutoMensal;
@@ -1042,6 +1109,9 @@ function carregarExemploPDF() {
 
 function resetarTudo() {
   localStorage.removeItem(CFG.STORAGE_KEY);
+  document.getElementById('input-patrimonio').value = CFG.PATRIMONIO_TOTAL;
+  document.getElementById('input-selic-inicial').value = CFG.SELIC_INICIAL;
+  document.getElementById('input-ipca-inicial').value = CFG.TESOURO_IPCA;
   document.getElementById('select-saque').value = '200000';
   document.getElementById('div-saque-custom').classList.add('hidden');
   document.getElementById('input-saque-custom').value = 200000;
@@ -1054,6 +1124,7 @@ function resetarTudo() {
   estado = { inputs: { rentSelicManual: false, rentIPCAManual: false } };
   document.getElementById('val-rent-selic').textContent = '11.5%';
   document.getElementById('val-rent-ipca').textContent = '9.5%';
+  atualizarSomaAlocada();
   atualizarSimulacao();
 }
 
@@ -1075,7 +1146,8 @@ document.addEventListener('DOMContentLoaded', () => {
     atualizarSimulacao();
   });
 
-  ['input-saque-custom','input-rent-selic','input-rent-ipca','input-meta-selic',
+  ['input-patrimonio','input-selic-inicial','input-ipca-inicial','input-saque-custom',
+   'input-rent-selic','input-rent-ipca','input-meta-selic',
    'input-extra-imovel','input-extra-outros','input-data-base'].forEach(id => {
     document.getElementById(id).addEventListener('input', () => {
       if (!estado) estado = { inputs: {} };
@@ -1083,6 +1155,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (id === 'input-rent-ipca') estado.inputs.rentIPCAManual = true;
       document.getElementById('val-rent-selic').textContent = parseFloat(document.getElementById('input-rent-selic').value).toFixed(1) + '%';
       document.getElementById('val-rent-ipca').textContent = parseFloat(document.getElementById('input-rent-ipca').value).toFixed(1) + '%';
+      if (id === 'input-patrimonio' || id === 'input-selic-inicial' || id === 'input-ipca-inicial') {
+        atualizarSomaAlocada();
+      }
       atualizarSimulacao();
     });
   });
