@@ -1,7 +1,7 @@
 /* =========================================================
    Service Worker — Gestão Patrimonial R$ 32M v2.4
 ========================================================= */
-const CACHE = 'gestao32m-v24';   // ← versão nova força atualização
+const CACHE = 'gestao32m-v25';   // ← versão nova força atualização
 const ASSETS = ['./', './index.html'];
 
 // Instalação: pré-cacheia o app
@@ -29,9 +29,7 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
-  // ⚠️ 1. Requisições JSONP do BCB são <script src="api.bcb.gov.br/...?callback=...">
-  //    → têm query string com "callback=" e NÃO devem ser cacheadas
-  //    → sempre network, nunca cache (dados precisam ser frescos)
+  // ⚠️ 1. Requisições do BCB: sempre network, nunca cache (dados precisam ser frescos)
   if (url.hostname.includes('bcb.gov.br')) {
     e.respondWith(fetch(e.request));   // sem cache, sem fallback
     return;
