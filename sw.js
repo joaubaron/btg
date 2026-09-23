@@ -1,7 +1,7 @@
 /* =========================================================
-   Service Worker — Gestão Patrimonial R$ 32M v2.4
+   Service Worker — Gestão Patrimonial R$ 32M v2.6
 ========================================================= */
-const CACHE = 'gestao32m-v25';   // ← versão nova força atualização
+const CACHE = 'gestao32m-v26';   // ← bump força atualização
 const ASSETS = ['./', './index.html'];
 
 // Instalação: pré-cacheia o app
@@ -29,17 +29,14 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
-  // ⚠️ 1. Requisições do BCB: sempre network, nunca cache (dados precisam ser frescos)
+  // 1. Requisições do BCB: sempre network, nunca cache (dados precisam ser frescos)
   if (url.hostname.includes('bcb.gov.br')) {
-    e.respondWith(fetch(e.request));   // sem cache, sem fallback
+    e.respondWith(fetch(e.request));
     return;
   }
 
-  // ⚠️ 2. CDNs externos (Tailwind, Chart.js, Flaticon) → cache-first simples
-  //    Não precisa de lógica especial, cai no default abaixo.
-
-  // ⚠️ 3. Estáticos locais (index.html, sw.js) → cache-first com fallback
-  //    Mas só para GET same-origin (evita cachear POST/opaque responses)
+  // 2. Estáticos locais (index.html, sw.js) → cache-first com fallback
+  //    Só para GET same-origin (evita cachear POST/opaque responses)
   if (url.origin === self.location.origin && e.request.method === 'GET') {
     e.respondWith(
       caches.match(e.request).then(cached => {
@@ -56,6 +53,11 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // ⚠️ 4. Todo o resto (CDNs externos, etc.) → network direto, sem SW interferir
-  //    Não chamamos respondWith — o browser segue o fluxo normal.
+  // 3. Todo o resto (CDNs externos: Tailwind, Chart.js, Flaticon)
+  //    → network direto, sem SW interferir.
+});
+
+// Permite que a página force a ativação imediata do novo SW
+self.addEventListener('message', e => {
+  if (e.data === 'SKIP_WAITING') self.skipWaiting();
 });
