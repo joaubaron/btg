@@ -11,10 +11,34 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Gestão 32M">
 
-<link rel="manifest" href='data:application/manifest+json,{"name":"Gestão Patrimonial R$32M","short_name":"Gestão32M","start_url":".","display":"standalone","background_color":"#0f172a","theme_color":"#0f172a","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/2489/2489756.png","sizes":"512x512","type":"image/png","purpose":"any"}]}'>
+<link rel="manifest" id="app-manifest">
+<script>
+  const manifest = {
+    name: "Gestão Patrimonial R$32M",
+    short_name: "Gestão32M",
+    start_url: ".",
+    display: "standalone",
+    background_color: "#0f172a",
+    theme_color: "#0f172a",
+    icons: [{
+      src: "https://cdn-icons-png.flaticon.com/512/2489/2489756.png",
+      sizes: "512x512",
+      type: "image/png",
+      purpose: "any"
+    }]
+  };
+  document.getElementById('app-manifest').href =
+    URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' }));
+</script>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<meta name="theme-color" content="#0f172a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gestão 32M">
 
 <style>
   body{background:#0f172a;color:#f8fafc;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
