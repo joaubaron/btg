@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Gestão Patrimonial v2.5</title>
+<title>Gestão Patrimonial v2.6</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
 
 <meta name="theme-color" content="#0f172a">
@@ -58,7 +58,7 @@
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
       </div>
       <div class="min-w-0">
-        <h1 class="font-bold text-base sm:text-lg leading-tight text-white truncate">Gestão Patrimonial <span class="text-emerald-400">v2.5</span></h1>
+        <h1 class="font-bold text-base sm:text-lg leading-tight text-white truncate">Gestão Patrimonial <span class="text-emerald-400">v2.6</span></h1>
         <p class="text-[11px] text-slate-400 truncate">Base: <span id="header-base">R$ 32.000.000</span> · <span id="header-data">--/--/----</span></p>
       </div>
     </div>
@@ -96,7 +96,7 @@
     </div>
   </section>
 
-  <!-- ============ PAINEL DE SAÚDE DO INVESTIMENTO (NOVO) ============ -->
+  <!-- ============ PAINEL DE SAÚDE DO INVESTIMENTO ============ -->
   <section id="painel-saude" class="card-glass rounded-2xl p-5 shadow-xl border border-slate-700/50">
     <div class="flex items-center justify-between mb-4">
       <h3 class="font-bold text-slate-100 text-base flex items-center gap-2">
@@ -243,12 +243,31 @@
         <span class="text-[10px] text-slate-400 block mt-0.5">PDF: Selic 11–13% bruto → ~10,5% líquida</span>
       </div>
       <div>
-        <label class="block text-xs font-medium text-slate-300 mb-1">Rentabilidade IPCA+ <span class="text-[9px] text-emerald-400">(líquida % a.a.)</span></label>
+        <label class="block text-xs font-medium text-slate-300 mb-1">Taxa real IPCA+ <span class="text-[9px] text-purple-400">(% real a.a. — ex.: IPCA+6,0%)</span></label>
+        <div class="flex items-center gap-2">
+          <input type="range" id="input-taxa-real-ipca" min="3" max="9" step="0.1" value="6.0" class="w-full accent-purple-500">
+          <span id="val-taxa-real-ipca" class="text-sm font-bold text-purple-400 w-14 text-right">6.0%</span>
+        </div>
+        <span class="text-[10px] text-slate-400 block mt-0.5">Nominal = (1+real)×(1+IPCA)−1 → <span id="ipca-nominal-calc" class="text-purple-300">—</span></span>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-300 mb-1">Rentabilidade IPCA+ <span class="text-[9px] text-emerald-400">(líquida % a.a. nominal)</span></label>
         <div class="flex items-center gap-2">
           <input type="range" id="input-rent-ipca" min="6" max="11" step="0.1" value="8.0" class="w-full accent-purple-500">
           <span id="val-rent-ipca" class="text-sm font-bold text-purple-400 w-14 text-right">8.0%</span>
         </div>
-        <span class="text-[10px] text-slate-400 block mt-0.5">PDF: IPCA 4–6% + juro real → ~8% líquida</span>
+        <span class="text-[10px] text-slate-400 block mt-0.5">Calculado a partir da taxa real + IPCA do BCB</span>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1">Custo BTG <span class="text-[9px]">(% a.a.)</span></label>
+          <input type="number" id="input-custo-btg" value="0.3" step="0.05" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1">IR efetivo <span class="text-[9px]">(% s/ rend.)</span></label>
+          <input type="number" id="input-ir-efetivo" value="15" step="0.5" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
+          <span class="text-[9px] text-slate-500 block">0 = automático</span>
+        </div>
       </div>
       <div>
         <label class="block text-xs font-medium text-slate-300 mb-1">Meta Reserva Selic <span class="text-[9px] text-amber-400 font-normal">(a definir com BTG)</span></label>
@@ -345,7 +364,7 @@
     </div>
   </section>
 
-  <!-- ============ PREMISSAS DO PDF (NOVO) ============ -->
+  <!-- ============ PREMISSAS DO PDF ============ -->
   <section class="card-glass rounded-2xl p-5 border-l-4 border-amber-500/50">
     <h3 class="font-bold text-slate-200 text-sm mb-2">📄 Premissas do PDF "Fluxo R$ 32 milhões" (referência oficial)</h3>
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-[11px]">
@@ -449,13 +468,12 @@ const CFG = {
   ],
   VALIDACAO: { selicMin: 6, selicMax: 20, ipcaMin: 1.5, ipcaMax: 15 },
   FALLBACK: { selic: 12.0, ipca: 5.0, rentSelicLiq: 10.5, rentIPCALiq: 8.0 },
-  STORAGE_KEY: 'gestao32m_v25',
+  STORAGE_KEY: 'gestao32m_v26',
   API_TIMEOUT: 8000,
-  // Premissas PDF para o painel de saúde
   PDF: {
     rentLiqMin: 8.5, rentLiqMax: 10.0,
     rendMin: 2720000, rendMax: 3200000,
-    taxaRetiradaSegura: 4.0   // % a.a. — referência clássica (Trinity study)
+    taxaRetiradaSegura: 4.0
   }
 };
 
@@ -583,6 +601,9 @@ async function atualizarDadosBCB() {
     document.getElementById('ind-ipca-data').textContent = ipca ? '*fora da faixa' : '*sem conexão c/ BCB';
   }
 
+  // Atualiza o cálculo do IPCA nominal a partir da taxa real
+  recalcularIPCANominal();
+
   atualizarSimulacao();
 }
 function forcarAtualizacaoAPI() { atualizarDadosBCB(); fecharConfig(); }
@@ -612,6 +633,26 @@ function proximoPagamentoCupom(dataBase) {
 }
 
 /* =========================================================
+   TAXA REAL IPCA+ → NOMINAL (novo)
+========================================================= */
+function recalcularIPCANominal() {
+  const realEl = document.getElementById('input-taxa-real-ipca');
+  const nominalEl = document.getElementById('input-rent-ipca');
+  const calcEl = document.getElementById('ipca-nominal-calc');
+  const valEl = document.getElementById('val-taxa-real-ipca');
+  if (!realEl || !nominalEl) return;
+  const real = (parseFloat(realEl.value) || 6.0) / 100;
+  const ipca = (dadosBCB.ipca || CFG.FALLBACK.ipca) / 100;
+  let nominal = ((1 + real) * (1 + ipca) - 1) * 100;
+  // Respeita os limites do slider (6 a 11)
+  nominal = Math.min(11, Math.max(6, nominal));
+  nominalEl.value = nominal.toFixed(1);
+  document.getElementById('val-rent-ipca').textContent = nominal.toFixed(1) + '%';
+  if (calcEl) calcEl.textContent = nominal.toFixed(2) + '%';
+  if (valEl) valEl.textContent = (parseFloat(realEl.value) || 6.0).toFixed(1) + '%';
+}
+
+/* =========================================================
    INPUTS
 ========================================================= */
 function coletarInputs() {
@@ -624,6 +665,9 @@ function coletarInputs() {
     saqueCustom: parseFloat(document.getElementById('input-saque-custom').value) || 200000,
     rentSelic: parseFloat(document.getElementById('input-rent-selic').value),
     rentIPCA: parseFloat(document.getElementById('input-rent-ipca').value),
+    taxaRealIPCA: parseFloat(document.getElementById('input-taxa-real-ipca').value) || 6.0,
+    custoBTG: parseFloat(document.getElementById('input-custo-btg').value),
+    irEfetivo: parseFloat(document.getElementById('input-ir-efetivo').value),
     metaSelic: parseFloat(document.getElementById('input-meta-selic').value) || 12000000,
     extraImovel: parseFloat(document.getElementById('input-extra-imovel').value) || 0,
     extraOutros: parseFloat(document.getElementById('input-extra-outros').value) || 0,
@@ -642,6 +686,16 @@ function aplicarInputs(inp) {
   document.getElementById('input-saque-custom').value = inp.saqueCustom || 200000;
   document.getElementById('input-rent-selic').value = inp.rentSelic || 10.5;
   document.getElementById('input-rent-ipca').value = inp.rentIPCA || 8.0;
+  if (document.getElementById('input-taxa-real-ipca')) {
+    document.getElementById('input-taxa-real-ipca').value = inp.taxaRealIPCA || 6.0;
+    document.getElementById('val-taxa-real-ipca').textContent = (inp.taxaRealIPCA || 6.0).toFixed(1) + '%';
+  }
+  if (document.getElementById('input-custo-btg')) {
+    document.getElementById('input-custo-btg').value = (inp.custoBTG !== undefined && !isNaN(inp.custoBTG)) ? inp.custoBTG : 0.3;
+  }
+  if (document.getElementById('input-ir-efetivo')) {
+    document.getElementById('input-ir-efetivo').value = (inp.irEfetivo !== undefined && !isNaN(inp.irEfetivo)) ? inp.irEfetivo : 15;
+  }
   document.getElementById('input-meta-selic').value = inp.metaSelic || 12000000;
   document.getElementById('input-extra-imovel').value = inp.extraImovel || 0;
   document.getElementById('input-extra-outros').value = inp.extraOutros || 0;
@@ -678,12 +732,9 @@ function igualarAlocacaoTotal() {
 ========================================================= */
 function calcularSaude(patrimonioTotal, rendTotalLiq, ipcaProjetado, saqueMensal, saldoSelic, metaSelic) {
   const saqueAnual = saqueMensal * 12;
-  // 1. Retorno real acima do IPCA
-  const rentNominalLiq = rendTotalLiq / patrimonioTotal * 100; // %
+  const rentNominalLiq = rendTotalLiq / patrimonioTotal * 100;
   const retornoReal = ((1 + rentNominalLiq/100) / (1 + ipcaProjetado/100) - 1) * 100;
-  // 2. Taxa de retirada
   const taxaRetirada = saqueAnual / patrimonioTotal * 100;
-  // 3. Durabilidade: simula patrimônio mês a mês com retorno real (preserva poder de compra)
   let saldo = patrimonioTotal;
   const retornoRealMensal = Math.pow(1 + retornoReal/100, 1/12) - 1;
   let anos = 0;
@@ -694,21 +745,17 @@ function calcularSaude(patrimonioTotal, rendTotalLiq, ipcaProjetado, saqueMensal
     }
     anos++;
   }
-  // 4. Poder de compra em 10 anos do patrimônio (se não sacar)
   const poderCompra10 = patrimonioTotal / Math.pow(1 + ipcaProjetado/100, 10);
-
   return { rentNominalLiq, retornoReal, taxaRetirada, durabilidade: anos, poderCompra10, saqueAnual };
 }
 
 function renderizarSaude(saude, saldoSelic, metaSelic) {
-  // Retorno real
   const elReal = document.getElementById('saude-retorno-real');
   elReal.textContent = (saude.retornoReal >= 0 ? '+' : '') + saude.retornoReal.toFixed(2) + '% a.a.';
   elReal.className = 'text-lg font-bold ' + (saude.retornoReal >= 2 ? 'text-emerald-400' : saude.retornoReal >= 0 ? 'text-amber-400' : 'text-rose-400');
   document.getElementById('saude-retorno-real-desc').textContent =
     saude.retornoReal >= 0 ? 'Ganha da inflação' : 'Perde para a inflação';
 
-  // Taxa de retirada
   const elTx = document.getElementById('saude-tx-retirada');
   elTx.textContent = saude.taxaRetirada.toFixed(2) + '% a.a.';
   elTx.className = 'text-lg font-bold ' + (saude.taxaRetirada <= 4 ? 'text-emerald-400' : saude.taxaRetirada <= 6 ? 'text-amber-400' : 'text-rose-400');
@@ -716,7 +763,6 @@ function renderizarSaude(saude, saldoSelic, metaSelic) {
     saude.taxaRetirada <= 4 ? 'Abaixo da taxa segura (4%)' :
     saude.taxaRetirada <= 6 ? 'Zona de atenção' : 'Acima do sustentável';
 
-  // Durabilidade
   const elDur = document.getElementById('saude-durabilidade');
   elDur.textContent = saude.durabilidade >= 100 ? '∞ (perpétuo)' : saude.durabilidade + ' anos';
   elDur.className = 'text-lg font-bold ' + (saude.durabilidade >= 50 ? 'text-emerald-400' : saude.durabilidade >= 25 ? 'text-amber-400' : 'text-rose-400');
@@ -725,13 +771,11 @@ function renderizarSaude(saude, saldoSelic, metaSelic) {
     saude.durabilidade >= 50 ? 'Sustenta por décadas' :
     saude.durabilidade >= 25 ? 'Pode acabar em uma geração' : 'Risco de exaustão';
 
-  // Poder de compra
   const elPC = document.getElementById('saude-poder-compra');
   elPC.textContent = formatarMoeda(saude.poderCompra10);
   elPC.className = 'text-lg font-bold text-slate-200';
   document.getElementById('saude-poder-compra-desc').textContent = 'Mesmo patrimônio, preços de hoje';
 
-  // Semáforo principal
   const preservaPrincipal = saude.retornoReal >= 0 && saude.taxaRetirada <= 5;
   const preservaReal = saude.retornoReal >= 2;
   const reservaOk = saldoSelic >= metaSelic;
@@ -761,7 +805,6 @@ function renderizarSaude(saude, saldoSelic, metaSelic) {
       : `Não. Selic em ${formatarMoeda(saldoSelic)} < meta ${formatarMoeda(metaSelic)} — cupons vão recompor.`
   );
 
-  // Veredito geral
   const veredito = document.getElementById('saude-veredito');
   if (preservaPrincipal && preservaReal && reservaOk) {
     veredito.textContent = '✓ SAUDÁVEL';
@@ -808,13 +851,13 @@ function atualizarSimulacao() {
   const saldoSelicAtual = Math.max(0, selicBase - totalExtra);
 
   const dataBase = inputs.dataBase ? new Date(inputs.dataBase + 'T12:00:00') : new Date();
-  const aliqIR = calcularIR(800);
+  const aliqIR = (inputs.irEfetivo > 0) ? (inputs.irEfetivo / 100) : calcularIR(800);
   const rendMensalTotal = rendTotalLiq / 12;
   const propRendimento = rendMensalTotal / (patrimonioTotal + rendMensalTotal);
   const rendimentoNoResgate = saqueMensal * propRendimento;
   const irMensal = rendimentoNoResgate * aliqIR;
   const resgateBruto = saqueMensal + irMensal;
-  const custoMensal = patrimonioTotal * (CFG.CUSTO_BTG_AA / 12);
+  const custoMensal = patrimonioTotal * ((inputs.custoBTG || 0.3) / 100 / 12);
 
   const saqueAnual = saqueMensal * 12;
   const sobraAnual = rendTotalLiq - saqueAnual;
@@ -867,7 +910,6 @@ function atualizarSimulacao() {
 
   document.getElementById('rec-saque-bruto').textContent = 'bruto: ' + formatarMoeda(resgateBruto);
 
-  // Painel de saúde
   const saude = calcularSaude(patrimonioTotal, rendTotalLiq, ipcaProjetado, saqueMensal, saldoSelicAtual, metaSelic);
   renderizarSaude(saude, saldoSelicAtual, metaSelic);
 
@@ -1148,6 +1190,10 @@ function resetarTudo() {
   document.getElementById('input-saque-custom').value = 200000;
   document.getElementById('input-rent-selic').value = 10.5;
   document.getElementById('input-rent-ipca').value = 8.0;
+  document.getElementById('input-taxa-real-ipca').value = 6.0;
+  document.getElementById('val-taxa-real-ipca').textContent = '6.0%';
+  document.getElementById('input-custo-btg').value = 0.3;
+  document.getElementById('input-ir-efetivo').value = 15;
   document.getElementById('input-meta-selic').value = 12000000;
   document.getElementById('input-extra-imovel').value = 0;
   document.getElementById('input-extra-outros').value = 0;
@@ -1177,11 +1223,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   ['input-patrimonio','input-selic-inicial','input-ipca-inicial','input-saque-custom',
    'input-rent-selic','input-rent-ipca','input-meta-selic',
+   'input-taxa-real-ipca','input-custo-btg','input-ir-efetivo',
    'input-extra-imovel','input-extra-outros','input-data-base'].forEach(id => {
     document.getElementById(id).addEventListener('input', () => {
       if (!estado) estado = { inputs: {} };
       if (id === 'input-rent-selic') estado.inputs.rentSelicManual = true;
       if (id === 'input-rent-ipca') estado.inputs.rentIPCAManual = true;
+      if (id === 'input-taxa-real-ipca') recalcularIPCANominal();
       document.getElementById('val-rent-selic').textContent = parseFloat(document.getElementById('input-rent-selic').value).toFixed(1) + '%';
       document.getElementById('val-rent-ipca').textContent = parseFloat(document.getElementById('input-rent-ipca').value).toFixed(1) + '%';
       if (id === 'input-patrimonio' || id === 'input-selic-inicial' || id === 'input-ipca-inicial') {
