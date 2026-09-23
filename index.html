@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Gestão Patrimonial v2.3</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
 
 <meta name="theme-color" content="#0f172a">
 <meta name="mobile-web-app-capable" content="yes">
@@ -13,10 +14,13 @@
 
 <link rel="manifest" id="app-manifest">
 <script>
+  // URL absoluta baseada na localização real da página (resolve start_url inválido)
+  const base = location.origin + location.pathname.replace(/[^/]*$/, '');
   const manifest = {
     name: "Gestão Patrimonial R$32M",
     short_name: "Gestão32M",
-    start_url: ".",
+    start_url: base,
+    scope: base,
     display: "standalone",
     background_color: "#0f172a",
     theme_color: "#0f172a",
@@ -526,13 +530,11 @@ async function atualizarDadosBCB() {
   dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-400 badge-live';
   label.textContent = 'carregando...';
 
-  // Série 432 = Selic meta anual | Série 13522 = IPCA acumulado 12 meses
   const [selic, ipca] = await Promise.all([fetchBCB(432), fetchBCB(13522)]);
 
   const selicValida = selic && selic.valor >= CFG.VALIDACAO.selicMin && selic.valor <= CFG.VALIDACAO.selicMax;
   const ipcaValido  = ipca  && ipca.valor  >= CFG.VALIDACAO.ipcaMin  && ipca.valor  <= CFG.VALIDACAO.ipcaMax;
 
-  // Status: distingue "offline" (nenhuma resposta) de "parcial" (respondeu mas fora da faixa)
   if (selic || ipca) {
     dadosBCB.online = true;
     dadosBCB.valido = selicValida && ipcaValido;
