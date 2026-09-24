@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Gestão Patrimonial v2.7</title>
+<title>Gestão Patrimonial v2.10</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
 
 <meta name="theme-color" content="#0f172a">
@@ -67,7 +67,7 @@ header.sticky{padding-top:calc(0.75rem + env(safe-area-inset-top,0px))}
 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
 </div>
 <div class="min-w-0">
-<h1 class="font-bold text-base sm:text-lg leading-tight text-white truncate">Gestão Patrimonial <span class="text-emerald-400">v2.7</span></h1>
+<h1 class="font-bold text-base sm:text-lg leading-tight text-white truncate">Gestão Patrimonial <span class="text-emerald-400">v2.10</span></h1>
 <p class="text-[11px] text-slate-400 truncate">Base: <span id="header-base">R$ 32.000.000</span> · <span id="header-data">--/--/----</span></p>
 </div>
 </div>
@@ -228,7 +228,11 @@ Parâmetros
 <span class="text-slate-400">Soma alocada: <span id="soma-alocada" class="text-slate-200 font-mono">R$ 32.000.000</span></span>
 <span id="aviso-soma" class="text-emerald-400">✓ ok</span>
 </div>
-<button onclick="igualarAlocacaoTotal()" class="w-full text-[10px] py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700">Ajustar IPCA+ = Total − Selic</button>
+<div id="aviso-soma-sugestao" class="hidden text-[10px] text-amber-300 -mt-1"></div>
+<div class="grid grid-cols-2 gap-2">
+<button onclick="igualarAlocacaoTotal('selic')" class="w-full text-[10px] py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700">Diferença → Selic</button>
+<button onclick="igualarAlocacaoTotal('ipca')" class="w-full text-[10px] py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700">Diferença → IPCA+</button>
+</div>
 </div>
 
 <div>
@@ -238,6 +242,7 @@ Parâmetros
 <option value="250000">Teto Condicionado: R$ 250.000</option>
 <option value="custom">Outro valor</option>
 </select>
+<span class="text-[10px] block mt-0.5" id="saque-max-sustentavel">Sustenta até — /mês hoje</span>
 </div>
 <div id="div-saque-custom" class="hidden">
 <label class="block text-xs font-medium text-slate-300 mb-1">Valor Personalizado (R$/mês)</label>
@@ -519,7 +524,15 @@ const reader = new FileReader();
 reader.onload = (e) => {
 try {
 const data = JSON.parse(e.target.result);
-if (data.inputs) { aplicarInputs(data.inputs); salvarEstado(); atualizarSimulacao(); alert('Importado com sucesso!'); }
+if (data.inputs) {
+aplicarInputs(data.inputs);
+estado = { inputs: {
+rentSelicManual: !!data.inputs.rentSelicManual,
+rentIPCAManual: !!data.inputs.rentIPCAManual
+} };
+document.getElementById('rent-selic-auto-tag').textContent = data.inputs.rentSelicManual ? 'Manual (ajustado por você)' : 'Auto: derivada da Selic BCB, IR e custo BTG';
+salvarEstado(); atualizarSimulacao(); alert('Importado com sucesso!');
+}
 } catch { alert('Arquivo inválido.'); }
 };
 reader.readAsText(file);
@@ -758,14 +771,37 @@ const ipca  = parseFloat(document.getElementById('input-ipca-inicial').value) ||
 const soma  = selic + ipca;
 document.getElementById('soma-alocada').textContent = formatarMoeda(soma);
 const elAviso = document.getElementById('aviso-soma');
-if (Math.abs(soma - total) < 1) { elAviso.textContent = '✓ ok'; elAviso.className = 'text-emerald-400'; }
-else if (soma > total) { elAviso.textContent = '⚠ excede total'; elAviso.className = 'text-rose-400'; }
-else { elAviso.textContent = '⚠ falta ' + formatarMoeda(total - soma); elAviso.className = 'text-amber-400'; }
+const elSug = document.getElementById('aviso-soma-sugestao');
+if (Math.abs(soma - total) < 1) {
+elAviso.textContent = '✓ ok'; elAviso.className = 'text-emerald-400';
+elSug.classList.add('hidden');
+} else if (soma > total) {
+elAviso.textContent = '⚠ excede total'; elAviso.className = 'text-rose-400';
+elSug.classList.add('hidden');
+} else {
+const diff = total - soma;
+elAviso.textContent = '⚠ falta ' + formatarMoeda(diff); elAviso.className = 'text-amber-400';
+// Sugestão de onde colocar a diferença: a Reserva Selic tem prioridade
+// enquanto estiver abaixo da meta definida (regra do planejamento); só depois
+// disso o excedente costuma ir para o Tesouro IPCA+.
+const metaSelic = parseFloat(document.getElementById('input-meta-selic')?.value) || 12000000;
+if (selic < metaSelic) {
+elSug.textContent = `Sugestão: colocar em Selic — reserva ainda ${formatarMoeda(metaSelic - selic)} abaixo da meta.`;
+} else {
+elSug.textContent = 'Sugestão: colocar em IPCA+ — Selic já está na meta.';
 }
-function igualarAlocacaoTotal() {
+elSug.classList.remove('hidden');
+}
+}
+function igualarAlocacaoTotal(destino) {
 const total = parseFloat(document.getElementById('input-patrimonio').value) || 0;
 const selic = parseFloat(document.getElementById('input-selic-inicial').value) || 0;
+const ipca  = parseFloat(document.getElementById('input-ipca-inicial').value) || 0;
+if (destino === 'selic') {
+document.getElementById('input-selic-inicial').value = Math.round(Math.max(0, total - ipca));
+} else {
 document.getElementById('input-ipca-inicial').value = Math.round(Math.max(0, total - selic));
+}
 atualizarSomaAlocada(); atualizarSimulacao();
 }
 
@@ -888,6 +924,13 @@ const saqueMensal = inputs.saqueSelect === 'custom' ? inputs.saqueCustom : parse
 const rendSelicLiq = selicBase * (inputs.rentSelic / 100);
 const rendIPCALiq = ipcaBase * (inputs.rentIPCA / 100);
 const rendTotalLiq = rendSelicLiq + rendIPCALiq;
+
+const saqueMaxSustentavel = rendTotalLiq / 12;
+const elSaqueMax = document.getElementById('saque-max-sustentavel');
+if (elSaqueMax) {
+elSaqueMax.textContent = 'Sustenta até ' + formatarMoeda(saqueMaxSustentavel) + '/mês hoje';
+elSaqueMax.className = 'text-[10px] block mt-0.5 ' + (saqueMensal <= saqueMaxSustentavel ? 'text-emerald-400' : 'text-rose-400');
+}
 
 const totalExtra = inputs.extraImovel + inputs.extraOutros;
 const saldoSelicAtual = Math.max(0, selicBase - totalExtra);
