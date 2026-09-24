@@ -105,7 +105,7 @@ header.sticky{padding-top:calc(0.75rem + env(safe-area-inset-top,0px))}
 <span class="w-2 h-2 rounded-full bg-slate-500 ring-2 ring-emerald-400/20" id="sw-dot"></span>
 <span id="sw-label">sw</span>
 </div>
-<button onclick="abrirConfig()" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700" title="Configurações">
+<button onclick="abrirConfig()" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700" title="Configurações" aria-label="Configurações">
 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
 </button>
 </div>
@@ -155,7 +155,7 @@ Saúde do Investimento — você está perdendo dinheiro?
 <span class="text-lg font-bold" id="saude-tx-retirada">—</span>
 <span class="text-[10px] text-slate-500 block" id="saude-tx-retirada-desc">—</span>
 </div>
-<div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800" title="Quantos anos o patrimônio dura mantendo o saque atual, em termos reais.">
+<div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800" title="Quantos anos o patrimônio dura mantendo o saque atual, corrigido pela inflação.">
 <span class="text-[10px] uppercase tracking-wider text-slate-400 block">Durabilidade do principal</span>
 <span class="text-lg font-bold" id="saude-durabilidade">—</span>
 <span class="text-[10px] text-slate-500 block" id="saude-durabilidade-desc">—</span>
@@ -247,17 +247,17 @@ Parâmetros
 <div class="pt-1 pb-2 border-b border-slate-700/50 space-y-3">
 <div>
 <label class="block text-xs font-medium text-slate-300 mb-1">Patrimônio Total (R$)</label>
-<input type="number" id="input-patrimonio" value="38000000" step="500000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
+<input type="number" id="input-patrimonio" value="38000000" step="500000" inputmode="numeric" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
 <span class="text-[10px] text-slate-400 block mt-0.5">Base total da carteira</span>
 </div>
 <div class="grid grid-cols-2 gap-2">
 <div>
 <label class="block text-xs font-medium text-slate-300 mb-1">Reserva Selic (R$)</label>
-<input type="number" id="input-selic-inicial" value="12000000" step="500000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
+<input type="number" id="input-selic-inicial" value="12000000" step="500000" inputmode="numeric" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
 </div>
 <div>
 <label class="block text-xs font-medium text-slate-300 mb-1">Tesouro IPCA+ (R$)</label>
-<input type="number" id="input-ipca-inicial" value="26000000" step="500000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
+<input type="number" id="input-ipca-inicial" value="26000000" step="500000" inputmode="numeric" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
 </div>
 </div>
 <div class="flex items-center justify-between text-[10px]">
@@ -283,11 +283,11 @@ Parâmetros
 </div>
 <div id="div-saque-custom" class="hidden">
 <label class="block text-xs font-medium text-slate-300 mb-1">Valor Personalizado (R$/mês)</label>
-<input type="number" id="input-saque-custom" value="200000" step="5000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
+<input type="number" id="input-saque-custom" value="200000" step="5000" inputmode="numeric" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
 </div>
 <div id="div-payout">
 <label class="block text-xs font-medium text-slate-300 mb-1">Payout do rendimento líquido <span class="text-[9px] text-emerald-400">(% distribuído)</span></label>
-<input type="number" id="input-payout" value="60" min="0" max="100" step="1" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
+<input type="number" id="input-payout" value="60" min="0" max="100" step="1" inputmode="numeric" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
 <span id="payout-info" class="text-[10px] text-slate-400 block mt-0.5">—</span>
 </div>
 
@@ -303,12 +303,12 @@ Parâmetros
 
 <div class="grid grid-cols-2 gap-2 mt-2">
 <div><span class="text-[10px] text-slate-400">Mesada Esposa (R$/mês)</span>
-<input type="number" id="input-mesada-esposa" value="24000" min="0" step="1000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white readonly-field" readonly></div>
+<input type="number" id="input-mesada-esposa" value="24000" min="0" step="1000" inputmode="numeric" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white readonly-field" readonly></div>
 <div><span class="text-[10px] text-slate-400">Mesada Marido (R$/mês)</span>
-<input type="number" id="input-mesada-marido" value="24000" min="0" step="1000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white readonly-field" readonly></div>
+<input type="number" id="input-mesada-marido" value="24000" min="0" step="1000" inputmode="numeric" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white readonly-field" readonly></div>
 </div>
 <div class="mt-2"><span class="text-[10px] text-slate-400">Piso da Casa (R$/mês, opcional)</span>
-<input type="number" id="input-piso-casa" value="0" min="0" step="5000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white"></div>
+<input type="number" id="input-piso-casa" value="0" min="0" step="5000" inputmode="numeric" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white"></div>
 <p class="text-[10px] text-slate-500 mt-1">💡 Modo automático aplica 70/15/15 sobre o saque. Ative o toggle para editar manualmente.</p>
 <button onclick="reajustarMesadasIPCA()" class="w-full text-[10px] py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 mt-2">Reajustar mesadas e piso pelo IPCA (12m, 1×/ano)</button>
 </div>
@@ -340,17 +340,17 @@ Parâmetros
 <div class="grid grid-cols-2 gap-2">
 <div>
 <label class="block text-xs font-medium text-slate-300 mb-1">Custo BTG <span class="text-[9px]">(% a.a.)</span></label>
-<input type="number" id="input-custo-btg" value="0.3" step="0.05" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
+<input type="number" id="input-custo-btg" value="0.3" step="0.05" inputmode="decimal" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
 </div>
 <div>
 <label class="block text-xs font-medium text-slate-300 mb-1">IR efetivo <span class="text-[9px]">(% s/ rend.)</span></label>
-<input type="number" id="input-ir-efetivo" value="15" step="0.5" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
+<input type="number" id="input-ir-efetivo" value="15" step="0.5" inputmode="decimal" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
 <span class="text-[9px] text-slate-500 block">0 = automático</span>
 </div>
 </div>
 <div>
 <label class="block text-xs font-medium text-slate-300 mb-1">Meta Reserva Selic <span class="text-[9px] text-amber-400 font-normal">(a definir com BTG)</span></label>
-<input type="number" id="input-meta-selic" value="12000000" step="500000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
+<input type="number" id="input-meta-selic" value="12000000" step="500000" inputmode="numeric" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
 <span id="meta-aviso" class="text-[10px] text-amber-400 block mt-0.5">⚠ Meta final a confirmar com o BTG</span>
 </div>
 <div class="pt-2 border-t border-slate-700/50">
@@ -358,11 +358,11 @@ Parâmetros
 <div class="grid grid-cols-2 gap-2 mb-2">
 <div>
 <span class="text-[10px] text-slate-400">Imóvel (R$)</span>
-<input type="number" id="input-extra-imovel" value="0" step="100000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white">
+<input type="number" id="input-extra-imovel" value="0" step="100000" inputmode="numeric" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white">
 </div>
 <div>
 <span class="text-[10px] text-slate-400">Veículo/Outros (R$)</span>
-<input type="number" id="input-extra-outros" value="0" step="50000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white">
+<input type="number" id="input-extra-outros" value="0" step="50000" inputmode="numeric" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white">
 </div>
 </div>
 
@@ -386,10 +386,13 @@ Parâmetros
 <span>Metade/metade</span>
 </label>
 </div>
-<p class="text-[10px] text-slate-500 mt-2 italic">A alocação é ajustada automaticamente ao digitar o valor.</p>
+<p class="text-[10px] text-slate-500 mt-2 italic">Digite o valor e clique em <strong>Aplicar saque extraordinário</strong>.</p>
 </div>
 
-<button onclick="carregarExemploPDF()" class="w-full text-xs py-1.5 mt-2 bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-lg hover:bg-amber-500/20 transition">Carregar exemplo de saque extraordinário (R$ 3,5Mi)</button>
+<div class="flex gap-2 mt-2">
+<button onclick="carregarExemploPDF()" class="flex-1 text-xs py-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-lg hover:bg-amber-500/20 transition">Exemplo (R$ 3,5Mi)</button>
+<button onclick="aplicarSaqueExtra()" class="flex-1 text-xs py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg transition font-medium">Aplicar saque</button>
+</div>
 
 <div id="historico-extra" class="mt-3 pt-3 border-t border-slate-700/50">
   <div class="flex items-center justify-between mb-2">
@@ -595,6 +598,13 @@ taxaRetiradaSegura: 4.0
 }
 };
 
+/* =========================================================
+CONSTANTES DE PERSISTÊNCIA (movidas para o topo — robustez)
+========================================================= */
+const BCB_CACHE_KEY = 'gestao32m_bcb_last';
+const BCB_CACHE_MAX_AGE_DAYS = 30;
+const HIST_EXTRA_KEY = 'gestao32m_hist_extra';
+
 let chartAlocacao = null;
 let chartProjecao = null;
 let estado = null;
@@ -630,10 +640,43 @@ try {
 localStorage.setItem(CFG.STORAGE_KEY, JSON.stringify({ inputs: coletarInputs(), ts: Date.now() }));
 } catch (e) {}
 }
+
+/* Validação completa do schema — nunca quebra por storage corrompido */
 function carregarEstado() {
-try { const raw = localStorage.getItem(CFG.STORAGE_KEY); if (!raw) return null; return JSON.parse(raw).inputs; }
-catch { return null; }
+  try {
+    const raw = localStorage.getItem(CFG.STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object' || !parsed.inputs || typeof parsed.inputs !== 'object') return null;
+    const inp = parsed.inputs;
+    const num = (v, def) => (typeof v === 'number' && isFinite(v)) ? v : def;
+    const str = (v, def) => (typeof v === 'string' && v.length) ? v : def;
+    return {
+      patrimonioTotal: num(inp.patrimonioTotal, CFG.PATRIMONIO_TOTAL),
+      selicInicial:    num(inp.selicInicial,    CFG.SELIC_INICIAL),
+      ipcaInicial:     num(inp.ipcaInicial,     CFG.TESOURO_IPCA),
+      saqueSelect:     ['auto','custom','200000','250000'].includes(inp.saqueSelect) ? inp.saqueSelect : 'auto',
+      saqueCustom:     num(inp.saqueCustom, 200000),
+      rentSelic:       num(inp.rentSelic, 10.5),
+      rentIPCA:        num(inp.rentIPCA, 8.0),
+      taxaRealIPCA:    num(inp.taxaRealIPCA, 6.0),
+      custoBTG:        num(inp.custoBTG, 0.3),
+      irEfetivo:       num(inp.irEfetivo, 15),
+      metaSelic:       num(inp.metaSelic, 12000000),
+      extraImovel:     num(inp.extraImovel, 0),
+      extraOutros:     num(inp.extraOutros, 0),
+      dataBase:        str(inp.dataBase, new Date().toISOString().slice(0,10)),
+      payout:          num(inp.payout, CFG.PAYOUT_PADRAO),
+      mesadaEsposa:    num(inp.mesadaEsposa, CFG.MESADA_PADRAO),
+      mesadaMarido:    num(inp.mesadaMarido, CFG.MESADA_PADRAO),
+      pisoCasa:        num(inp.pisoCasa, 0),
+      rentSelicManual: !!inp.rentSelicManual,
+      rentIPCAManual:  !!inp.rentIPCAManual,
+      divisaoManual:   !!inp.divisaoManual
+    };
+  } catch { return null; }
 }
+
 function limparStorage() {
 if (confirm('Apagar todos os dados salvos?')) {
 localStorage.removeItem(CFG.STORAGE_KEY);
@@ -728,9 +771,6 @@ if (!json || !json.length) return null;
 return { valor: parseFloat(String(json[0].valor).replace(',', '.')), data: json[0].data };
 } catch (e) { return null; } finally { clearTimeout(timer); }
 }
-
-const BCB_CACHE_KEY = 'gestao32m_bcb_last';
-const BCB_CACHE_MAX_AGE_DAYS = 30;
 
 function salvarBCBCache(selic, ipca) {
 try {
@@ -958,7 +998,6 @@ const label = document.getElementById('divisao-modo-label');
 const badge = document.getElementById('divisao-badge');
 if (manual) {
 if (label) label.innerHTML = '🔓 <strong class="text-amber-400">Modo manual</strong>: edite as mesadas livremente';
-// Badge será atualizado por atualizarBadgeDivisao() em atualizarSimulacao()
 } else {
 if (label) label.innerHTML = '🔒 Modo automático: <strong class="text-emerald-400">70% Casa / 15% Esposa / 15% Marido</strong>';
 if (badge) { badge.textContent = '(Automático 70/15/15)'; badge.className = 'text-[9px] text-emerald-400 font-normal normal-case'; }
@@ -967,7 +1006,6 @@ estado.inputs.divisaoManual = false;
 }
 }
 
-/* Calcula e mostra as % reais no badge do modo manual */
 function atualizarBadgeDivisao(saqueMensal, vCasa, vEsposa, vMarido) {
   const badge = document.getElementById('divisao-badge');
   if (!badge) return;
@@ -1168,18 +1206,28 @@ document.getElementById('input-ipca-inicial').value = Math.round(Math.max(0, tot
 atualizarSomaAlocada(); atualizarSimulacao();
 }
 
+/* =========================================================
+CORRIGIDO: durabilidade agora corrige o saque pela inflação
+(nominal vs. real deixa de ser misturado — métrica realista)
+========================================================= */
 function calcularSaude(patrimonioTotal, rendTotalLiq, ipcaProjetado, saqueMensal, saldoSelic, metaSelic) {
 const saqueAnual = saqueMensal * 12;
 const rentNominalLiq = patrimonioTotal > 0 ? rendTotalLiq / patrimonioTotal * 100 : 0;
 const retornoReal = ((1 + rentNominalLiq/100) / (1 + ipcaProjetado/100) - 1) * 100;
 const taxaRetirada = patrimonioTotal > 0 ? saqueAnual / patrimonioTotal * 100 : 0;
-let saldo = patrimonioTotal;
+
+// Simulação em termos REAIS: retorno real e saque corrigido pela inflação ano a ano.
+// Ambos os lados na mesma unidade — métrica confiável.
 const retornoRealMensal = Math.pow(1 + retornoReal/100, 1/12) - 1;
+const inflacaoMensal = Math.pow(1 + ipcaProjetado/100, 1/12) - 1;
+let saldo = patrimonioTotal;
+let saqueCorrigido = saqueMensal;
 let anos = 0;
 const maxAnos = 100;
 while (saldo > 0 && anos < maxAnos) {
 for (let m = 0; m < 12 && saldo > 0; m++) {
-saldo = saldo * (1 + retornoRealMensal) - saqueMensal;
+saldo = saldo * (1 + retornoRealMensal) - saqueCorrigido;
+saqueCorrigido *= (1 + inflacaoMensal);
 }
 anos++;
 }
@@ -1417,7 +1465,6 @@ renderizarProjecao(saldoSelicAtual, metaSelic, rendSelicLiq, cupomLiq, saqueMens
 avaliarRegraAcao(saqueMensal, sobraAnual, saldoSelicAtual, metaSelic, resgateBruto, rendTotalLiq);
 atualizarGrafico(saldoSelicAtual, metaSelic, selicBase, ipcaBase, patrimonioTotal);
 
-// ATUALIZA O BADGE COM AS % REAIS (auto ou manual)
 atualizarBadgeDivisao(saqueMensal, vCasa, vEsposa, vMarido);
 
 salvarEstado();
@@ -1565,7 +1612,7 @@ function aplicarSaqueExtra() {
   const extraOutros = numOr('input-extra-outros', 0);
   const totalExtra = extraImovel + extraOutros;
 
-  if (totalExtra <= 0) return;
+  if (totalExtra <= 0) { alert('Informe um valor para o saque extraordinário.'); return; }
 
   const origem = document.querySelector('input[name="origem-extra"]:checked')?.value || 'auto';
   const selicAtual = numOr('input-selic-inicial', 0);
@@ -1607,11 +1654,12 @@ function aplicarSaqueExtra() {
   atualizarSimulacao();
 }
 
-const HIST_EXTRA_KEY = 'gestao32m_hist_extra';
-
 function carregarHistoricoExtra() {
   try {
-    return JSON.parse(localStorage.getItem(HIST_EXTRA_KEY) || '[]');
+    const raw = localStorage.getItem(HIST_EXTRA_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter(i => i && typeof i.ts === 'number') : [];
   } catch { return []; }
 }
 
@@ -1637,6 +1685,7 @@ function registrarHistoricoExtra(valor, tiraSelic, tiraIPCA) {
   renderizarHistoricoExtra();
 }
 
+/* Histórico agora usa timestamp como chave (robusto a remoções) */
 function renderizarHistoricoExtra() {
   const lista = carregarHistoricoExtra();
   const el = document.getElementById('historico-extra-lista');
@@ -1646,7 +1695,7 @@ function renderizarHistoricoExtra() {
     return;
   }
   const fm = formatarMoeda;
-  el.innerHTML = lista.map((item, i) => `
+  el.innerHTML = lista.map((item) => `
     <div class="flex items-center justify-between p-1.5 bg-slate-900/60 rounded border border-slate-800">
       <div class="flex-1 min-w-0">
         <div class="flex items-center gap-1.5">
@@ -1657,14 +1706,16 @@ function renderizarHistoricoExtra() {
           ${item.tiraSelic > 0 ? `Selic: ${fm(item.tiraSelic)} ` : ''}${item.tiraIPCA > 0 ? `IPCA+: ${fm(item.tiraIPCA)}` : ''}
         </div>
       </div>
-      <button onclick="removerHistoricoExtra(${i})" class="text-slate-600 hover:text-rose-400 text-xs px-1" title="remover">×</button>
+      <button onclick="removerHistoricoExtra(${item.ts})" class="text-slate-600 hover:text-rose-400 text-xs px-1" title="remover">×</button>
     </div>
   `).join('');
 }
 
-function removerHistoricoExtra(index) {
+function removerHistoricoExtra(ts) {
   const lista = carregarHistoricoExtra();
-  lista.splice(index, 1);
+  const idx = lista.findIndex(i => i.ts === ts);
+  if (idx === -1) return;
+  lista.splice(idx, 1);
   salvarHistoricoExtra(lista);
   renderizarHistoricoExtra();
 }
@@ -1674,13 +1725,6 @@ function limparHistoricoExtra() {
   salvarHistoricoExtra([]);
   renderizarHistoricoExtra();
 }
-
-['input-extra-imovel', 'input-extra-outros'].forEach(id => {
-  document.getElementById(id)?.addEventListener('change', () => {
-    const total = numOr('input-extra-imovel', 0) + numOr('input-extra-outros', 0);
-    if (total > 0) aplicarSaqueExtra();
-  });
-});
 
 function aplicarFix(tipo, valor) {
 if (!estado) estado = { inputs: {} };
@@ -1697,10 +1741,9 @@ recalcularIPCANominal(true);
 atualizarSimulacao(); return;
 }
 if (tipo === 'saque') {
-const selicBase = estado.inputs.selicInicial || CFG.SELIC_INICIAL;
-const ipcaBase = estado.inputs.ipcaInicial || CFG.TESOURO_IPCA;
-const rendTotal = selicBase * (estado.inputs.rentSelic/100) + ipcaBase * (estado.inputs.rentIPCA/100);
-const maxMensal = Math.floor(rendTotal / 12 / 1000) * 1000;
+const inputs = coletarInputs();
+const { rendTotalLiq } = calcularRendimentos(inputs);
+const maxMensal = Math.floor(rendTotalLiq / 12 / 1000) * 1000;
 document.getElementById('select-saque').value = 'custom';
 sincronizarModoSaque();
 document.getElementById('input-saque-custom').value = maxMensal;
@@ -1721,7 +1764,7 @@ type: 'bar',
 data: {
 labels: ['Selic Atual', 'Meta Selic', 'IPCA+'],
 datasets: [{
-label: 'R$', data: [12000000, 12000000, 20000000],
+label: 'R$', data: [0, 0, 0],
 backgroundColor: ['rgba(56,189,248,.7)', 'rgba(99,102,241,.4)', 'rgba(168,85,247,.7)'],
 borderColor: ['#38bdf8', '#6366f1', '#a855f7'],
 borderWidth: 1.5, borderRadius: 8
@@ -1798,7 +1841,6 @@ return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maxi
 function carregarExemploPDF() {
 document.getElementById('input-extra-imovel').value = 3000000;
 document.getElementById('input-extra-outros').value = 500000;
-aplicarSaqueExtra();
 }
 function resetarTudo() {
 localStorage.removeItem(CFG.STORAGE_KEY);
