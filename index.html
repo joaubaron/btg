@@ -376,7 +376,32 @@ Parâmetros
 <input type="number" id="input-extra-outros" value="0" step="50000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white">
 </div>
 </div>
-<button onclick="carregarExemploPDF()" class="w-full text-xs py-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-lg hover:bg-amber-500/20 transition">Carregar exemplo de saque extraordinário (R$ 3,5Mi)</button>
+
+<!-- NOVO: Origem do saque extraordinário -->
+<div class="mt-2 p-2.5 bg-slate-900/40 border border-amber-500/20 rounded-lg">
+<p class="text-[10px] text-amber-300 font-bold mb-2">De onde tirar?</p>
+<div class="space-y-1.5">
+<label class="flex items-center gap-2 text-[11px] text-slate-300 cursor-pointer">
+<input type="radio" name="origem-extra" value="auto" checked class="accent-amber-500">
+<span>Automático <span class="text-slate-500">(usa excedente Selic; depois IPCA+)</span></span>
+</label>
+<label class="flex items-center gap-2 text-[11px] text-slate-300 cursor-pointer">
+<input type="radio" name="origem-extra" value="selic" class="accent-sky-500">
+<span>Forçar Selic <span class="text-slate-500">(não mexe no IPCA+)</span></span>
+</label>
+<label class="flex items-center gap-2 text-[11px] text-slate-300 cursor-pointer">
+<input type="radio" name="origem-extra" value="ipca" class="accent-purple-500">
+<span>Forçar IPCA+ <span class="text-slate-500">(preserva reserva Selic)</span></span>
+</label>
+<label class="flex items-center gap-2 text-[11px] text-slate-300 cursor-pointer">
+<input type="radio" name="origem-extra" value="meio" class="accent-indigo-500">
+<span>Metade/metade</span>
+</label>
+</div>
+<p class="text-[10px] text-slate-500 mt-2 italic">A alocação é ajustada automaticamente ao digitar o valor.</p>
+</div>
+
+<button onclick="carregarExemploPDF()" class="w-full text-xs py-1.5 mt-2 bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-lg hover:bg-amber-500/20 transition">Carregar exemplo de saque extraordinário (R$ 3,5Mi)</button>
 </div>
 <div class="pt-2 border-t border-slate-700/50">
 <label class="block text-xs font-medium text-slate-300 mb-1">Data-base da simulação</label>
@@ -1504,6 +1529,62 @@ opcoes.innerHTML = `
 }
 
 /* =========================================================
+APLICAR SAQUE EXTRAORDINÁRIO NA ALOCAÇÃO
+========================================================= */
+function aplicarSaqueExtra() {
+  const extraImovel = parseFloat(document.getElementById('input-extra-imovel').value) || 0;
+  const extraOutros = parseFloat(document.getElementById('input-extra-outros').value) || 0;
+  const totalExtra = extraImovel + extraOutros;
+
+  if (totalExtra <= 0) return;
+
+  const origem = document.querySelector('input[name="origem-extra"]:checked')?.value || 'auto';
+  const selicAtual = parseFloat(document.getElementById('input-selic-inicial').value) || 0;
+  const ipcaAtual  = parseFloat(document.getElementById('input-ipca-inicial').value) || 0;
+  const patAtual   = parseFloat(document.getElementById('input-patrimonio').value) || 0;
+  const meta       = parseFloat(document.getElementById('input-meta-selic').value) || 0;
+
+  let tiraSelic = 0;
+  let tiraIPCA  = 0;
+
+  if (origem === 'selic') {
+    tiraSelic = Math.min(totalExtra, selicAtual);
+    tiraIPCA  = totalExtra - tiraSelic;
+  } else if (origem === 'ipca') {
+    tiraIPCA  = Math.min(totalExtra, ipcaAtual);
+    tiraSelic = totalExtra - tiraIPCA;
+  } else if (origem === 'meio') {
+    tiraSelic = Math.min(totalExtra / 2, selicAtual);
+    tiraIPCA  = totalExtra - tiraSelic;
+  } else {
+    const excedente = Math.max(0, selicAtual - meta);
+    if (excedente >= totalExtra) {
+      tiraSelic = totalExtra;
+    } else {
+      tiraSelic = excedente;
+      tiraIPCA  = totalExtra - excedente;
+    }
+  }
+
+  document.getElementById('input-selic-inicial').value = Math.max(0, selicAtual - tiraSelic);
+  document.getElementById('input-ipca-inicial').value  = Math.max(0, ipcaAtual - tiraIPCA);
+  document.getElementById('input-patrimonio').value = Math.max(0, patAtual - totalExtra);
+  document.getElementById('input-extra-imovel').value = 0;
+  document.getElementById('input-extra-outros').value = 0;
+
+  atualizarSomaAlocada();
+  atualizarSimulacao();
+}
+
+['input-extra-imovel', 'input-extra-outros'].forEach(id => {
+  document.getElementById(id)?.addEventListener('change', () => {
+    const total = (parseFloat(document.getElementById('input-extra-imovel').value) || 0) +
+                  (parseFloat(document.getElementById('input-extra-outros').value) || 0);
+    if (total > 0) aplicarSaqueExtra();
+  });
+});
+
+/* =========================================================
 APLICAR FIX
 ========================================================= */
 function aplicarFix(tipo, valor) {
@@ -1628,7 +1709,7 @@ return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maxi
 function carregarExemploPDF() {
 document.getElementById('input-extra-imovel').value = 3000000;
 document.getElementById('input-extra-outros').value = 500000;
-atualizarSimulacao();
+aplicarSaqueExtra();
 }
 function resetarTudo() {
 localStorage.removeItem(CFG.STORAGE_KEY);
