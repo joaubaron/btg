@@ -7,7 +7,7 @@
    v33: corrigiu fallback que servia index.html no lugar
         de chart.js / tailwind.css (quebrava o parser JS)
 ========================================================= */
-const CACHE = 'gestao32m-v34';   // ← bump força atualização
+const CACHE = 'gestao32m-v35';   // ← bump força atualização
 const ASSETS = [
   './',
   './index.html',
