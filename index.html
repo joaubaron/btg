@@ -62,8 +62,8 @@ header.sticky{padding-top:calc(0.75rem + env(safe-area-inset-top,0px))}
 .saude-explicacao.ok{border-left-color:#10b981}
 .saude-explicacao.critico{border-left-color:#f43f5e}
 @media (max-width:380px){
-  #action-banner .flex-col{gap:.75rem}
-  .btn-fix{font-size:11px;padding:.5rem .6rem}
+#action-banner .flex-col{gap:.75rem}
+.btn-fix{font-size:11px;padding:.5rem .6rem}
 }
 #bcb-banner{display:none;margin-top:.5rem;padding:.5rem .75rem;border-radius:.5rem;font-size:11px;line-height:1.35;border:1px solid transparent}
 #bcb-banner.on{display:block}
@@ -113,7 +113,7 @@ header.sticky{padding-top:calc(0.75rem + env(safe-area-inset-top,0px))}
 </header>
 
 <div class="max-w-6xl mx-auto px-4">
-  <div id="bcb-banner"></div>
+<div id="bcb-banner"></div>
 </div>
 
 <main class="max-w-6xl mx-auto px-4 mt-6 space-y-6">
@@ -395,11 +395,11 @@ Parâmetros
 </div>
 
 <div id="historico-extra" class="mt-3 pt-3 border-t border-slate-700/50">
-  <div class="flex items-center justify-between mb-2">
-    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">📋 Histórico de saques</span>
-    <button onclick="limparHistoricoExtra()" class="text-[9px] text-slate-500 hover:text-rose-400">limpar</button>
-  </div>
-  <div id="historico-extra-lista" class="space-y-1.5 text-[10px]"></div>
+<div class="flex items-center justify-between mb-2">
+<span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">📋 Histórico de saques</span>
+<button onclick="limparHistoricoExtra()" class="text-[9px] text-slate-500 hover:text-rose-400">limpar</button>
+</div>
+<div id="historico-extra-lista" class="space-y-1.5 text-[10px]"></div>
 </div>
 </div>
 <div class="pt-2 border-t border-slate-700/50">
@@ -424,7 +424,7 @@ Parâmetros
 <span class="text-base font-bold text-sky-400" id="metric-saldo-selic">—</span>
 </div>
 <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-<span class="text-[10px] uppercase tracking-wider text-slate-400 block">Sobra/Ano</span>
+<span class="text-[10px] uppercase tracking-wider text-slate-400 block">Sobra/Ano <span id="metric-sobra-sinal" class="font-bold">—</span></span>
 <span class="text-base font-bold text-amber-400" id="metric-sobra">—</span>
 </div>
 </div>
@@ -589,8 +589,8 @@ STORAGE_KEY: 'gestao32m-v36',
 API_TIMEOUT: 8000,
 DIVISAO: { casa: 0.70, esposa: 0.15, marido: 0.15 },
 LIMITES_RENT: {
-  selicMin: 2, selicMax: 14,
-  ipcaMin: 6, ipcaMax: 14
+selicMin: 2, selicMax: 14,
+ipcaMin: 6, ipcaMax: 14
 },
 PDF: {
 rentLiqMin: 8.5, rentLiqMax: 10.0,
@@ -609,25 +609,25 @@ let estado = null;
 let dadosBCB = { selic: null, ipca: null, selicData: null, ipcaData: null, online: false, valido: false };
 
 function parseValor(id) {
-  const el = document.getElementById(id);
-  if (!el) return NaN;
-  const raw = el.value;
-  if (raw === '' || raw === null || raw === undefined) return NaN;
-  const v = parseFloat(raw);
-  return isNaN(v) ? NaN : v;
+const el = document.getElementById(id);
+if (!el) return NaN;
+const raw = el.value;
+if (raw === '' || raw === null || raw === undefined) return NaN;
+const v = parseFloat(raw);
+return isNaN(v) ? NaN : v;
 }
 
 function numOr(id, def) {
-  const v = parseValor(id);
-  return isNaN(v) ? def : v;
+const v = parseValor(id);
+return isNaN(v) ? def : v;
 }
 
 function numInput(id, def, min, max) {
-  let v = parseValor(id);
-  if (isNaN(v)) v = def;
-  if (min !== undefined) v = Math.max(min, v);
-  if (max !== undefined) v = Math.min(max, v);
-  return v;
+let v = parseValor(id);
+if (isNaN(v)) v = def;
+if (min !== undefined) v = Math.max(min, v);
+if (max !== undefined) v = Math.min(max, v);
+return v;
 }
 
 /* =========================================================
@@ -639,38 +639,38 @@ localStorage.setItem(CFG.STORAGE_KEY, JSON.stringify({ inputs: coletarInputs(), 
 } catch (e) {}
 }
 function carregarEstado() {
-  try {
-    const raw = localStorage.getItem(CFG.STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== 'object' || !parsed.inputs || typeof parsed.inputs !== 'object') return null;
-    const inp = parsed.inputs;
-    const num = (v, def) => (typeof v === 'number' && isFinite(v)) ? v : def;
-    const str = (v, def) => (typeof v === 'string' && v.length) ? v : def;
-    return {
-      patrimonioTotal: num(inp.patrimonioTotal, CFG.PATRIMONIO_TOTAL),
-      selicInicial:    num(inp.selicInicial,    CFG.SELIC_INICIAL),
-      ipcaInicial:     num(inp.ipcaInicial,     CFG.TESOURO_IPCA),
-      saqueSelect:     ['auto','custom','200000','250000'].includes(inp.saqueSelect) ? inp.saqueSelect : 'auto',
-      saqueCustom:     num(inp.saqueCustom, 200000),
-      rentSelic:       num(inp.rentSelic, 10.5),
-      rentIPCA:        num(inp.rentIPCA, 8.0),
-      taxaRealIPCA:    num(inp.taxaRealIPCA, 6.0),
-      custoBTG:        num(inp.custoBTG, 0.3),
-      irEfetivo:       num(inp.irEfetivo, 15),
-      metaSelic:       num(inp.metaSelic, 12000000),
-      extraImovel:     num(inp.extraImovel, 0),
-      extraOutros:     num(inp.extraOutros, 0),
-      dataBase:        str(inp.dataBase, new Date().toISOString().slice(0,10)),
-      payout:          num(inp.payout, CFG.PAYOUT_PADRAO),
-      mesadaEsposa:    num(inp.mesadaEsposa, CFG.MESADA_PADRAO),
-      mesadaMarido:    num(inp.mesadaMarido, CFG.MESADA_PADRAO),
-      pisoCasa:        num(inp.pisoCasa, 0),
-      rentSelicManual: !!inp.rentSelicManual,
-      rentIPCAManual:  !!inp.rentIPCAManual,
-      divisaoManual:   !!inp.divisaoManual
-    };
-  } catch { return null; }
+try {
+const raw = localStorage.getItem(CFG.STORAGE_KEY);
+if (!raw) return null;
+const parsed = JSON.parse(raw);
+if (!parsed || typeof parsed !== 'object' || !parsed.inputs || typeof parsed.inputs !== 'object') return null;
+const inp = parsed.inputs;
+const num = (v, def) => (typeof v === 'number' && isFinite(v)) ? v : def;
+const str = (v, def) => (typeof v === 'string' && v.length) ? v : def;
+return {
+patrimonioTotal: num(inp.patrimonioTotal, CFG.PATRIMONIO_TOTAL),
+selicInicial:    num(inp.selicInicial,    CFG.SELIC_INICIAL),
+ipcaInicial:     num(inp.ipcaInicial,     CFG.TESOURO_IPCA),
+saqueSelect:     ['auto','custom','200000','250000'].includes(inp.saqueSelect) ? inp.saqueSelect : 'auto',
+saqueCustom:     num(inp.saqueCustom, 200000),
+rentSelic:       num(inp.rentSelic, 10.5),
+rentIPCA:        num(inp.rentIPCA, 8.0),
+taxaRealIPCA:    num(inp.taxaRealIPCA, 6.0),
+custoBTG:        num(inp.custoBTG, 0.3),
+irEfetivo:       num(inp.irEfetivo, 15),
+metaSelic:       num(inp.metaSelic, 12000000),
+extraImovel:     num(inp.extraImovel, 0),
+extraOutros:     num(inp.extraOutros, 0),
+dataBase:        str(inp.dataBase, new Date().toISOString().slice(0,10)),
+payout:          num(inp.payout, CFG.PAYOUT_PADRAO),
+mesadaEsposa:    num(inp.mesadaEsposa, CFG.MESADA_PADRAO),
+mesadaMarido:    num(inp.mesadaMarido, CFG.MESADA_PADRAO),
+pisoCasa:        num(inp.pisoCasa, 0),
+rentSelicManual: !!inp.rentSelicManual,
+rentIPCAManual:  !!inp.rentIPCAManual,
+divisaoManual:   !!inp.divisaoManual
+};
+} catch { return null; }
 }
 function limparStorage() {
 if (confirm('Apagar todos os dados salvos?')) {
@@ -931,13 +931,13 @@ selicEl.value = liquidaTruncada.toFixed(1);
 document.getElementById('val-rent-selic').textContent = liquidaTruncada.toFixed(1) + '%';
 
 if (tagEl) {
-  if (Math.abs(liquidaTruncada - liquidaOriginal) > 0.05) {
-    tagEl.textContent = `⚠️ Calculado ${liquidaOriginal.toFixed(2)}% — ajustado p/ ${liquidaTruncada.toFixed(1)}% (fora da faixa do slider)`;
-    tagEl.className = 'text-[10px] block mt-0.5 auto-tag-truncado';
-  } else {
-    tagEl.textContent = 'Auto: derivada da Selic BCB, IR e custo BTG';
-    tagEl.className = 'text-[10px] block mt-0.5 auto-tag-normal';
-  }
+if (Math.abs(liquidaTruncada - liquidaOriginal) > 0.05) {
+tagEl.textContent = `⚠️ Calculado ${liquidaOriginal.toFixed(2)}% — ajustado p/ ${liquidaTruncada.toFixed(1)}% (fora da faixa do slider)`;
+tagEl.className = 'text-[10px] block mt-0.5 auto-tag-truncado';
+} else {
+tagEl.textContent = 'Auto: derivada da Selic BCB, IR e custo BTG';
+tagEl.className = 'text-[10px] block mt-0.5 auto-tag-normal';
+}
 }
 if (forcarPorAcaoDoUsuario) { if (!estado) estado = { inputs: {} }; estado.inputs.rentSelicManual = false; }
 }
@@ -950,8 +950,8 @@ const valEl = document.getElementById('val-taxa-real-ipca');
 const tagIPCA = document.getElementById('rent-ipca-auto-tag');
 if (!realEl || !nominalEl) return;
 if (!forcarPorAcaoDoUsuario && estado?.inputs?.rentIPCAManual) {
-  if (tagIPCA) { tagIPCA.textContent = 'Manual (ajustado por você)'; tagIPCA.className = 'text-[10px] block mt-0.5 auto-tag-normal'; }
-  return;
+if (tagIPCA) { tagIPCA.textContent = 'Manual (ajustado por você)'; tagIPCA.className = 'text-[10px] block mt-0.5 auto-tag-normal'; }
+return;
 }
 const real = (parseFloat(realEl.value) || 6.0) / 100;
 const ipca = (dadosBCB.ipca || CFG.FALLBACK.ipca) / 100;
@@ -969,13 +969,13 @@ if (calcEl) calcEl.textContent = bruto.toFixed(2) + '%';
 if (valEl) valEl.textContent = (parseFloat(realEl.value) || 6.0).toFixed(1) + '%';
 
 if (tagIPCA) {
-  if (Math.abs(nominalTruncado - nominalOriginal) > 0.05) {
-    tagIPCA.textContent = `⚠️ Calculado ${nominalOriginal.toFixed(2)}% — ajustado p/ ${nominalTruncado.toFixed(1)}% (fora da faixa do slider)`;
-    tagIPCA.className = 'text-[10px] block mt-0.5 auto-tag-truncado';
-  } else {
-    tagIPCA.textContent = 'Calculado: taxa real + IPCA do BCB, menos IR e custo BTG';
-    tagIPCA.className = 'text-[10px] block mt-0.5 auto-tag-normal';
-  }
+if (Math.abs(nominalTruncado - nominalOriginal) > 0.05) {
+tagIPCA.textContent = `⚠️ Calculado ${nominalOriginal.toFixed(2)}% — ajustado p/ ${nominalTruncado.toFixed(1)}% (fora da faixa do slider)`;
+tagIPCA.className = 'text-[10px] block mt-0.5 auto-tag-truncado';
+} else {
+tagIPCA.textContent = 'Calculado: taxa real + IPCA do BCB, menos IR e custo BTG';
+tagIPCA.className = 'text-[10px] block mt-0.5 auto-tag-normal';
+}
 }
 if (forcarPorAcaoDoUsuario) { if (!estado) estado = { inputs: {} }; estado.inputs.rentIPCAManual = false; }
 }
@@ -1002,24 +1002,24 @@ estado.inputs.divisaoManual = false;
 }
 
 function atualizarBadgeDivisao(saqueMensal, vCasa, vEsposa, vMarido) {
-  const badge = document.getElementById('divisao-badge');
-  if (!badge) return;
-  const manual = estado?.inputs?.divisaoManual;
-  if (!manual) {
-    badge.textContent = '(Automático 70/15/15)';
-    badge.className = 'text-[9px] text-emerald-400 font-normal normal-case';
-    return;
-  }
-  if (saqueMensal <= 0) {
-    badge.textContent = '(Manual)';
-    badge.className = 'text-[9px] text-amber-400 font-normal normal-case';
-    return;
-  }
-  const pCasa   = Math.round((vCasa   / saqueMensal) * 100);
-  const pEsposa = Math.round((vEsposa / saqueMensal) * 100);
-  const pMarido = Math.round((vMarido / saqueMensal) * 100);
-  badge.textContent = `(Casa ${pCasa}% / Esposa ${pEsposa}% / Marido ${pMarido}%)`;
-  badge.className = 'text-[9px] text-amber-400 font-normal normal-case';
+const badge = document.getElementById('divisao-badge');
+if (!badge) return;
+const manual = estado?.inputs?.divisaoManual;
+if (!manual) {
+badge.textContent = '(Automático 70/15/15)';
+badge.className = 'text-[9px] text-emerald-400 font-normal normal-case';
+return;
+}
+if (saqueMensal <= 0) {
+badge.textContent = '(Manual)';
+badge.className = 'text-[9px] text-amber-400 font-normal normal-case';
+return;
+}
+const pCasa   = Math.round((vCasa   / saqueMensal) * 100);
+const pEsposa = Math.round((vEsposa / saqueMensal) * 100);
+const pMarido = Math.round((vMarido / saqueMensal) * 100);
+badge.textContent = `(Casa ${pCasa}% / Esposa ${pEsposa}% / Marido ${pMarido}%)`;
+badge.className = 'text-[9px] text-amber-400 font-normal normal-case';
 }
 
 function aplicarDivisaoAutomatica(saqueMensal) {
@@ -1225,10 +1225,10 @@ const resgateBrutoMensal = saqueMensal * 1.02;
 
 let saldoProj = saldoSelic;
 for (let m = 0; m < MESES_PROJ; m++) {
-  saldoProj += rentSelicAnual / 12;
-  if (m % 6 === 5) saldoProj += cupomSemestral;
-  saldoProj -= resgateBrutoMensal;
-  if (saldoProj < 0) saldoProj = 0;
+saldoProj += rentSelicAnual / 12;
+if (m % 6 === 5) saldoProj += cupomSemestral;
+saldoProj -= resgateBrutoMensal;
+if (saldoProj < 0) saldoProj = 0;
 }
 const patrimonioFinal = saldoProj + (estado?.inputs?.ipcaInicial || CFG.TESOURO_IPCA);
 const anosProj = MESES_PROJ / 12;
@@ -1267,19 +1267,19 @@ document.getElementById('saude-poder-compra-desc').textContent = 'Mesmo patrimô
 
 const elCagr = document.getElementById('saude-cagr');
 if (elCagr) {
-  elCagr.textContent = (saude.cagr >= 0 ? '+' : '') + saude.cagr.toFixed(2) + '% a.a.';
-  elCagr.className = 'text-lg font-bold ' + (saude.cagr >= 6 ? 'text-emerald-400' : saude.cagr >= 3 ? 'text-amber-400' : 'text-rose-400');
-  document.getElementById('saude-cagr-desc').textContent =
-    saude.cagr >= 6 ? 'Acima de referências conservadoras' :
-    saude.cagr >= 3 ? 'Moderado' : 'Abaixo do esperado';
+elCagr.textContent = (saude.cagr >= 0 ? '+' : '') + saude.cagr.toFixed(2) + '% a.a.';
+elCagr.className = 'text-lg font-bold ' + (saude.cagr >= 6 ? 'text-emerald-400' : saude.cagr >= 3 ? 'text-amber-400' : 'text-rose-400');
+document.getElementById('saude-cagr-desc').textContent =
+saude.cagr >= 6 ? 'Acima de referências conservadoras' :
+saude.cagr >= 3 ? 'Moderado' : 'Abaixo do esperado';
 }
 const elRent = document.getElementById('saude-rent-acum');
 if (elRent) {
-  elRent.textContent = (saude.rentAcumulada >= 0 ? '+' : '') + saude.rentAcumulada.toFixed(2) + '%';
-  elRent.className = 'text-lg font-bold ' + (saude.rentAcumulada >= 12 ? 'text-emerald-400' : saude.rentAcumulada >= 6 ? 'text-amber-400' : 'text-rose-400');
-  document.getElementById('saude-rent-acum-desc').textContent =
-    saude.rentAcumulada >= 12 ? 'Ganho composto em 24 meses' :
-    saude.rentAcumulada >= 6 ? 'Ganho moderado' : 'Ganho baixo';
+elRent.textContent = (saude.rentAcumulada >= 0 ? '+' : '') + saude.rentAcumulada.toFixed(2) + '%';
+elRent.className = 'text-lg font-bold ' + (saude.rentAcumulada >= 12 ? 'text-emerald-400' : saude.rentAcumulada >= 6 ? 'text-amber-400' : 'text-rose-400');
+document.getElementById('saude-rent-acum-desc').textContent =
+saude.rentAcumulada >= 12 ? 'Ganho composto em 24 meses' :
+saude.rentAcumulada >= 6 ? 'Ganho moderado' : 'Ganho baixo';
 }
 
 const preservaPrincipal = saude.retornoReal >= 0 && saude.taxaRetirada <= 5;
@@ -1412,8 +1412,13 @@ document.getElementById('metric-saque-anual-liq').textContent = 'líquido: ' + f
 document.getElementById('metric-saldo-selic').textContent = formatarMoeda(saldoSelicAtual);
 
 const sobraEl = document.getElementById('metric-sobra');
-sobraEl.textContent = (sobraAnual >= 0 ? '+ ' : '') + formatarMoeda(sobraAnual) + '/ano';
+const sobraSinalEl = document.getElementById('metric-sobra-sinal');
+sobraEl.textContent = formatarMoeda(Math.abs(sobraAnual)) + '/ano';
 sobraEl.className = 'text-base font-bold ' + (sobraAnual >= 0 ? 'text-amber-400' : 'text-red-400');
+if (sobraSinalEl) {
+sobraSinalEl.textContent = sobraAnual >= 0 ? '+' : '−';
+sobraSinalEl.className = 'font-bold ' + (sobraAnual >= 0 ? 'text-amber-400' : 'text-red-400');
+}
 
 document.getElementById('ir-aliquota').textContent = (aliqIR * 100).toFixed(1) + '%';
 document.getElementById('ir-valor').textContent = formatarMoeda(irMensal);
@@ -1595,121 +1600,121 @@ opcoes.innerHTML = `
 }
 
 function aplicarSaqueExtra() {
-  const extraImovel = numOr('input-extra-imovel', 0);
-  const extraOutros = numOr('input-extra-outros', 0);
-  const totalExtra = extraImovel + extraOutros;
+const extraImovel = numOr('input-extra-imovel', 0);
+const extraOutros = numOr('input-extra-outros', 0);
+const totalExtra = extraImovel + extraOutros;
 
-  if (totalExtra <= 0) { alert('Informe um valor para o saque extraordinário.'); return; }
+if (totalExtra <= 0) { alert('Informe um valor para o saque extraordinário.'); return; }
 
-  const origem = document.querySelector('input[name="origem-extra"]:checked')?.value || 'auto';
-  const selicAtual = numOr('input-selic-inicial', 0);
-  const ipcaAtual  = numOr('input-ipca-inicial', 0);
-  const patAtual   = numOr('input-patrimonio', 0);
-  const meta       = numOr('input-meta-selic', 0);
+const origem = document.querySelector('input[name="origem-extra"]:checked')?.value || 'auto';
+const selicAtual = numOr('input-selic-inicial', 0);
+const ipcaAtual  = numOr('input-ipca-inicial', 0);
+const patAtual   = numOr('input-patrimonio', 0);
+const meta       = numOr('input-meta-selic', 0);
 
-  let tiraSelic = 0;
-  let tiraIPCA  = 0;
+let tiraSelic = 0;
+let tiraIPCA  = 0;
 
-  if (origem === 'selic') {
-    tiraSelic = Math.min(totalExtra, selicAtual);
-    tiraIPCA  = totalExtra - tiraSelic;
-  } else if (origem === 'ipca') {
-    tiraIPCA  = Math.min(totalExtra, ipcaAtual);
-    tiraSelic = totalExtra - tiraIPCA;
-  } else if (origem === 'meio') {
-    tiraSelic = Math.min(totalExtra / 2, selicAtual);
-    tiraIPCA  = totalExtra - tiraSelic;
-  } else {
-    const excedente = Math.max(0, selicAtual - meta);
-    if (excedente >= totalExtra) {
-      tiraSelic = totalExtra;
-    } else {
-      tiraSelic = excedente;
-      tiraIPCA  = totalExtra - excedente;
-    }
-  }
+if (origem === 'selic') {
+tiraSelic = Math.min(totalExtra, selicAtual);
+tiraIPCA  = totalExtra - tiraSelic;
+} else if (origem === 'ipca') {
+tiraIPCA  = Math.min(totalExtra, ipcaAtual);
+tiraSelic = totalExtra - tiraIPCA;
+} else if (origem === 'meio') {
+tiraSelic = Math.min(totalExtra / 2, selicAtual);
+tiraIPCA  = totalExtra - tiraSelic;
+} else {
+const excedente = Math.max(0, selicAtual - meta);
+if (excedente >= totalExtra) {
+tiraSelic = totalExtra;
+} else {
+tiraSelic = excedente;
+tiraIPCA  = totalExtra - excedente;
+}
+}
 
-  document.getElementById('input-selic-inicial').value = Math.max(0, selicAtual - tiraSelic);
-  document.getElementById('input-ipca-inicial').value  = Math.max(0, ipcaAtual - tiraIPCA);
-  document.getElementById('input-patrimonio').value = Math.max(0, patAtual - totalExtra);
-  document.getElementById('input-extra-imovel').value = 0;
-  document.getElementById('input-extra-outros').value = 0;
+document.getElementById('input-selic-inicial').value = Math.max(0, selicAtual - tiraSelic);
+document.getElementById('input-ipca-inicial').value  = Math.max(0, ipcaAtual - tiraIPCA);
+document.getElementById('input-patrimonio').value = Math.max(0, patAtual - totalExtra);
+document.getElementById('input-extra-imovel').value = 0;
+document.getElementById('input-extra-outros').value = 0;
 
-  registrarHistoricoExtra(totalExtra, tiraSelic, tiraIPCA);
+registrarHistoricoExtra(totalExtra, tiraSelic, tiraIPCA);
 
-  atualizarSomaAlocada();
-  atualizarSimulacao();
+atualizarSomaAlocada();
+atualizarSimulacao();
 }
 
 function carregarHistoricoExtra() {
-  try {
-    const raw = localStorage.getItem(HIST_EXTRA_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.filter(i => i && typeof i.ts === 'number') : [];
-  } catch { return []; }
+try {
+const raw = localStorage.getItem(HIST_EXTRA_KEY);
+if (!raw) return [];
+const parsed = JSON.parse(raw);
+return Array.isArray(parsed) ? parsed.filter(i => i && typeof i.ts === 'number') : [];
+} catch { return []; }
 }
 
 function salvarHistoricoExtra(lista) {
-  try {
-    localStorage.setItem(HIST_EXTRA_KEY, JSON.stringify(lista));
-  } catch {}
+try {
+localStorage.setItem(HIST_EXTRA_KEY, JSON.stringify(lista));
+} catch {}
 }
 
 function registrarHistoricoExtra(valor, tiraSelic, tiraIPCA) {
-  if (!valor || valor <= 0) return;
-  const lista = carregarHistoricoExtra();
-  lista.unshift({
-    ts: Date.now(),
-    data: new Date().toLocaleDateString('pt-BR'),
-    valor,
-    tiraSelic: tiraSelic || 0,
-    tiraIPCA: tiraIPCA || 0,
-    origem: tiraSelic > 0 && tiraIPCA > 0 ? 'misto' :
-            tiraSelic > 0 ? 'Selic' : 'IPCA+'
-  });
-  salvarHistoricoExtra(lista);
-  renderizarHistoricoExtra();
+if (!valor || valor <= 0) return;
+const lista = carregarHistoricoExtra();
+lista.unshift({
+ts: Date.now(),
+data: new Date().toLocaleDateString('pt-BR'),
+valor,
+tiraSelic: tiraSelic || 0,
+tiraIPCA: tiraIPCA || 0,
+origem: tiraSelic > 0 && tiraIPCA > 0 ? 'misto' :
+    tiraSelic > 0 ? 'Selic' : 'IPCA+'
+});
+salvarHistoricoExtra(lista);
+renderizarHistoricoExtra();
 }
 
 function renderizarHistoricoExtra() {
-  const lista = carregarHistoricoExtra();
-  const el = document.getElementById('historico-extra-lista');
-  if (!el) return;
-  if (!lista.length) {
-    el.innerHTML = '<div class="text-slate-500 italic">Nenhum saque registrado</div>';
-    return;
-  }
-  const fm = formatarMoeda;
-  el.innerHTML = lista.map((item) => `
-    <div class="flex items-center justify-between p-1.5 bg-slate-900/60 rounded border border-slate-800">
-      <div class="flex-1 min-w-0">
-        <div class="flex items-center gap-1.5">
-          <span class="text-amber-300 font-bold">${fm(item.valor)}</span>
-          <span class="text-slate-500">· ${item.data}</span>
-        </div>
-        <div class="text-slate-400 text-[9px]">
-          ${item.tiraSelic > 0 ? `Selic: ${fm(item.tiraSelic)} ` : ''}${item.tiraIPCA > 0 ? `IPCA+: ${fm(item.tiraIPCA)}` : ''}
-        </div>
-      </div>
-      <button onclick="removerHistoricoExtra(${item.ts})" class="text-slate-600 hover:text-rose-400 text-xs px-1" title="remover">×</button>
-    </div>
-  `).join('');
+const lista = carregarHistoricoExtra();
+const el = document.getElementById('historico-extra-lista');
+if (!el) return;
+if (!lista.length) {
+el.innerHTML = '<div class="text-slate-500 italic">Nenhum saque registrado</div>';
+return;
+}
+const fm = formatarMoeda;
+el.innerHTML = lista.map((item) => `
+<div class="flex items-center justify-between p-1.5 bg-slate-900/60 rounded border border-slate-800">
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-1.5">
+  <span class="text-amber-300 font-bold">${fm(item.valor)}</span>
+  <span class="text-slate-500">· ${item.data}</span>
+</div>
+<div class="text-slate-400 text-[9px]">
+  ${item.tiraSelic > 0 ? `Selic: ${fm(item.tiraSelic)} ` : ''}${item.tiraIPCA > 0 ? `IPCA+: ${fm(item.tiraIPCA)}` : ''}
+</div>
+</div>
+<button onclick="removerHistoricoExtra(${item.ts})" class="text-slate-600 hover:text-rose-400 text-xs px-1" title="remover">×</button>
+</div>
+`).join('');
 }
 
 function removerHistoricoExtra(ts) {
-  const lista = carregarHistoricoExtra();
-  const idx = lista.findIndex(i => i.ts === ts);
-  if (idx === -1) return;
-  lista.splice(idx, 1);
-  salvarHistoricoExtra(lista);
-  renderizarHistoricoExtra();
+const lista = carregarHistoricoExtra();
+const idx = lista.findIndex(i => i.ts === ts);
+if (idx === -1) return;
+lista.splice(idx, 1);
+salvarHistoricoExtra(lista);
+renderizarHistoricoExtra();
 }
 
 function limparHistoricoExtra() {
-  if (!confirm('Apagar todo o histórico de saques extraordinários? (não afeta os valores atuais)')) return;
-  salvarHistoricoExtra([]);
-  renderizarHistoricoExtra();
+if (!confirm('Apagar todo o histórico de saques extraordinários? (não afeta os valores atuais)')) return;
+salvarHistoricoExtra([]);
+renderizarHistoricoExtra();
 }
 
 function aplicarFix(tipo, valor) {
