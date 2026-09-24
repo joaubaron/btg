@@ -1288,11 +1288,11 @@ saude.taxaRetirada <= 4 ? 'Abaixo da taxa segura (4%)' :
 saude.taxaRetirada <= 6 ? 'Zona de atenção' : 'Acima do sustentável';
 
 const elDur = document.getElementById('saude-durabilidade');
-elDur.textContent = saude.durabilidade >= 100 ? '∞ (perpétuo)' : saude.durabilidade + ' anos';
+elDur.textContent = saude.durabilidade >= 100 ? '∞ (perpétuo)' : saude.durabilidade + ' anos+';
 elDur.className = 'text-lg font-bold ' + (saude.durabilidade >= 50 ? 'text-emerald-400' : saude.durabilidade >= 25 ? 'text-amber-400' : 'text-rose-400');
 document.getElementById('saude-durabilidade-desc').textContent =
 saude.durabilidade >= 100 ? 'Principal preservado indefinidamente' :
-saude.durabilidade >= 50 ? 'Sustenta por décadas' :
+saude.durabilidade >= 50 ? 'Sustenta por décadas nas premissas atuais' :
 saude.durabilidade >= 25 ? 'Pode acabar em uma geração' : 'Risco de exaustão';
 
 const elPC = document.getElementById('saude-poder-compra');
