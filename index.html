@@ -402,6 +402,15 @@ Parâmetros
 </div>
 
 <button onclick="carregarExemploPDF()" class="w-full text-xs py-1.5 mt-2 bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-lg hover:bg-amber-500/20 transition">Carregar exemplo de saque extraordinário (R$ 3,5Mi)</button>
+
+<!-- NOVO: Histórico de saques extraordinários -->
+<div id="historico-extra" class="mt-3 pt-3 border-t border-slate-700/50">
+  <div class="flex items-center justify-between mb-2">
+    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">📋 Histórico de saques</span>
+    <button onclick="limparHistoricoExtra()" class="text-[9px] text-slate-500 hover:text-rose-400">limpar</button>
+  </div>
+  <div id="historico-extra-lista" class="space-y-1.5 text-[10px]"></div>
+</div>
 </div>
 <div class="pt-2 border-t border-slate-700/50">
 <label class="block text-xs font-medium text-slate-300 mb-1">Data-base da simulação</label>
@@ -620,6 +629,7 @@ function limparStorage() {
 if (confirm('Apagar todos os dados salvos?')) {
 localStorage.removeItem(CFG.STORAGE_KEY);
 localStorage.removeItem(BCB_CACHE_KEY);
+localStorage.removeItem(HIST_EXTRA_KEY);
 location.reload();
 }
 }
@@ -628,6 +638,7 @@ const blob = new Blob([JSON.stringify({
 inputs: coletarInputs(),
 dadosBCB,
 bcbCache: carregarBCBCache(),
+historicoExtra: carregarHistoricoExtra(),
 ts: Date.now()
 }, null, 2)], { type: 'application/json' });
 const url = URL.createObjectURL(blob);
@@ -643,6 +654,10 @@ try {
 const data = JSON.parse(e.target.result);
 if (data.bcbCache) {
 try { localStorage.setItem(BCB_CACHE_KEY, JSON.stringify(data.bcbCache)); } catch {}
+}
+if (data.historicoExtra) {
+try { localStorage.setItem(HIST_EXTRA_KEY, JSON.stringify(data.historicoExtra)); } catch {}
+renderizarHistoricoExtra();
 }
 if (data.inputs) {
 aplicarInputs(data.inputs);
@@ -1572,8 +1587,82 @@ function aplicarSaqueExtra() {
   document.getElementById('input-extra-imovel').value = 0;
   document.getElementById('input-extra-outros').value = 0;
 
+  // ---- Registra no histórico ----
+  registrarHistoricoExtra(totalExtra, tiraSelic, tiraIPCA);
+
   atualizarSomaAlocada();
   atualizarSimulacao();
+}
+
+/* =========================================================
+HISTÓRICO DE SAQUES EXTRAORDINÁRIOS
+========================================================= */
+const HIST_EXTRA_KEY = 'gestao32m_hist_extra';
+
+function carregarHistoricoExtra() {
+  try {
+    return JSON.parse(localStorage.getItem(HIST_EXTRA_KEY) || '[]');
+  } catch { return []; }
+}
+
+function salvarHistoricoExtra(lista) {
+  try {
+    localStorage.setItem(HIST_EXTRA_KEY, JSON.stringify(lista));
+  } catch {}
+}
+
+function registrarHistoricoExtra(valor, tiraSelic, tiraIPCA) {
+  if (!valor || valor <= 0) return;
+  const lista = carregarHistoricoExtra();
+  lista.unshift({
+    ts: Date.now(),
+    data: new Date().toLocaleDateString('pt-BR'),
+    valor,
+    tiraSelic: tiraSelic || 0,
+    tiraIPCA: tiraIPCA || 0,
+    origem: tiraSelic > 0 && tiraIPCA > 0 ? 'misto' :
+            tiraSelic > 0 ? 'Selic' : 'IPCA+'
+  });
+  salvarHistoricoExtra(lista);
+  renderizarHistoricoExtra();
+}
+
+function renderizarHistoricoExtra() {
+  const lista = carregarHistoricoExtra();
+  const el = document.getElementById('historico-extra-lista');
+  if (!el) return;
+  if (!lista.length) {
+    el.innerHTML = '<div class="text-slate-500 italic">Nenhum saque registrado</div>';
+    return;
+  }
+  const fm = formatarMoeda;
+  el.innerHTML = lista.map((item, i) => `
+    <div class="flex items-center justify-between p-1.5 bg-slate-900/60 rounded border border-slate-800">
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-1.5">
+          <span class="text-amber-300 font-bold">${fm(item.valor)}</span>
+          <span class="text-slate-500">· ${item.data}</span>
+        </div>
+        <div class="text-slate-400 text-[9px]">
+          ${item.tiraSelic > 0 ? `Selic: ${fm(item.tiraSelic)} ` : ''}${item.tiraIPCA > 0 ? `IPCA+: ${fm(item.tiraIPCA)}` : ''}
+        </div>
+      </div>
+      <button onclick="removerHistoricoExtra(${i})" class="text-slate-600 hover:text-rose-400 text-xs px-1" title="remover">×</button>
+    </div>
+  `).join('');
+}
+
+function removerHistoricoExtra(index) {
+  const lista = carregarHistoricoExtra();
+  lista.splice(index, 1);
+  salvarHistoricoExtra(lista);
+  renderizarHistoricoExtra();
+}
+
+function limparHistoricoExtra() {
+  if (!confirm('Apagar todo o histórico de saques extraordinários? (não afeta os valores atuais)')) return;
+  salvarHistoricoExtra([]);
+  renderizarHistoricoExtra();
 }
 
 ['input-extra-imovel', 'input-extra-outros'].forEach(id => {
@@ -1714,6 +1803,7 @@ aplicarSaqueExtra();
 function resetarTudo() {
 localStorage.removeItem(CFG.STORAGE_KEY);
 localStorage.removeItem(BCB_CACHE_KEY);
+localStorage.removeItem(HIST_EXTRA_KEY);
 document.getElementById('input-patrimonio').value = CFG.PATRIMONIO_TOTAL;
 document.getElementById('input-selic-inicial').value = CFG.SELIC_INICIAL;
 document.getElementById('input-ipca-inicial').value = CFG.TESOURO_IPCA;
@@ -1740,6 +1830,7 @@ sincronizarModoDivisao();
 recalcularSelicLiquida(true);
 recalcularIPCANominal(true);
 atualizarSomaAlocada(); atualizarSimulacao();
+renderizarHistoricoExtra();
 }
 function abrirConfig() { document.getElementById('modal-config').classList.remove('hidden'); }
 function fecharConfig() { document.getElementById('modal-config').classList.add('hidden'); }
@@ -1804,6 +1895,7 @@ recalcularSelicLiquida();
 recalcularIPCANominal();
 initCharts();
 atualizarSimulacao();
+renderizarHistoricoExtra();
 registrarSW();
 atualizarDadosBCB();
 });
