@@ -1,7 +1,7 @@
 /* =========================================================
    Service Worker — Gestão Patrimonial R$ 32M v2.6
 ========================================================= */
-const CACHE = 'gestao32m-v30';   // ← bump força atualização
+const CACHE = 'gestao32m-v31';   // ← bump força atualização
 const ASSETS = ['./', './index.html'];
 
 // Instalação: pré-cacheia o app
