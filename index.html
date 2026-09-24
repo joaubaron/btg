@@ -65,6 +65,13 @@ header.sticky{padding-top:calc(0.75rem + env(safe-area-inset-top,0px))}
   #action-banner .flex-col{gap:.75rem}
   .btn-fix{font-size:11px;padding:.5rem .6rem}
 }
+/* Banner de status BCB offline */
+#bcb-banner{display:none;margin-top:.5rem;padding:.5rem .75rem;border-radius:.5rem;font-size:11px;line-height:1.35;border:1px solid transparent}
+#bcb-banner.on{display:block}
+#bcb-banner.fresco{background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.35);color:#fcd34d}
+#bcb-banner.atencao{background:rgba(249,115,22,.12);border-color:rgba(249,115,22,.4);color:#fdba74}
+#bcb-banner.obsoleto{background:rgba(244,63,94,.12);border-color:rgba(244,63,94,.4);color:#fda4af}
+#bcb-banner strong{font-weight:700}
 </style>
 </head>
 <body class="pb-12">
@@ -97,6 +104,11 @@ header.sticky{padding-top:calc(0.75rem + env(safe-area-inset-top,0px))}
 </div>
 </header>
 
+<!-- Banner BCB offline (só aparece quando há cache offline) -->
+<div class="max-w-6xl mx-auto px-4">
+  <div id="bcb-banner"></div>
+</div>
+
 <main class="max-w-6xl mx-auto px-4 mt-6 space-y-6">
 
 <!-- ============ BANNER DE AÇÃO ============ -->
@@ -125,7 +137,6 @@ Saúde do Investimento — você está perdendo dinheiro?
 <span id="saude-veredito" class="text-xs font-bold px-3 py-1 rounded-full">—</span>
 </div>
 
-<!-- NOVO: explicação dinâmica do veredito -->
 <p id="saude-explicacao" class="saude-explicacao">—</p>
 
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
@@ -504,6 +515,7 @@ Timeline Real (estimativa)
 <p><strong>Divisão padrão:</strong> 70% Casa / 15% Esposa / 15% Marido (modo automático)</p>
 <p><strong>Rentabilidades:</strong> Selic e IPCA+ líquidas calculadas (BCB, IR efetivo e custo BTG); ajuste manual possível</p>
 <p><strong>IR:</strong> incide apenas sobre rendimento do resgate</p>
+<p><strong>Cache offline:</strong> último dado válido do BCB é guardado localmente por até 30 dias</p>
 </div>
 <button onclick="fecharConfig()" class="w-full p-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm">Fechar</button>
 </div>
@@ -558,10 +570,19 @@ try { const raw = localStorage.getItem(CFG.STORAGE_KEY); if (!raw) return null; 
 catch { return null; }
 }
 function limparStorage() {
-if (confirm('Apagar todos os dados salvos?')) { localStorage.removeItem(CFG.STORAGE_KEY); location.reload(); }
+if (confirm('Apagar todos os dados salvos?')) {
+localStorage.removeItem(CFG.STORAGE_KEY);
+localStorage.removeItem(BCB_CACHE_KEY);
+location.reload();
+}
 }
 function exportarJSON() {
-const blob = new Blob([JSON.stringify({ inputs: coletarInputs(), dadosBCB, ts: Date.now() }, null, 2)], { type: 'application/json' });
+const blob = new Blob([JSON.stringify({
+inputs: coletarInputs(),
+dadosBCB,
+bcbCache: carregarBCBCache(),
+ts: Date.now()
+}, null, 2)], { type: 'application/json' });
 const url = URL.createObjectURL(blob);
 const a = document.createElement('a'); a.href = url;
 a.download = `gestao_${new Date().toISOString().slice(0,10)}.json`;
@@ -573,6 +594,9 @@ const reader = new FileReader();
 reader.onload = (e) => {
 try {
 const data = JSON.parse(e.target.result);
+if (data.bcbCache) {
+try { localStorage.setItem(BCB_CACHE_KEY, JSON.stringify(data.bcbCache)); } catch {}
+}
 if (data.inputs) {
 aplicarInputs(data.inputs);
 estado = { inputs: {
@@ -634,6 +658,69 @@ return { valor: parseFloat(String(json[0].valor).replace(',', '.')), data: json[
 } catch (e) { return null; } finally { clearTimeout(timer); }
 }
 
+/* =========================================================
+CACHE DO ÚLTIMO DADO BCB VÁLIDO
+- Salva quando o fetch retorna valor válido
+- Usa como fallback antes do CFG.FALLBACK hardcoded
+========================================================= */
+const BCB_CACHE_KEY = 'gestao32m_bcb_last';
+const BCB_CACHE_MAX_AGE_DAYS = 30; // acima disso, marca como obsoleto
+
+function salvarBCBCache(selic, ipca) {
+try {
+localStorage.setItem(BCB_CACHE_KEY, JSON.stringify({
+selic: { valor: selic.valor, data: selic.data },
+ipca:  { valor: ipca.valor,  data: ipca.data },
+ts: Date.now()
+}));
+} catch (e) { /* quota cheia ou privacy mode — ignora */ }
+}
+
+function carregarBCBCache() {
+try {
+const raw = localStorage.getItem(BCB_CACHE_KEY);
+if (!raw) return null;
+const parsed = JSON.parse(raw);
+if (!parsed?.selic?.valor || !parsed?.ipca?.valor) return null;
+const idadeDias = Math.floor((Date.now() - parsed.ts) / 86400000);
+return { ...parsed, idadeDias };
+} catch { return null; }
+}
+
+function renderizarBannerBCB(cache) {
+const el = document.getElementById('bcb-banner');
+if (!el) return;
+
+// Online com dado fresco → esconde banner
+if (dadosBCB.valido) {
+el.className = '';
+el.textContent = '';
+return;
+}
+
+// Sem cache e sem conexão → aviso básico
+if (!cache) {
+el.className = 'on obsoleto';
+el.innerHTML = '⚠ <strong>Sem conexão com o BCB</strong> — usando valores de referência fixos (Selic 12%, IPCA 5%). Atualize quando possível.';
+return;
+}
+
+const idade = cache.idadeDias;
+const selicTxt = cache.selic.valor.toFixed(2).replace('.', ',');
+const ipcaTxt  = cache.ipca.valor.toFixed(2).replace('.', ',');
+const dataTxt  = cache.selic.data;
+
+let classe = 'fresco';
+let prefixo = '📡';
+if (idade > BCB_CACHE_MAX_AGE_DAYS) { classe = 'obsoleto'; prefixo = '🚨'; }
+else if (idade >= 7)                { classe = 'atencao';  prefixo = '⚠'; }
+
+const idadeTxt = idade === 0 ? 'hoje' : idade === 1 ? '1 dia' : `${idade} dias`;
+
+el.className = 'on ' + classe;
+el.innerHTML = `${prefixo} <strong>Sem conexão com o BCB</strong> — usando Selic ${selicTxt}% e IPCA ${ipcaTxt}% de ${dataTxt} (${idadeTxt}${idade > BCB_CACHE_MAX_AGE_DAYS ? ' · <u>obsoleto</u>' : ''}).`;
+}
+
 async function atualizarDadosBCB() {
 const dot = document.getElementById('api-dot');
 const label = document.getElementById('api-label');
@@ -644,39 +731,68 @@ const [selic, ipca] = await Promise.all([fetchBCB(432), fetchBCB(13522)]);
 const selicValida = selic && selic.valor >= CFG.VALIDACAO.selicMin && selic.valor <= CFG.VALIDACAO.selicMax;
 const ipcaValido  = ipca  && ipca.valor  >= CFG.VALIDACAO.ipcaMin  && ipca.valor  <= CFG.VALIDACAO.ipcaMax;
 
-if (selic || ipca) {
-dadosBCB.online = true; dadosBCB.valido = selicValida && ipcaValido;
-dot.className = 'w-1.5 h-1.5 rounded-full ' + (dadosBCB.valido ? 'bg-emerald-400' : 'bg-amber-400');
-label.textContent = dadosBCB.valido ? 'BCB online' : 'BCB parcial';
-} else {
-dadosBCB.online = false; dadosBCB.valido = false;
-dot.className = 'w-1.5 h-1.5 rounded-full bg-rose-400';
-label.textContent = 'BCB offline';
-}
-
-if (selicValida) {
+// ---- Caminho feliz: ambos válidos → salva cache ----
+if (selicValida && ipcaValido) {
+dadosBCB.online = true;
+dadosBCB.valido = true;
 dadosBCB.selic = selic.valor; dadosBCB.selicData = selic.data;
+dadosBCB.ipca  = ipca.valor;  dadosBCB.ipcaData  = ipca.data;
+
+dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-400';
+label.textContent = 'BCB online';
+
 document.getElementById('ind-selic').textContent = selic.valor.toFixed(2) + '%';
 document.getElementById('ind-selic-data').textContent = 'em ' + selic.data;
-} else {
-dadosBCB.selic = CFG.FALLBACK.selic;
-document.getElementById('ind-selic').textContent = CFG.FALLBACK.selic.toFixed(2) + '%*';
-document.getElementById('ind-selic-data').textContent = selic ? '*fora da faixa' : '*sem conexão c/ BCB';
-}
-
-if (ipcaValido) {
-dadosBCB.ipca = ipca.valor; dadosBCB.ipcaData = ipca.data;
 document.getElementById('ind-ipca').textContent = ipca.valor.toFixed(2) + '%';
 document.getElementById('ind-ipca-data').textContent = 'em ' + ipca.data;
+
+salvarBCBCache(selic, ipca);
+renderizarBannerBCB(null);
+
+recalcularSelicLiquida();
+recalcularIPCANominal();
+atualizarSimulacao();
+return;
+}
+
+// ---- Falha parcial ou total: tenta cache local antes do fallback fixo ----
+const cache = carregarBCBCache();
+
+if (cache) {
+dadosBCB.online = false;
+dadosBCB.valido = false;
+dadosBCB.selic = cache.selic.valor; dadosBCB.selicData = cache.selic.data;
+dadosBCB.ipca  = cache.ipca.valor;  dadosBCB.ipcaData  = cache.ipca.data;
+
+dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-400';
+label.textContent = 'BCB offline (cache)';
+
+document.getElementById('ind-selic').textContent = cache.selic.valor.toFixed(2) + '%';
+document.getElementById('ind-selic-data').textContent = 'cache de ' + cache.selic.data;
+document.getElementById('ind-ipca').textContent = cache.ipca.valor.toFixed(2) + '%';
+document.getElementById('ind-ipca-data').textContent = 'cache de ' + cache.ipca.data;
+
+renderizarBannerBCB(cache);
 } else {
-dadosBCB.ipca = CFG.FALLBACK.ipca;
+// Nunca houve dado válido → fallback hardcoded (última instância)
+dadosBCB.online = false;
+dadosBCB.valido = false;
+dadosBCB.selic = CFG.FALLBACK.selic; dadosBCB.selicData = null;
+dadosBCB.ipca  = CFG.FALLBACK.ipca;  dadosBCB.ipcaData  = null;
+
+dot.className = 'w-1.5 h-1.5 rounded-full bg-rose-400';
+label.textContent = 'BCB offline';
+
+document.getElementById('ind-selic').textContent = CFG.FALLBACK.selic.toFixed(2) + '%*';
+document.getElementById('ind-selic-data').textContent = '*sem conexão e sem cache';
 document.getElementById('ind-ipca').textContent = CFG.FALLBACK.ipca.toFixed(2) + '%*';
-document.getElementById('ind-ipca-data').textContent = ipca ? '*fora da faixa' : '*sem conexão c/ BCB';
+document.getElementById('ind-ipca-data').textContent = '*sem conexão e sem cache';
+
+renderizarBannerBCB(null);
 }
 
 recalcularSelicLiquida();
 recalcularIPCANominal();
-
 atualizarSimulacao();
 }
 function forcarAtualizacaoAPI() { atualizarDadosBCB(); fecharConfig(); }
@@ -1462,6 +1578,7 @@ atualizarSimulacao();
 }
 function resetarTudo() {
 localStorage.removeItem(CFG.STORAGE_KEY);
+localStorage.removeItem(BCB_CACHE_KEY);
 document.getElementById('input-patrimonio').value = CFG.PATRIMONIO_TOTAL;
 document.getElementById('input-selic-inicial').value = CFG.SELIC_INICIAL;
 document.getElementById('input-ipca-inicial').value = CFG.TESOURO_IPCA;
