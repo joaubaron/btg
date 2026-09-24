@@ -1,14 +1,29 @@
 /* =========================================================
-   Service Worker — Gestão Patrimonial R$ 32M v2.6
+   Service Worker — Gestão Patrimonial R$ 32M v2.11
+   Cache v32: inclui tailwind.css e chart.js locais
 ========================================================= */
-const CACHE = 'gestao32m-v31';   // ← bump força atualização
-const ASSETS = ['./', './index.html'];
+const CACHE = 'gestao32m-v32';   // ← bump força atualização
+const ASSETS = [
+  './',
+  './index.html',
+  './tailwind.css',
+  './chart.js'
+];
 
 // Instalação: pré-cacheia o app
 self.addEventListener('install', e => {
   self.skipWaiting();
   e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(ASSETS).catch(() => {}))
+    caches.open(CACHE).then(c =>
+      // addAll falha por completo se UM asset faltar; usamos add individual
+      // para que um asset ausente (ex.: chart.js ainda não baixado) não
+      // impeça o cache dos demais.
+      Promise.all(
+        ASSETS.map(url =>
+          c.add(url).catch(err => console.warn('[SW] falha ao cachear', url, err))
+        )
+      )
+    )
   );
 });
 
@@ -35,7 +50,8 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // 2. Estáticos locais (index.html, sw.js) → cache-first com fallback
+  // 2. Estáticos locais (index.html, sw.js, tailwind.css, chart.js)
+  //    → cache-first com fallback para rede; se falhar, cai no index.html
   //    Só para GET same-origin (evita cachear POST/opaque responses)
   if (url.origin === self.location.origin && e.request.method === 'GET') {
     e.respondWith(
@@ -53,8 +69,7 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // 3. Todo o resto (CDNs externos: Tailwind, Chart.js, Flaticon)
-  //    → network direto, sem SW interferir.
+  // 3. Todo o resto (CDNs externos eventuais) → network direto, sem SW interferir.
 });
 
 // Permite que a página force a ativação imediata do novo SW
