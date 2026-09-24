@@ -101,7 +101,7 @@ header.sticky{padding-top:calc(0.75rem + env(safe-area-inset-top,0px))}
 </div>
 <div class="min-w-0">
 <h1 class="font-bold text-base sm:text-lg leading-tight text-white truncate">Gestão Patrimonial <span class="text-emerald-400">v2.12</span></h1>
-<p class="text-[11px] text-slate-400 truncate">Base: <span id="header-base">R$ 32.000.000</span> · <span id="header-data">--/--/----</span></p>
+<p class="text-[11px] text-slate-400 truncate">Base: <span id="header-base">R$ 38.000.000</span> · <span id="header-data">--/--/----</span></p>
 </div>
 </div>
 <div class="flex items-center gap-2">
@@ -261,7 +261,7 @@ Parâmetros
 <div class="pt-1 pb-2 border-b border-slate-700/50 space-y-3">
 <div>
 <label class="block text-xs font-medium text-slate-300 mb-1">Patrimônio Total (R$)</label>
-<input type="number" id="input-patrimonio" value="32000000" step="500000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
+<input type="number" id="input-patrimonio" value="38000000" step="500000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
 <span class="text-[10px] text-slate-400 block mt-0.5">Base total da carteira</span>
 </div>
 <div class="grid grid-cols-2 gap-2">
@@ -271,11 +271,11 @@ Parâmetros
 </div>
 <div>
 <label class="block text-xs font-medium text-slate-300 mb-1">Tesouro IPCA+ (R$)</label>
-<input type="number" id="input-ipca-inicial" value="20000000" step="500000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
+<input type="number" id="input-ipca-inicial" value="26000000" step="500000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
 </div>
 </div>
 <div class="flex items-center justify-between text-[10px]">
-<span class="text-slate-400">Soma alocada: <span id="soma-alocada" class="text-slate-200 font-mono">R$ 32.000.000</span></span>
+<span class="text-slate-400">Soma alocada: <span id="soma-alocada" class="text-slate-200 font-mono">R$ 38.000.000</span></span>
 <span id="aviso-soma" class="text-emerald-400">✓ ok</span>
 </div>
 <div id="aviso-soma-sugestao" class="hidden text-[10px] text-amber-300 -mt-1"></div>
@@ -331,7 +331,7 @@ Parâmetros
 <div>
 <label class="block text-xs font-medium text-slate-300 mb-1">Rentabilidade Selic <span class="text-[9px] text-emerald-400">(líquida % a.a.)</span></label>
 <div class="flex items-center gap-2">
-<input type="range" id="input-rent-selic" min="9" max="14" step="0.1" value="10.5" class="w-full accent-sky-500">
+<input type="range" id="input-rent-selic" min="2" max="14" step="0.1" value="10.5" class="w-full accent-sky-500">
 <span id="val-rent-selic" class="text-sm font-bold text-sky-400 w-14 text-right">10.5%</span>
 </div>
 <span class="text-[10px] text-slate-400 block mt-0.5" id="rent-selic-auto-tag">Auto: derivada da Selic BCB, IR e custo BTG</span>
@@ -586,13 +586,13 @@ Timeline Real (estimativa)
 CONFIGURAÇÕES GLOBAIS
 ========================================================= */
 const CFG = {
-PATRIMONIO_TOTAL: 32000000,
-TESOURO_IPCA: 20000000,
+PATRIMONIO_TOTAL: 38000000,
+TESOURO_IPCA: 26000000,
 SELIC_INICIAL: 12000000,
 PAYOUT_PADRAO: 60,
 MESADA_PADRAO: 24000,
 CUPOM_FIXO_AA: 6,
-TETO_TAXA_ANUAL: 250000 * 12 / 32000000,
+TETO_TAXA_ANUAL: 250000 * 12 / 38000000,
 CUSTO_BTG_AA: 0.003,
 IR_FAIXAS: [
 { maxDias: 180, aliq: 0.225 },
@@ -602,11 +602,11 @@ IR_FAIXAS: [
 ],
 VALIDACAO: { selicMin: 6, selicMax: 20, ipcaMin: 1.5, ipcaMax: 15 },
 FALLBACK: { selic: 12.0, ipca: 5.0, rentSelicLiq: 10.5, rentIPCALiq: 8.0 },
-STORAGE_KEY: 'gestao32m_v28',
+STORAGE_KEY: 'gestao32m-v35',
 API_TIMEOUT: 8000,
 DIVISAO: { casa: 0.70, esposa: 0.15, marido: 0.15 },
 LIMITES_RENT: {
-  selicMin: 9, selicMax: 14,
+  selicMin: 2, selicMax: 14,
   ipcaMin: 6, ipcaMax: 14
 },
 PDF: {
