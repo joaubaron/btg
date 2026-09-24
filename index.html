@@ -80,6 +80,10 @@ header.sticky{padding-top:calc(0.75rem + env(safe-area-inset-top,0px))}
 .bg-slate-500{background-color:#64748b!important}
 .bg-sky-400{background-color:#38bdf8!important}
 
+/* Ring/glow dos dots — também inline */
+.ring-2{box-shadow:0 0 0 2px var(--tw-ring-color, transparent)!important}
+.ring-emerald-400\/20{--tw-ring-color:rgba(52,211,153,.2)!important}
+.ring-slate-500\/20{--tw-ring-color:rgba(100,116,139,.2)!important}
 </style>
 </head>
 <body class="pb-12">
@@ -167,6 +171,16 @@ Saúde do Investimento — você está perdendo dinheiro?
 <span class="text-[10px] uppercase tracking-wider text-slate-400 block">Poder de compra em 10 anos</span>
 <span class="text-lg font-bold" id="saude-poder-compra">—</span>
 <span class="text-[10px] text-slate-500 block" id="saude-poder-compra-desc">—</span>
+</div>
+<div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800" title="Taxa de crescimento anual composta, projetada para 24 meses.">
+<span class="text-[10px] uppercase tracking-wider text-slate-400 block">CAGR (projetado 24m)</span>
+<span class="text-lg font-bold" id="saude-cagr">—</span>
+<span class="text-[10px] text-slate-500 block" id="saude-cagr-desc">—</span>
+</div>
+<div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800" title="Ganho total no período de 24 meses, sem anualizar.">
+<span class="text-[10px] uppercase tracking-wider text-slate-400 block">Rent. acumulada (24m)</span>
+<span class="text-lg font-bold" id="saude-rent-acum">—</span>
+<span class="text-[10px] text-slate-500 block" id="saude-rent-acum-desc">—</span>
 </div>
 </div>
 
@@ -668,11 +682,9 @@ return { valor: parseFloat(String(json[0].valor).replace(',', '.')), data: json[
 
 /* =========================================================
 CACHE DO ÚLTIMO DADO BCB VÁLIDO
-- Salva quando o fetch retorna valor válido
-- Usa como fallback antes do CFG.FALLBACK hardcoded
 ========================================================= */
 const BCB_CACHE_KEY = 'gestao32m_bcb_last';
-const BCB_CACHE_MAX_AGE_DAYS = 30; // acima disso, marca como obsoleto
+const BCB_CACHE_MAX_AGE_DAYS = 30;
 
 function salvarBCBCache(selic, ipca) {
 try {
@@ -681,7 +693,7 @@ selic: { valor: selic.valor, data: selic.data },
 ipca:  { valor: ipca.valor,  data: ipca.data },
 ts: Date.now()
 }));
-} catch (e) { /* quota cheia ou privacy mode — ignora */ }
+} catch (e) {}
 }
 
 function carregarBCBCache() {
@@ -699,14 +711,12 @@ function renderizarBannerBCB(cache) {
 const el = document.getElementById('bcb-banner');
 if (!el) return;
 
-// Online com dado fresco → esconde banner
 if (dadosBCB.valido) {
 el.className = '';
 el.textContent = '';
 return;
 }
 
-// Sem cache e sem conexão → aviso básico
 if (!cache) {
 el.className = 'on obsoleto';
 el.innerHTML = '⚠ <strong>Sem conexão com o BCB</strong> — usando valores de referência fixos (Selic 12%, IPCA 5%). Atualize quando possível.';
@@ -739,7 +749,6 @@ const [selic, ipca] = await Promise.all([fetchBCB(432), fetchBCB(13522)]);
 const selicValida = selic && selic.valor >= CFG.VALIDACAO.selicMin && selic.valor <= CFG.VALIDACAO.selicMax;
 const ipcaValido  = ipca  && ipca.valor  >= CFG.VALIDACAO.ipcaMin  && ipca.valor  <= CFG.VALIDACAO.ipcaMax;
 
-// ---- Caminho feliz: ambos válidos → salva cache ----
 if (selicValida && ipcaValido) {
 dadosBCB.online = true;
 dadosBCB.valido = true;
@@ -763,7 +772,6 @@ atualizarSimulacao();
 return;
 }
 
-// ---- Falha parcial ou total: tenta cache local antes do fallback fixo ----
 const cache = carregarBCBCache();
 
 if (cache) {
@@ -782,7 +790,6 @@ document.getElementById('ind-ipca-data').textContent = 'cache de ' + cache.ipca.
 
 renderizarBannerBCB(cache);
 } else {
-// Nunca houve dado válido → fallback hardcoded (última instância)
 dadosBCB.online = false;
 dadosBCB.valido = false;
 dadosBCB.selic = CFG.FALLBACK.selic; dadosBCB.selicData = null;
@@ -1108,7 +1115,27 @@ saldo = saldo * (1 + retornoRealMensal) - saqueMensal;
 anos++;
 }
 const poderCompra10 = patrimonioTotal / Math.pow(1 + ipcaProjetado/100, 10);
-return { rentNominalLiq, retornoReal, taxaRetirada, durabilidade: anos, poderCompra10, saqueAnual };
+
+// ---- CAGR e Rentabilidade Acumulada (projeção 24 meses) ----
+const MESES_PROJ = 24;
+const aliqIRsaude = (estado?.inputs?.irEfetivo > 0) ? (estado.inputs.irEfetivo / 100) : calcularIR(800);
+const cupomSemestral = calcularCupomIPCA(estado?.inputs?.ipcaInicial || CFG.TESOURO_IPCA, aliqIRsaude);
+const rentSelicAnual = (estado?.inputs?.selicInicial || CFG.SELIC_INICIAL) * ((estado?.inputs?.rentSelic || 10.5) / 100);
+const resgateBrutoMensal = saqueMensal * 1.02;
+
+let saldoProj = saldoSelic;
+for (let m = 0; m < MESES_PROJ; m++) {
+  saldoProj += rentSelicAnual / 12;
+  if (m % 6 === 5) saldoProj += cupomSemestral;
+  saldoProj -= resgateBrutoMensal;
+  if (saldoProj < 0) saldoProj = 0;
+}
+const patrimonioFinal = saldoProj + (estado?.inputs?.ipcaInicial || CFG.TESOURO_IPCA);
+const anosProj = MESES_PROJ / 12;
+const rentAcumulada = (patrimonioFinal / patrimonioTotal - 1) * 100;
+const cagr = (Math.pow(patrimonioFinal / patrimonioTotal, 1 / anosProj) - 1) * 100;
+
+return { rentNominalLiq, retornoReal, taxaRetirada, durabilidade: anos, poderCompra10, saqueAnual, cagr, rentAcumulada };
 }
 
 function renderizarSaude(saude, saldoSelic, metaSelic) {
@@ -1137,6 +1164,25 @@ const elPC = document.getElementById('saude-poder-compra');
 elPC.textContent = formatarMoeda(saude.poderCompra10);
 elPC.className = 'text-lg font-bold text-slate-200';
 document.getElementById('saude-poder-compra-desc').textContent = 'Mesmo patrimônio, preços de hoje';
+
+// ---- CAGR ----
+const elCagr = document.getElementById('saude-cagr');
+if (elCagr) {
+  elCagr.textContent = (saude.cagr >= 0 ? '+' : '') + saude.cagr.toFixed(2) + '% a.a.';
+  elCagr.className = 'text-lg font-bold ' + (saude.cagr >= 6 ? 'text-emerald-400' : saude.cagr >= 3 ? 'text-amber-400' : 'text-rose-400');
+  document.getElementById('saude-cagr-desc').textContent =
+    saude.cagr >= 6 ? 'Acima de referências conservadoras' :
+    saude.cagr >= 3 ? 'Moderado' : 'Abaixo do esperado';
+}
+// ---- Rent. acumulada ----
+const elRent = document.getElementById('saude-rent-acum');
+if (elRent) {
+  elRent.textContent = (saude.rentAcumulada >= 0 ? '+' : '') + saude.rentAcumulada.toFixed(2) + '%';
+  elRent.className = 'text-lg font-bold ' + (saude.rentAcumulada >= 12 ? 'text-emerald-400' : saude.rentAcumulada >= 6 ? 'text-amber-400' : 'text-rose-400');
+  document.getElementById('saude-rent-acum-desc').textContent =
+    saude.rentAcumulada >= 12 ? 'Ganho composto em 24 meses' :
+    saude.rentAcumulada >= 6 ? 'Ganho moderado' : 'Ganho baixo';
+}
 
 const preservaPrincipal = saude.retornoReal >= 0 && saude.taxaRetirada <= 5;
 const preservaReal = saude.retornoReal >= 2;
