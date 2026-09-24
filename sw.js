@@ -1,9 +1,13 @@
 /* =========================================================
    Service Worker — Gestão Patrimonial R$ 32M
-   Cache v33: corrige fallback que servia index.html no lugar
-              de chart.js / tailwind.css (quebrava o parser JS)
+   v34: stale-while-revalidate para HTML
+        → sempre serve o HTML do cache (rápido)
+        → busca versão nova em background
+        → próximo reload já pega a versão atualizada
+   v33: corrigiu fallback que servia index.html no lugar
+        de chart.js / tailwind.css (quebrava o parser JS)
 ========================================================= */
-const CACHE = 'gestao32m-v33';   // ← bump força atualização
+const CACHE = 'gestao32m-v34';   // ← bump força atualização
 const ASSETS = [
   './',
   './index.html',
@@ -23,7 +27,7 @@ self.addEventListener('install', e => {
       ASSETS.map(url =>
         cache.add(url).catch(err => {
           console.warn('[SW] falha ao cachear', url, err);
-          throw err; // propaga pro allSettled registrar como rejected
+          throw err;
         })
       )
     );
@@ -50,7 +54,7 @@ self.addEventListener('activate', e => {
 });
 
 /* =========================================================
-   FETCH — estratégia híbrida por origem
+   FETCH — estratégia híbrida por origem/tipo
 ========================================================= */
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
@@ -74,7 +78,37 @@ self.addEventListener('fetch', e => {
     return; // deixa o navegador lidar normalmente
   }
 
-  // 3) Estáticos locais: cache-first com fallback para rede
+  // 3) HTML (navegação ou .html) → STALE-WHILE-REVALIDATE
+  //    Serve do cache imediatamente, atualiza em background.
+  //    Resultado: usuário nunca fica preso na versão antiga.
+  const isHTML =
+    e.request.mode === 'navigate' ||
+    (e.request.headers.get('accept') || '').includes('text/html') ||
+    url.pathname.endsWith('.html') ||
+    url.pathname.endsWith('/btg/') ||
+    url.pathname === '/btg';
+
+  if (isHTML) {
+    e.respondWith((async () => {
+      const cache = await caches.open(CACHE);
+      const cached = await cache.match(e.request);
+
+      // Dispara fetch em background — atualiza o cache pra próxima visita
+      const fetchPromise = fetch(e.request).then(r => {
+        if (r && r.ok) {
+          cache.put(e.request, r.clone()).catch(() => {});
+        }
+        return r;
+      }).catch(() => cached);
+
+      // Retorna o cached na hora; se não tiver, espera o fetch
+      return cached || fetchPromise;
+    })());
+    return;
+  }
+
+  // 4) Demais estáticos (chart.js, tailwind.css) → CACHE-FIRST
+  //    Estes mudam raramente, então cache-first é adequado.
   e.respondWith((async () => {
     const cached = await caches.match(e.request);
     if (cached) return cached;
@@ -83,14 +117,11 @@ self.addEventListener('fetch', e => {
       const response = await fetch(e.request);
       if (response && response.ok) {
         const clone = response.clone();
-        // put em background — não bloqueia a resposta
         caches.open(CACHE).then(c => c.put(e.request, clone)).catch(() => {});
       }
       return response;
     } catch (err) {
-      // ---- FALLBACK ----
-      // Só HTML cai no index.html. JS/CSS/imagem retorna 503 —
-      // senão o navegador tenta parsear HTML como JS e quebra tudo.
+      // Fallback para navegação: devolve index.html do cache
       const isNavigate =
         e.request.mode === 'navigate' ||
         (e.request.headers.get('accept') || '').includes('text/html');
@@ -100,6 +131,7 @@ self.addEventListener('fetch', e => {
         if (html) return html;
       }
 
+      // JS/CSS/imagem: 503 honesto (nunca HTML, que quebraria o parser)
       return new Response('', {
         status: 503,
         statusText: 'Offline'
