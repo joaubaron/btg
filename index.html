@@ -98,7 +98,7 @@ header.sticky{padding-top:calc(0.75rem + env(safe-area-inset-top,0px))}
 </div>
 <div class="flex items-center gap-2">
 <div id="api-status" class="text-[10px] px-2 py-1 rounded-full bg-slate-800 text-slate-400 border border-slate-700 flex items-center gap-1">
-<span class="w-1.5 h-1.5 rounded-full bg-slate-500" id="api-dot"></span>
+<span class="w-2 h-2 rounded-full bg-slate-500 ring-2 ring-emerald-400/20" id="api-dot"></span>
 <span id="api-label">offline</span>
 </div>
 <div id="sw-status" class="hidden text-[10px] px-2 py-1 rounded-full bg-slate-800 text-slate-400 border border-slate-700 items-center gap-1">
@@ -746,7 +746,7 @@ dadosBCB.valido = true;
 dadosBCB.selic = selic.valor; dadosBCB.selicData = selic.data;
 dadosBCB.ipca  = ipca.valor;  dadosBCB.ipcaData  = ipca.data;
 
-dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-400';
+dot.className = 'w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-emerald-400/20';
 label.textContent = 'BCB online';
 
 document.getElementById('ind-selic').textContent = selic.valor.toFixed(2) + '%';
