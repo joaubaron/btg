@@ -36,8 +36,10 @@ document.getElementById('app-manifest').href =
 URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' }));
 </script>
 
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Tailwind local (antes era CDN) -->
+<link rel="stylesheet" href="./tailwind.css">
+<!-- Chart.js local (antes era CDN) -->
+<script src="./chart.js"></script>
 
 <style>
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -646,8 +648,6 @@ document.getElementById('ind-ipca').textContent = CFG.FALLBACK.ipca.toFixed(2) +
 document.getElementById('ind-ipca-data').textContent = ipca ? '*fora da faixa' : '*sem conexão c/ BCB';
 }
 
-// Atualiza os cálculos automáticos (Selic líquida e IPCA nominal) com os novos dados do BCB.
-// Ambos respeitam ajuste manual do usuário (não sobrescrevem silenciosamente).
 recalcularSelicLiquida();
 recalcularIPCANominal();
 
@@ -667,8 +667,6 @@ return 0.15;
 CÁLCULOS
 ========================================================= */
 function calcularCupomIPCA(valorIPCA, aliqIR) {
-// Cupom do Tesouro IPCA+ com juros semestrais: fixo em 6% a.a. (não depende da taxa de compra).
-// Aproximação: valor investido ≈ valor de face; líquido do IR sobre o cupom.
 const cupomSemestral = Math.pow(1 + CFG.CUPOM_FIXO_AA / 100, 0.5) - 1;
 return valorIPCA * cupomSemestral * (1 - (aliqIR || 0));
 }
@@ -682,7 +680,7 @@ return proxAnoFev;
 }
 
 /* =========================================================
-TAXA REAL IPCA+ → NOMINAL (novo)
+TAXA REAL IPCA+ → NOMINAL
 ========================================================= */
 function recalcularIPCANominal(forcarPorAcaoDoUsuario) {
 const realEl = document.getElementById('input-taxa-real-ipca');
@@ -690,10 +688,6 @@ const nominalEl = document.getElementById('input-rent-ipca');
 const calcEl = document.getElementById('ipca-nominal-calc');
 const valEl = document.getElementById('val-taxa-real-ipca');
 if (!realEl || !nominalEl) return;
-// Se o usuário ajustou a rentabilidade IPCA+ manualmente (arrastando o slider dela
-// diretamente), uma atualização automática (ex.: chegada de novo dado do BCB) não
-// deve sobrescrever silenciosamente a escolha dele. Só recalcula de fato quando o
-// próprio slider "Taxa real" foi mexido (ação explícita do usuário).
 if (!forcarPorAcaoDoUsuario && estado?.inputs?.rentIPCAManual) return;
 const real = (parseFloat(realEl.value) || 6.0) / 100;
 const ipca = (dadosBCB.ipca || CFG.FALLBACK.ipca) / 100;
@@ -701,9 +695,7 @@ const bruto = ((1 + real) * (1 + ipca) - 1) * 100;
 const irInput = parseFloat(document.getElementById('input-ir-efetivo')?.value);
 const aliqIR = (irInput > 0) ? irInput / 100 : calcularIR(800);
 const custoBTG = parseFloat(document.getElementById('input-custo-btg')?.value) || 0.3;
-// Líquido: mesmo tratamento da Selic (IR sobre o rendimento nominal e custo BTG)
 let nominal = bruto * (1 - aliqIR) - custoBTG;
-// Respeita os limites do slider (6 a 14)
 nominal = Math.min(14, Math.max(6, nominal));
 nominalEl.value = nominal.toFixed(1);
 document.getElementById('val-rent-ipca').textContent = nominal.toFixed(1) + '%';
@@ -713,9 +705,7 @@ if (forcarPorAcaoDoUsuario) { if (!estado) estado = { inputs: {} }; estado.input
 }
 
 /* =========================================================
-RENTABILIDADE SELIC LÍQUIDA — AUTOMÁTICA (novo)
-Deriva a rentabilidade líquida da Selic a partir da Selic do BCB,
-do IR efetivo e do custo BTG, em vez de depender de ajuste manual.
+RENTABILIDADE SELIC LÍQUIDA — AUTOMÁTICA
 ========================================================= */
 function recalcularSelicLiquida(forcarPorAcaoDoUsuario) {
 const selicEl = document.getElementById('input-rent-selic');
@@ -758,7 +748,6 @@ function calcularSaqueMensal(inputs, rendTotalLiq) {
 if (inputs.saqueSelect === 'auto') return Math.max(0, rendTotalLiq * (inputs.payout / 100) / 12);
 return inputs.saqueSelect === 'custom' ? inputs.saqueCustom : parseFloat(inputs.saqueSelect);
 }
-// Saque anual que preserva o poder de compra do patrimônio (retorno real líquido × patrimônio)
 function calcularPreservacaoReal(patrimonioTotal, rendTotalLiq) {
 const ipca = (dadosBCB.ipca || CFG.FALLBACK.ipca) / 100;
 const rendNominal = patrimonioTotal > 0 ? rendTotalLiq / patrimonioTotal : 0;
@@ -887,9 +876,6 @@ elSug.classList.add('hidden');
 } else {
 const diff = total - soma;
 elAviso.textContent = '⚠ falta ' + formatarMoeda(diff); elAviso.className = 'text-amber-400';
-// Sugestão de onde colocar a diferença: a Reserva Selic tem prioridade
-// enquanto estiver abaixo da meta definida (regra do planejamento); só depois
-// disso o excedente costuma ir para o Tesouro IPCA+.
 const metaSelic = parseFloat(document.getElementById('input-meta-selic')?.value) || 12000000;
 if (selic < metaSelic) {
 elSug.textContent = `Sugestão: colocar em Selic — reserva ainda ${formatarMoeda(metaSelic - selic)} abaixo da meta.`;
@@ -1158,9 +1144,6 @@ const patAcao = estado?.inputs?.patrimonioTotal || CFG.PATRIMONIO_TOTAL;
 const presAcao = calcularPreservacaoReal(patAcao, rendTotalLiq);
 const consomeReal = saqueMensal * 12 > presAcao.saqueMaxRealAnual + 1;
 
-// Fluxo negativo (o rendimento não cobre o saque, ou seja, está consumindo o
-// principal) é sempre o alerta mais grave — precisa aparecer mesmo quando a
-// reserva Selic também está abaixo da meta, e não pode ser escondido por ela.
 if (sobraAnual < 0) {
 banner.className = 'card-glass rounded-2xl p-5 sm:p-6 shadow-xl border-l-4 border-red-500 bg-red-950/20';
 title.textContent = '✗ REDUZIR SAQUE MENSAL';
@@ -1428,8 +1411,6 @@ if (!dbEl.value) dbEl.value = new Date().toISOString().slice(0,10);
 const salvo = carregarEstado();
 if (salvo) {
 aplicarInputs(salvo);
-// Restaura se Selic/IPCA estavam em modo manual, senão a próxima atualização
-// automática (BCB) sobrescreveria silenciosamente o que o usuário tinha ajustado.
 estado = { inputs: { rentSelicManual: !!salvo.rentSelicManual, rentIPCAManual: !!salvo.rentIPCAManual } };
 if (salvo.rentSelicManual) { const t = document.getElementById('rent-selic-auto-tag'); if (t) t.textContent = 'Manual (ajustado por você)'; }
 }
