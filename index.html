@@ -3,10 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Gestão Patrimonial v2.6</title>
+<title>Gestão Patrimonial v2.7</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
 
 <meta name="theme-color" content="#0f172a">
+<meta name="color-scheme" content="dark">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -21,13 +22,14 @@ short_name: "Gestão",
 start_url: base,
 scope: base,
 display: "standalone",
+orientation: "portrait-primary",
 background_color: "#0f172a",
 theme_color: "#0f172a",
 icons: [{
-src: "https://cdn-icons-png.flaticon.com/512/2489/2489756.png",
+src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230f172a'/%3E%3Ctext x='50' y='68' font-size='55' text-anchor='middle'%3E%F0%9F%92%B0%3C/text%3E%3C/svg%3E",
 sizes: "512x512",
-type: "image/png",
-purpose: "any"
+type: "image/svg+xml",
+purpose: "any maskable"
 }]
 };
 document.getElementById('app-manifest').href =
@@ -38,7 +40,9 @@ URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: 'application/ma
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-body{background:#0f172a;color:#f8fafc;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px);overflow-x:hidden}
+body{background:#0f172a;color:#f8fafc;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;overflow-x:hidden}
 .card-glass{background:rgba(30,41,59,.7);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.1)}
 .badge-live{animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
@@ -46,6 +50,11 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
 input[type=number]{-moz-appearance:textfield}
 .btn-fix{transition:all .2s ease}
 .btn-fix:hover{transform:translateY(-1px)}
+header.sticky{padding-top:calc(0.75rem + env(safe-area-inset-top,0px))}
+@media (max-width:380px){
+  #action-banner .flex-col{gap:.75rem}
+  .btn-fix{font-size:11px;padding:.5rem .6rem}
+}
 </style>
 </head>
 <body class="pb-12">
@@ -58,7 +67,7 @@ input[type=number]{-moz-appearance:textfield}
 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
 </div>
 <div class="min-w-0">
-<h1 class="font-bold text-base sm:text-lg leading-tight text-white truncate">Gestão Patrimonial <span class="text-emerald-400">v2.6</span></h1>
+<h1 class="font-bold text-base sm:text-lg leading-tight text-white truncate">Gestão Patrimonial <span class="text-emerald-400">v2.7</span></h1>
 <p class="text-[11px] text-slate-400 truncate">Base: <span id="header-base">R$ 32.000.000</span> · <span id="header-data">--/--/----</span></p>
 </div>
 </div>
@@ -157,10 +166,10 @@ Saúde do Investimento — você está perdendo dinheiro?
 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4" id="ajuste-opcoes"></div>
 <div class="mt-4 pt-3 border-t border-amber-500/20">
 <p class="text-[11px] text-slate-400 mb-2">⚙️ Ajuste manual direto:</p>
-<div class="flex flex-wrap gap-2">
-<button onclick="aplicarFix('rendimento')" class="btn-fix text-[11px] px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-lg font-medium">Usar rendimento padrão do PDF (Selic 10,5% + IPCA+ 8,0%)</button>
-<button onclick="aplicarFix('saque')" class="btn-fix text-[11px] px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium">Reduzir saque para o máximo sustentável</button>
-<button onclick="aplicarFix('meta')" class="btn-fix text-[11px] px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-medium">Reduzir meta Selic (emergência)</button>
+<div class="flex flex-col sm:flex-row sm:flex-wrap gap-2">
+<button onclick="aplicarFix('rendimento')" class="btn-fix w-full sm:w-auto text-[11px] px-3 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-lg font-medium">Usar rendimento padrão do plano (Selic 10,5% + IPCA+ 8,0%)</button>
+<button onclick="aplicarFix('saque')" class="btn-fix w-full sm:w-auto text-[11px] px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium">Reduzir saque para o máximo sustentável</button>
+<button onclick="aplicarFix('meta')" class="btn-fix w-full sm:w-auto text-[11px] px-3 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-medium">Reduzir meta Selic (emergência)</button>
 </div>
 </div>
 </div>
@@ -240,7 +249,7 @@ Parâmetros
 <input type="range" id="input-rent-selic" min="9" max="14" step="0.1" value="10.5" class="w-full accent-sky-500">
 <span id="val-rent-selic" class="text-sm font-bold text-sky-400 w-14 text-right">10.5%</span>
 </div>
-<span class="text-[10px] text-slate-400 block mt-0.5">PDF: Selic 11–13% bruto → ~10,5% líquida</span>
+<span class="text-[10px] text-slate-400 block mt-0.5" id="rent-selic-auto-tag">Auto: derivada da Selic BCB, IR e custo BTG</span>
 </div>
 <div>
 <label class="block text-xs font-medium text-slate-300 mb-1">Taxa real IPCA+ <span class="text-[9px] text-purple-400">(% real a.a. — ex.: IPCA+6,0%)</span></label>
@@ -272,7 +281,7 @@ Parâmetros
 <div>
 <label class="block text-xs font-medium text-slate-300 mb-1">Meta Reserva Selic <span class="text-[9px] text-amber-400 font-normal">(a definir com BTG)</span></label>
 <input type="number" id="input-meta-selic" value="12000000" step="500000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
-<span id="meta-aviso" class="text-[10px] text-amber-400 block mt-0.5">⚠ PDF diz: meta será definida com o BTG</span>
+<span id="meta-aviso" class="text-[10px] text-amber-400 block mt-0.5">⚠ Meta final a confirmar com o BTG</span>
 </div>
 <div class="pt-2 border-t border-slate-700/50">
 <label class="block text-xs font-medium text-amber-400 mb-1">Saque Extraordinário (pontual)</label>
@@ -286,7 +295,7 @@ Parâmetros
 <input type="number" id="input-extra-outros" value="0" step="50000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white">
 </div>
 </div>
-<button onclick="carregarExemploPDF()" class="w-full text-xs py-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-lg hover:bg-amber-500/20 transition">Carregar Exemplo PDF (R$ 3,5Mi)</button>
+<button onclick="carregarExemploPDF()" class="w-full text-xs py-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-lg hover:bg-amber-500/20 transition">Carregar exemplo de saque extraordinário (R$ 3,5Mi)</button>
 </div>
 <div class="pt-2 border-t border-slate-700/50">
 <label class="block text-xs font-medium text-slate-300 mb-1">Data-base da simulação</label>
@@ -366,7 +375,7 @@ Projeção 24 meses (Selic + Cupons − Saques)
 
 <!-- ============ PREMISSAS DO PDF ============ -->
 <section class="card-glass rounded-2xl p-5 border-l-4 border-amber-500/50">
-<h3 class="font-bold text-slate-200 text-sm mb-2">📄 Premissas do PDF "Fluxo R$ 32 milhões" (referência oficial)</h3>
+<h3 class="font-bold text-slate-200 text-sm mb-2">📄 Premissas do Planejamento (referência)</h3>
 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-[11px]">
 <div><span class="text-slate-400 block">Selic</span><span class="text-sky-300 font-bold">11% – 13% a.a.</span></div>
 <div><span class="text-slate-400 block">IPCA</span><span class="text-amber-300 font-bold">4% – 6% a.a.</span></div>
@@ -381,7 +390,7 @@ Projeção 24 meses (Selic + Cupons − Saques)
 <div class="card-glass rounded-2xl p-5 space-y-3">
 <h3 class="font-bold text-slate-200 text-base border-b border-slate-700 pb-2 flex items-center gap-2">
 <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-Regras (Manual)
+Regras do Planejamento
 </h3>
 <ul class="space-y-2.5 text-xs text-slate-300">
 <li class="flex items-start gap-2"><span class="p-1 bg-indigo-500/20 text-indigo-400 rounded mt-0.5 shrink-0">1</span><span><strong>Teto R$ 250k:</strong> condicionado ao desempenho. Se não cobrir, reduzir <u>antes de consumir principal</u>.</span></li>
@@ -419,7 +428,7 @@ Timeline Real (estimativa)
 <div class="flex justify-between items-center p-2 rounded bg-slate-900/80 border border-slate-800"><span>D+1 a D+5 · Abertura/procuração</span><span class="text-slate-400">documentos</span></div>
 <div class="flex justify-between items-center p-2 rounded bg-slate-900/80 border border-slate-800"><span>D+5 a D+10 · Aporte/investimento</span><span class="text-slate-400">liquidação</span></div>
 <div class="flex justify-between items-center p-2 rounded bg-emerald-950/40 border border-emerald-800/40"><span>D+10 a D+15 · 1º saque disponível</span><span class="text-emerald-400">✓</span></div>
-<p class="text-[10px] text-slate-500 pt-1">⚠ Estimativa. O PDF deixa a Pergunta 2 em aberto — confirmar com BTG.</p>
+<p class="text-[10px] text-slate-500 pt-1">⚠ Estimativa. Prazo real ainda em aberto — confirmar com o BTG.</p>
 </div>
 </div>
 </section>
@@ -442,8 +451,8 @@ Timeline Real (estimativa)
 </div>
 <div class="text-[10px] text-slate-500 border-t border-slate-700 pt-3 space-y-1">
 <p><strong>API BCB:</strong> Selic s.432 · IPCA s.13522 (12m acum.) — via fetch</p>
-<p><strong>Premissas PDF:</strong> Selic 11–13% · IPCA 4–6% · Rent. líq. 8,5–10%</p>
-<p><strong>Defaults:</strong> Selic 10,5% · IPCA+ 8,0% (dentro do PDF)</p>
+<p><strong>Premissas do plano:</strong> Selic 11–13% · IPCA 4–6% · Rent. líq. 8,5–10%</p>
+<p><strong>Defaults:</strong> Selic 10,5% · IPCA+ 8,0% (dentro da faixa planejada)</p>
 <p><strong>IR:</strong> incide apenas sobre rendimento do resgate</p>
 </div>
 <button onclick="fecharConfig()" class="w-full p-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm">Fechar</button>
@@ -601,7 +610,9 @@ document.getElementById('ind-ipca').textContent = CFG.FALLBACK.ipca.toFixed(2) +
 document.getElementById('ind-ipca-data').textContent = ipca ? '*fora da faixa' : '*sem conexão c/ BCB';
 }
 
-// Atualiza o cálculo do IPCA nominal a partir da taxa real
+// Atualiza os cálculos automáticos (Selic líquida e IPCA nominal) com os novos dados do BCB.
+// Ambos respeitam ajuste manual do usuário (não sobrescrevem silenciosamente).
+recalcularSelicLiquida();
 recalcularIPCANominal();
 
 atualizarSimulacao();
@@ -635,12 +646,17 @@ return proxAnoFev;
 /* =========================================================
 TAXA REAL IPCA+ → NOMINAL (novo)
 ========================================================= */
-function recalcularIPCANominal() {
+function recalcularIPCANominal(forcarPorAcaoDoUsuario) {
 const realEl = document.getElementById('input-taxa-real-ipca');
 const nominalEl = document.getElementById('input-rent-ipca');
 const calcEl = document.getElementById('ipca-nominal-calc');
 const valEl = document.getElementById('val-taxa-real-ipca');
 if (!realEl || !nominalEl) return;
+// Se o usuário ajustou a rentabilidade IPCA+ manualmente (arrastando o slider dela
+// diretamente), uma atualização automática (ex.: chegada de novo dado do BCB) não
+// deve sobrescrever silenciosamente a escolha dele. Só recalcula de fato quando o
+// próprio slider "Taxa real" foi mexido (ação explícita do usuário).
+if (!forcarPorAcaoDoUsuario && estado?.inputs?.rentIPCAManual) return;
 const real = (parseFloat(realEl.value) || 6.0) / 100;
 const ipca = (dadosBCB.ipca || CFG.FALLBACK.ipca) / 100;
 let nominal = ((1 + real) * (1 + ipca) - 1) * 100;
@@ -650,6 +666,32 @@ nominalEl.value = nominal.toFixed(1);
 document.getElementById('val-rent-ipca').textContent = nominal.toFixed(1) + '%';
 if (calcEl) calcEl.textContent = nominal.toFixed(2) + '%';
 if (valEl) valEl.textContent = (parseFloat(realEl.value) || 6.0).toFixed(1) + '%';
+if (forcarPorAcaoDoUsuario) { if (!estado) estado = { inputs: {} }; estado.inputs.rentIPCAManual = false; }
+}
+
+/* =========================================================
+RENTABILIDADE SELIC LÍQUIDA — AUTOMÁTICA (novo)
+Deriva a rentabilidade líquida da Selic a partir da Selic do BCB,
+do IR efetivo e do custo BTG, em vez de depender de ajuste manual.
+========================================================= */
+function recalcularSelicLiquida(forcarPorAcaoDoUsuario) {
+const selicEl = document.getElementById('input-rent-selic');
+const tagEl = document.getElementById('rent-selic-auto-tag');
+if (!selicEl) return;
+if (!forcarPorAcaoDoUsuario && estado?.inputs?.rentSelicManual) {
+if (tagEl) tagEl.textContent = 'Manual (ajustado por você)';
+return;
+}
+const selicBrutaBCB = dadosBCB.selic || CFG.FALLBACK.selic;
+const irInput = parseFloat(document.getElementById('input-ir-efetivo')?.value);
+const aliqIR = (irInput > 0) ? irInput / 100 : calcularIR(800);
+const custoBTG = parseFloat(document.getElementById('input-custo-btg')?.value) || 0.3;
+let liquida = selicBrutaBCB * (1 - aliqIR) - custoBTG;
+liquida = Math.min(14, Math.max(9, liquida));
+selicEl.value = liquida.toFixed(1);
+document.getElementById('val-rent-selic').textContent = liquida.toFixed(1) + '%';
+if (tagEl) tagEl.textContent = 'Auto: derivada da Selic BCB, IR e custo BTG';
+if (forcarPorAcaoDoUsuario) { if (!estado) estado = { inputs: {} }; estado.inputs.rentSelicManual = false; }
 }
 
 /* =========================================================
@@ -960,7 +1002,24 @@ const rec = document.getElementById('rec-saque');
 
 document.getElementById('painel-ajuste').classList.add('hidden');
 
-if (saldoSelic < metaSelic) {
+const reservaAbaixo = saldoSelic < metaSelic;
+
+// Fluxo negativo (o rendimento não cobre o saque, ou seja, está consumindo o
+// principal) é sempre o alerta mais grave — precisa aparecer mesmo quando a
+// reserva Selic também está abaixo da meta, e não pode ser escondido por ela.
+if (sobraAnual < 0) {
+banner.className = 'card-glass rounded-2xl p-5 sm:p-6 shadow-xl border-l-4 border-red-500 bg-red-950/20';
+title.textContent = '✗ REDUZIR SAQUE MENSAL';
+title.className = 'text-xl sm:text-2xl font-bold text-red-400 mt-1';
+const saqueMax = rendTotalLiq / 12;
+desc.innerHTML = `Rendimento líquido <strong>${formatarMoeda(rendTotalLiq)}/ano</strong> não cobre saques de <strong>${formatarMoeda(saqueMensal*12)}/ano</strong>. <u>Reduzir antes de consumir principal.</u>`
++ (reservaAbaixo ? ` Além disso, a reserva Selic também está <strong>${formatarMoeda(metaSelic - saldoSelic)}</strong> abaixo da meta.` : '');
+rec.textContent = 'Máx: ' + formatarMoeda(saqueMax);
+rec.className = 'text-base sm:text-lg font-bold text-red-400';
+mostrarPainelAjuste('reduzir', { saqueMax, saqueMensal, sobraAnual, rendTotalLiq });
+return;
+}
+if (reservaAbaixo) {
 const def = metaSelic - saldoSelic;
 banner.className = 'card-glass rounded-2xl p-5 sm:p-6 shadow-xl border-l-4 border-amber-500 bg-amber-950/20';
 title.textContent = '⚠ RECOMPOR RESERVA SELIC';
@@ -971,22 +1030,11 @@ rec.className = 'text-base sm:text-lg font-bold text-amber-400';
 mostrarPainelAjuste('selic_abaixo', { def, saldoSelic, metaSelic, saqueMensal, sobraAnual, rendTotalLiq });
 return;
 }
-if (sobraAnual < 0) {
-banner.className = 'card-glass rounded-2xl p-5 sm:p-6 shadow-xl border-l-4 border-red-500 bg-red-950/20';
-title.textContent = '✗ REDUZIR SAQUE MENSAL';
-title.className = 'text-xl sm:text-2xl font-bold text-red-400 mt-1';
-const saqueMax = rendTotalLiq / 12;
-desc.innerHTML = `Rendimento líquido <strong>${formatarMoeda(rendTotalLiq)}/ano</strong> não cobre saques de <strong>${formatarMoeda(saqueMensal*12)}/ano</strong>. <u>Reduzir antes de consumir principal.</u>`;
-rec.textContent = 'Máx: ' + formatarMoeda(saqueMax);
-rec.className = 'text-base sm:text-lg font-bold text-red-400';
-mostrarPainelAjuste('reduzir', { saqueMax, saqueMensal, sobraAnual, rendTotalLiq });
-return;
-}
 if (saqueMensal >= 250000 && sobraAnual >= 0) {
 banner.className = 'card-glass rounded-2xl p-5 sm:p-6 shadow-xl border-l-4 border-indigo-500 bg-indigo-950/20';
 title.textContent = '✓ TETO LIBERADO (R$ 250k/mês) — não garantido';
 title.className = 'text-xl sm:text-2xl font-bold text-indigo-300 mt-1';
-desc.textContent = 'Carteira sustenta o teto hoje. PDF: não é garantido em todos os cenários — monitorar revisão anual BTG.';
+desc.textContent = 'Carteira sustenta o teto hoje, mas não é garantido em todos os cenários — monitorar revisão anual BTG.';
 rec.textContent = 'Aprovado R$ 250.000';
 rec.className = 'text-base sm:text-lg font-bold text-indigo-400';
 return;
@@ -1022,7 +1070,7 @@ opcoes.innerHTML = `
 <button onclick="aplicarFix('rendimento')" class="btn-fix text-left p-3 bg-sky-900/30 hover:bg-sky-900/50 border border-sky-700/50 rounded-xl">
 <div class="flex items-start gap-2"><span class="text-sky-400 text-lg">⚙</span>
 <div><div class="text-xs font-bold text-sky-300">Ajustar rendimento</div>
-<div class="text-[10px] text-slate-400 mt-0.5">Padrão do PDF (10,5% + 8,0%)</div></div></div>
+<div class="text-[10px] text-slate-400 mt-0.5">Padrão do plano (10,5% + 8,0%)</div></div></div>
 </button>
 <button onclick="aplicarFix('meta')" class="btn-fix text-left p-3 bg-purple-900/30 hover:bg-purple-900/50 border border-purple-700/50 rounded-xl">
 <div class="flex items-start gap-2"><span class="text-purple-400 text-lg">⚡</span>
@@ -1045,7 +1093,7 @@ opcoes.innerHTML = `
 <button onclick="aplicarFix('rendimento')" class="btn-fix text-left p-3 bg-sky-900/30 hover:bg-sky-900/50 border border-sky-700/50 rounded-xl">
 <div class="flex items-start gap-2"><span class="text-sky-400 text-lg">⚙</span>
 <div><div class="text-xs font-bold text-sky-300">Ajustar rendimento</div>
-<div class="text-[10px] text-slate-400 mt-0.5">Padrão PDF (10,5% + 8,0%)</div></div></div>
+<div class="text-[10px] text-slate-400 mt-0.5">Padrão do plano (10,5% + 8,0%)</div></div></div>
 </button>`;
 }
 }
@@ -1062,11 +1110,9 @@ document.getElementById('input-saque-custom').value = Math.round(valor);
 atualizarSimulacao(); return;
 }
 if (tipo === 'rendimento') {
-estado.inputs.rentSelicManual = true; estado.inputs.rentIPCAManual = true;
-document.getElementById('input-rent-selic').value = 10.5;
-document.getElementById('input-rent-ipca').value = 8.0;
-document.getElementById('val-rent-selic').textContent = '10.5%';
-document.getElementById('val-rent-ipca').textContent = '8.0%';
+estado.inputs.rentSelicManual = false; estado.inputs.rentIPCAManual = false;
+recalcularSelicLiquida(true);
+recalcularIPCANominal(true);
 atualizarSimulacao(); return;
 }
 if (tipo === 'saque') {
@@ -1199,8 +1245,8 @@ document.getElementById('input-extra-imovel').value = 0;
 document.getElementById('input-extra-outros').value = 0;
 document.getElementById('input-data-base').value = new Date().toISOString().slice(0,10);
 estado = { inputs: { rentSelicManual: false, rentIPCAManual: false } };
-document.getElementById('val-rent-selic').textContent = '10.5%';
-document.getElementById('val-rent-ipca').textContent = '8.0%';
+recalcularSelicLiquida(true);
+recalcularIPCANominal(true);
 atualizarSomaAlocada(); atualizarSimulacao();
 }
 function abrirConfig() { document.getElementById('modal-config').classList.remove('hidden'); }
@@ -1214,7 +1260,13 @@ const dbEl = document.getElementById('input-data-base');
 if (!dbEl.value) dbEl.value = new Date().toISOString().slice(0,10);
 
 const salvo = carregarEstado();
-if (salvo) aplicarInputs(salvo);
+if (salvo) {
+aplicarInputs(salvo);
+// Restaura se Selic/IPCA estavam em modo manual, senão a próxima atualização
+// automática (BCB) sobrescreveria silenciosamente o que o usuário tinha ajustado.
+estado = { inputs: { rentSelicManual: !!salvo.rentSelicManual, rentIPCAManual: !!salvo.rentIPCAManual } };
+if (salvo.rentSelicManual) { const t = document.getElementById('rent-selic-auto-tag'); if (t) t.textContent = 'Manual (ajustado por você)'; }
+}
 
 document.getElementById('select-saque').addEventListener('change', e => {
 document.getElementById('div-saque-custom').classList.toggle('hidden', e.target.value !== 'custom');
@@ -1227,9 +1279,14 @@ atualizarSimulacao();
 'input-extra-imovel','input-extra-outros','input-data-base'].forEach(id => {
 document.getElementById(id).addEventListener('input', () => {
 if (!estado) estado = { inputs: {} };
-if (id === 'input-rent-selic') estado.inputs.rentSelicManual = true;
+if (id === 'input-rent-selic') {
+estado.inputs.rentSelicManual = true;
+const tagEl = document.getElementById('rent-selic-auto-tag');
+if (tagEl) tagEl.textContent = 'Manual (ajustado por você)';
+}
 if (id === 'input-rent-ipca') estado.inputs.rentIPCAManual = true;
-if (id === 'input-taxa-real-ipca') recalcularIPCANominal();
+if (id === 'input-taxa-real-ipca') recalcularIPCANominal(true);
+if (id === 'input-custo-btg' || id === 'input-ir-efetivo') recalcularSelicLiquida();
 document.getElementById('val-rent-selic').textContent = parseFloat(document.getElementById('input-rent-selic').value).toFixed(1) + '%';
 document.getElementById('val-rent-ipca').textContent = parseFloat(document.getElementById('input-rent-ipca').value).toFixed(1) + '%';
 if (id === 'input-patrimonio' || id === 'input-selic-inicial' || id === 'input-ipca-inicial') {
@@ -1239,6 +1296,8 @@ atualizarSimulacao();
 });
 });
 
+recalcularSelicLiquida();
+recalcularIPCANominal();
 initCharts();
 atualizarSimulacao();
 registrarSW();
