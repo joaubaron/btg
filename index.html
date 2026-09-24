@@ -73,6 +73,10 @@ header.sticky{padding-top:calc(0.75rem + env(safe-area-inset-top,0px))}
 #bcb-banner.obsoleto{background:rgba(244,63,94,.12);border-color:rgba(244,63,94,.4);color:#fda4af}
 #bcb-banner strong{font-weight:700}
 
+/* Aviso de truncamento de rentabilidade */
+.auto-tag-normal{color:#94a3b8}
+.auto-tag-truncado{color:#fbbf24;font-weight:600}
+
 /* Cores dos dots de status — inline para não depender do build do Tailwind */
 .bg-emerald-400{background-color:#34d399!important}
 .bg-amber-400{background-color:#fbbf24!important}
@@ -346,7 +350,7 @@ Parâmetros
 <input type="range" id="input-rent-ipca" min="6" max="14" step="0.1" value="8.0" class="w-full accent-purple-500">
 <span id="val-rent-ipca" class="text-sm font-bold text-purple-400 w-14 text-right">8.0%</span>
 </div>
-<span class="text-[10px] text-slate-400 block mt-0.5">Calculado: taxa real + IPCA do BCB, menos IR e custo BTG</span>
+<span class="text-[10px] text-slate-400 block mt-0.5" id="rent-ipca-auto-tag">Calculado: taxa real + IPCA do BCB, menos IR e custo BTG</span>
 </div>
 <div class="grid grid-cols-2 gap-2">
 <div>
@@ -601,6 +605,10 @@ FALLBACK: { selic: 12.0, ipca: 5.0, rentSelicLiq: 10.5, rentIPCALiq: 8.0 },
 STORAGE_KEY: 'gestao32m_v27',
 API_TIMEOUT: 8000,
 DIVISAO: { casa: 0.70, esposa: 0.15, marido: 0.15 },
+LIMITES_RENT: {
+  selicMin: 9, selicMax: 14,
+  ipcaMin: 6, ipcaMax: 14
+},
 PDF: {
 rentLiqMin: 8.5, rentLiqMax: 10.0,
 rendMin: 2720000, rendMax: 3200000,
@@ -612,6 +620,31 @@ let chartAlocacao = null;
 let chartProjecao = null;
 let estado = null;
 let dadosBCB = { selic: null, ipca: null, selicData: null, ipcaData: null, online: false, valido: false };
+
+/* =========================================================
+HELPERS DE PARSE — distinguem "vazio/NaN" de "0 válido"
+========================================================= */
+function parseValor(id) {
+  const el = document.getElementById(id);
+  if (!el) return NaN;
+  const raw = el.value;
+  if (raw === '' || raw === null || raw === undefined) return NaN;
+  const v = parseFloat(raw);
+  return isNaN(v) ? NaN : v;
+}
+
+function numOr(id, def) {
+  const v = parseValor(id);
+  return isNaN(v) ? def : v;
+}
+
+function numInput(id, def, min, max) {
+  let v = parseValor(id);
+  if (isNaN(v)) v = def;
+  if (min !== undefined) v = Math.max(min, v);
+  if (max !== undefined) v = Math.min(max, v);
+  return v;
+}
 
 /* =========================================================
 PERSISTÊNCIA
@@ -877,51 +910,80 @@ return proxAnoFev;
 }
 
 /* =========================================================
-TAXA REAL IPCA+ → NOMINAL
-========================================================= */
-function recalcularIPCANominal(forcarPorAcaoDoUsuario) {
-const realEl = document.getElementById('input-taxa-real-ipca');
-const nominalEl = document.getElementById('input-rent-ipca');
-const calcEl = document.getElementById('ipca-nominal-calc');
-const valEl = document.getElementById('val-taxa-real-ipca');
-if (!realEl || !nominalEl) return;
-if (!forcarPorAcaoDoUsuario && estado?.inputs?.rentIPCAManual) return;
-const real = (parseFloat(realEl.value) || 6.0) / 100;
-const ipca = (dadosBCB.ipca || CFG.FALLBACK.ipca) / 100;
-const bruto = ((1 + real) * (1 + ipca) - 1) * 100;
-const irInput = parseFloat(document.getElementById('input-ir-efetivo')?.value);
-const aliqIR = (irInput > 0) ? irInput / 100 : calcularIR(800);
-const custoBTG = parseFloat(document.getElementById('input-custo-btg')?.value) || 0.3;
-let nominal = bruto * (1 - aliqIR) - custoBTG;
-nominal = Math.min(14, Math.max(6, nominal));
-nominalEl.value = nominal.toFixed(1);
-document.getElementById('val-rent-ipca').textContent = nominal.toFixed(1) + '%';
-if (calcEl) calcEl.textContent = bruto.toFixed(2) + '%';
-if (valEl) valEl.textContent = (parseFloat(realEl.value) || 6.0).toFixed(1) + '%';
-if (forcarPorAcaoDoUsuario) { if (!estado) estado = { inputs: {} }; estado.inputs.rentIPCAManual = false; }
-}
-
-/* =========================================================
 RENTABILIDADE SELIC LÍQUIDA — AUTOMÁTICA
+CORRIGIDO: avisa quando o valor calculado sai da faixa do slider
 ========================================================= */
 function recalcularSelicLiquida(forcarPorAcaoDoUsuario) {
 const selicEl = document.getElementById('input-rent-selic');
 const tagEl = document.getElementById('rent-selic-auto-tag');
 if (!selicEl) return;
 if (!forcarPorAcaoDoUsuario && estado?.inputs?.rentSelicManual) {
-if (tagEl) tagEl.textContent = 'Manual (ajustado por você)';
+if (tagEl) { tagEl.textContent = 'Manual (ajustado por você)'; tagEl.className = 'text-[10px] block mt-0.5 auto-tag-normal'; }
 return;
 }
 const selicBrutaBCB = dadosBCB.selic || CFG.FALLBACK.selic;
 const irInput = parseFloat(document.getElementById('input-ir-efetivo')?.value);
 const aliqIR = (irInput > 0) ? irInput / 100 : calcularIR(800);
 const custoBTG = parseFloat(document.getElementById('input-custo-btg')?.value) || 0.3;
-let liquida = selicBrutaBCB * (1 - aliqIR) - custoBTG;
-liquida = Math.min(14, Math.max(9, liquida));
-selicEl.value = liquida.toFixed(1);
-document.getElementById('val-rent-selic').textContent = liquida.toFixed(1) + '%';
-if (tagEl) tagEl.textContent = 'Auto: derivada da Selic BCB, IR e custo BTG';
+
+const liquidaOriginal = selicBrutaBCB * (1 - aliqIR) - custoBTG;
+const liquidaTruncada = Math.min(CFG.LIMITES_RENT.selicMax, Math.max(CFG.LIMITES_RENT.selicMin, liquidaOriginal));
+
+selicEl.value = liquidaTruncada.toFixed(1);
+document.getElementById('val-rent-selic').textContent = liquidaTruncada.toFixed(1) + '%';
+
+if (tagEl) {
+  if (Math.abs(liquidaTruncada - liquidaOriginal) > 0.05) {
+    tagEl.textContent = `⚠️ Calculado ${liquidaOriginal.toFixed(2)}% — ajustado p/ ${liquidaTruncada.toFixed(1)}% (fora da faixa do slider)`;
+    tagEl.className = 'text-[10px] block mt-0.5 auto-tag-truncado';
+  } else {
+    tagEl.textContent = 'Auto: derivada da Selic BCB, IR e custo BTG';
+    tagEl.className = 'text-[10px] block mt-0.5 auto-tag-normal';
+  }
+}
 if (forcarPorAcaoDoUsuario) { if (!estado) estado = { inputs: {} }; estado.inputs.rentSelicManual = false; }
+}
+
+/* =========================================================
+TAXA REAL IPCA+ → NOMINAL
+CORRIGIDO: avisa quando o valor calculado sai da faixa do slider
+========================================================= */
+function recalcularIPCANominal(forcarPorAcaoDoUsuario) {
+const realEl = document.getElementById('input-taxa-real-ipca');
+const nominalEl = document.getElementById('input-rent-ipca');
+const calcEl = document.getElementById('ipca-nominal-calc');
+const valEl = document.getElementById('val-taxa-real-ipca');
+const tagIPCA = document.getElementById('rent-ipca-auto-tag');
+if (!realEl || !nominalEl) return;
+if (!forcarPorAcaoDoUsuario && estado?.inputs?.rentIPCAManual) {
+  if (tagIPCA) { tagIPCA.textContent = 'Manual (ajustado por você)'; tagIPCA.className = 'text-[10px] block mt-0.5 auto-tag-normal'; }
+  return;
+}
+const real = (parseFloat(realEl.value) || 6.0) / 100;
+const ipca = (dadosBCB.ipca || CFG.FALLBACK.ipca) / 100;
+const bruto = ((1 + real) * (1 + ipca) - 1) * 100;
+const irInput = parseFloat(document.getElementById('input-ir-efetivo')?.value);
+const aliqIR = (irInput > 0) ? irInput / 100 : calcularIR(800);
+const custoBTG = parseFloat(document.getElementById('input-custo-btg')?.value) || 0.3;
+
+const nominalOriginal = bruto * (1 - aliqIR) - custoBTG;
+const nominalTruncado = Math.min(CFG.LIMITES_RENT.ipcaMax, Math.max(CFG.LIMITES_RENT.ipcaMin, nominalOriginal));
+
+nominalEl.value = nominalTruncado.toFixed(1);
+document.getElementById('val-rent-ipca').textContent = nominalTruncado.toFixed(1) + '%';
+if (calcEl) calcEl.textContent = bruto.toFixed(2) + '%';
+if (valEl) valEl.textContent = (parseFloat(realEl.value) || 6.0).toFixed(1) + '%';
+
+if (tagIPCA) {
+  if (Math.abs(nominalTruncado - nominalOriginal) > 0.05) {
+    tagIPCA.textContent = `⚠️ Calculado ${nominalOriginal.toFixed(2)}% — ajustado p/ ${nominalTruncado.toFixed(1)}% (fora da faixa do slider)`;
+    tagIPCA.className = 'text-[10px] block mt-0.5 auto-tag-truncado';
+  } else {
+    tagIPCA.textContent = 'Calculado: taxa real + IPCA do BCB, menos IR e custo BTG';
+    tagIPCA.className = 'text-[10px] block mt-0.5 auto-tag-normal';
+  }
+}
+if (forcarPorAcaoDoUsuario) { if (!estado) estado = { inputs: {} }; estado.inputs.rentIPCAManual = false; }
 }
 
 /* =========================================================
@@ -961,15 +1023,8 @@ if (elMarido) elMarido.value = Math.round(marido);
 
 /* =========================================================
 INPUTS
+CORRIGIDO: usa numOr() que distingue "0 válido" de "vazio"
 ========================================================= */
-function numInput(id, def, min, max) {
-const el = document.getElementById(id);
-let v = el ? parseFloat(el.value) : NaN;
-if (isNaN(v)) v = def;
-if (min !== undefined) v = Math.max(min, v);
-if (max !== undefined) v = Math.min(max, v);
-return v;
-}
 function aliquotaIR(inputs) { return (inputs.irEfetivo > 0) ? inputs.irEfetivo / 100 : calcularIR(800); }
 function calcularRendimentos(inputs) {
 const rendSelicLiq = inputs.selicInicial * (inputs.rentSelic / 100);
@@ -1036,19 +1091,19 @@ el.innerHTML = itens.map(([n, t]) => n === 'erro'
 function coletarInputs() {
 const sel = document.getElementById('select-saque').value;
 return {
-patrimonioTotal: parseFloat(document.getElementById('input-patrimonio').value) || CFG.PATRIMONIO_TOTAL,
-selicInicial: parseFloat(document.getElementById('input-selic-inicial').value) || CFG.SELIC_INICIAL,
-ipcaInicial: parseFloat(document.getElementById('input-ipca-inicial').value) || CFG.TESOURO_IPCA,
+patrimonioTotal: numOr('input-patrimonio', CFG.PATRIMONIO_TOTAL),
+selicInicial: numOr('input-selic-inicial', CFG.SELIC_INICIAL),
+ipcaInicial: numOr('input-ipca-inicial', CFG.TESOURO_IPCA),
 saqueSelect: sel,
-saqueCustom: parseFloat(document.getElementById('input-saque-custom').value) || 200000,
-rentSelic: parseFloat(document.getElementById('input-rent-selic').value),
-rentIPCA: parseFloat(document.getElementById('input-rent-ipca').value),
-taxaRealIPCA: parseFloat(document.getElementById('input-taxa-real-ipca').value) || 6.0,
-custoBTG: parseFloat(document.getElementById('input-custo-btg').value),
-irEfetivo: parseFloat(document.getElementById('input-ir-efetivo').value),
-metaSelic: parseFloat(document.getElementById('input-meta-selic').value) || 12000000,
-extraImovel: parseFloat(document.getElementById('input-extra-imovel').value) || 0,
-extraOutros: parseFloat(document.getElementById('input-extra-outros').value) || 0,
+saqueCustom: numOr('input-saque-custom', 200000),
+rentSelic: numOr('input-rent-selic', 10.5),
+rentIPCA: numOr('input-rent-ipca', 8.0),
+taxaRealIPCA: numOr('input-taxa-real-ipca', 6.0),
+custoBTG: numOr('input-custo-btg', 0.3),
+irEfetivo: numOr('input-ir-efetivo', 15),
+metaSelic: numOr('input-meta-selic', 12000000),
+extraImovel: numOr('input-extra-imovel', 0),
+extraOutros: numOr('input-extra-outros', 0),
 dataBase: document.getElementById('input-data-base').value,
 payout: numInput('input-payout', CFG.PAYOUT_PADRAO, 0, 100),
 mesadaEsposa: numInput('input-mesada-esposa', CFG.MESADA_PADRAO, 0),
@@ -1062,20 +1117,20 @@ divisaoManual: estado?.inputs?.divisaoManual || false
 
 function aplicarInputs(inp) {
 if (!inp) return;
-document.getElementById('input-patrimonio').value = inp.patrimonioTotal || CFG.PATRIMONIO_TOTAL;
-document.getElementById('input-selic-inicial').value = inp.selicInicial || CFG.SELIC_INICIAL;
-document.getElementById('input-ipca-inicial').value = inp.ipcaInicial || CFG.TESOURO_IPCA;
+document.getElementById('input-patrimonio').value = inp.patrimonioTotal ?? CFG.PATRIMONIO_TOTAL;
+document.getElementById('input-selic-inicial').value = inp.selicInicial ?? CFG.SELIC_INICIAL;
+document.getElementById('input-ipca-inicial').value = inp.ipcaInicial ?? CFG.TESOURO_IPCA;
 document.getElementById('select-saque').value = inp.saqueSelect || 'auto';
-document.getElementById('input-saque-custom').value = inp.saqueCustom || 200000;
+document.getElementById('input-saque-custom').value = inp.saqueCustom ?? 200000;
 document.getElementById('input-payout').value = (inp.payout ?? CFG.PAYOUT_PADRAO);
 document.getElementById('input-mesada-esposa').value = (inp.mesadaEsposa ?? CFG.MESADA_PADRAO);
 document.getElementById('input-mesada-marido').value = (inp.mesadaMarido ?? CFG.MESADA_PADRAO);
 document.getElementById('input-piso-casa').value = (inp.pisoCasa ?? 0);
-document.getElementById('input-rent-selic').value = inp.rentSelic || 10.5;
-document.getElementById('input-rent-ipca').value = inp.rentIPCA || 8.0;
+document.getElementById('input-rent-selic').value = inp.rentSelic ?? 10.5;
+document.getElementById('input-rent-ipca').value = inp.rentIPCA ?? 8.0;
 if (document.getElementById('input-taxa-real-ipca')) {
-document.getElementById('input-taxa-real-ipca').value = inp.taxaRealIPCA || 6.0;
-document.getElementById('val-taxa-real-ipca').textContent = (inp.taxaRealIPCA || 6.0).toFixed(1) + '%';
+document.getElementById('input-taxa-real-ipca').value = inp.taxaRealIPCA ?? 6.0;
+document.getElementById('val-taxa-real-ipca').textContent = (inp.taxaRealIPCA ?? 6.0).toFixed(1) + '%';
 }
 if (document.getElementById('input-custo-btg')) {
 document.getElementById('input-custo-btg').value = (inp.custoBTG !== undefined && !isNaN(inp.custoBTG)) ? inp.custoBTG : 0.3;
@@ -1083,13 +1138,13 @@ document.getElementById('input-custo-btg').value = (inp.custoBTG !== undefined &
 if (document.getElementById('input-ir-efetivo')) {
 document.getElementById('input-ir-efetivo').value = (inp.irEfetivo !== undefined && !isNaN(inp.irEfetivo)) ? inp.irEfetivo : 15;
 }
-document.getElementById('input-meta-selic').value = inp.metaSelic || 12000000;
-document.getElementById('input-extra-imovel').value = inp.extraImovel || 0;
-document.getElementById('input-extra-outros').value = inp.extraOutros || 0;
+document.getElementById('input-meta-selic').value = inp.metaSelic ?? 12000000;
+document.getElementById('input-extra-imovel').value = inp.extraImovel ?? 0;
+document.getElementById('input-extra-outros').value = inp.extraOutros ?? 0;
 if (inp.dataBase) document.getElementById('input-data-base').value = inp.dataBase;
 sincronizarModoSaque();
-document.getElementById('val-rent-selic').textContent = (inp.rentSelic || 10.5).toFixed(1) + '%';
-document.getElementById('val-rent-ipca').textContent = (inp.rentIPCA || 8.0).toFixed(1) + '%';
+document.getElementById('val-rent-selic').textContent = (inp.rentSelic ?? 10.5).toFixed(1) + '%';
+document.getElementById('val-rent-ipca').textContent = (inp.rentIPCA ?? 8.0).toFixed(1) + '%';
 if (inp.divisaoManual) { const t = document.getElementById('toggle-divisao-manual'); if (t) t.checked = true; }
 sincronizarModoDivisao();
 atualizarSomaAlocada();
@@ -1099,9 +1154,9 @@ atualizarSomaAlocada();
 HELPERS DE ALOCAÇÃO
 ========================================================= */
 function atualizarSomaAlocada() {
-const total = parseFloat(document.getElementById('input-patrimonio').value) || 0;
-const selic = parseFloat(document.getElementById('input-selic-inicial').value) || 0;
-const ipca  = parseFloat(document.getElementById('input-ipca-inicial').value) || 0;
+const total = numOr('input-patrimonio', 0);
+const selic = numOr('input-selic-inicial', 0);
+const ipca  = numOr('input-ipca-inicial', 0);
 const soma  = selic + ipca;
 document.getElementById('soma-alocada').textContent = formatarMoeda(soma);
 const elAviso = document.getElementById('aviso-soma');
@@ -1115,7 +1170,7 @@ elSug.classList.add('hidden');
 } else {
 const diff = total - soma;
 elAviso.textContent = '⚠ falta ' + formatarMoeda(diff); elAviso.className = 'text-amber-400';
-const metaSelic = parseFloat(document.getElementById('input-meta-selic')?.value) || 12000000;
+const metaSelic = numOr('input-meta-selic', 12000000);
 if (selic < metaSelic) {
 elSug.textContent = `Sugestão: colocar em Selic — reserva ainda ${formatarMoeda(metaSelic - selic)} abaixo da meta.`;
 } else {
@@ -1125,9 +1180,9 @@ elSug.classList.remove('hidden');
 }
 }
 function igualarAlocacaoTotal(destino) {
-const total = parseFloat(document.getElementById('input-patrimonio').value) || 0;
-const selic = parseFloat(document.getElementById('input-selic-inicial').value) || 0;
-const ipca  = parseFloat(document.getElementById('input-ipca-inicial').value) || 0;
+const total = numOr('input-patrimonio', 0);
+const selic = numOr('input-selic-inicial', 0);
+const ipca  = numOr('input-ipca-inicial', 0);
 if (destino === 'selic') {
 document.getElementById('input-selic-inicial').value = Math.round(Math.max(0, total - ipca));
 } else {
@@ -1141,9 +1196,9 @@ PAINEL DE SAÚDE DO INVESTIMENTO
 ========================================================= */
 function calcularSaude(patrimonioTotal, rendTotalLiq, ipcaProjetado, saqueMensal, saldoSelic, metaSelic) {
 const saqueAnual = saqueMensal * 12;
-const rentNominalLiq = rendTotalLiq / patrimonioTotal * 100;
+const rentNominalLiq = patrimonioTotal > 0 ? rendTotalLiq / patrimonioTotal * 100 : 0;
 const retornoReal = ((1 + rentNominalLiq/100) / (1 + ipcaProjetado/100) - 1) * 100;
-const taxaRetirada = saqueAnual / patrimonioTotal * 100;
+const taxaRetirada = patrimonioTotal > 0 ? saqueAnual / patrimonioTotal * 100 : 0;
 let saldo = patrimonioTotal;
 const retornoRealMensal = Math.pow(1 + retornoReal/100, 1/12) - 1;
 let anos = 0;
@@ -1172,8 +1227,8 @@ for (let m = 0; m < MESES_PROJ; m++) {
 }
 const patrimonioFinal = saldoProj + (estado?.inputs?.ipcaInicial || CFG.TESOURO_IPCA);
 const anosProj = MESES_PROJ / 12;
-const rentAcumulada = (patrimonioFinal / patrimonioTotal - 1) * 100;
-const cagr = (Math.pow(patrimonioFinal / patrimonioTotal, 1 / anosProj) - 1) * 100;
+const rentAcumulada = patrimonioTotal > 0 ? (patrimonioFinal / patrimonioTotal - 1) * 100 : 0;
+const cagr = patrimonioTotal > 0 ? (Math.pow(patrimonioFinal / patrimonioTotal, 1 / anosProj) - 1) * 100 : 0;
 
 return { rentNominalLiq, retornoReal, taxaRetirada, durabilidade: anos, poderCompra10, saqueAnual, cagr, rentAcumulada };
 }
@@ -1547,17 +1602,17 @@ opcoes.innerHTML = `
 APLICAR SAQUE EXTRAORDINÁRIO NA ALOCAÇÃO
 ========================================================= */
 function aplicarSaqueExtra() {
-  const extraImovel = parseFloat(document.getElementById('input-extra-imovel').value) || 0;
-  const extraOutros = parseFloat(document.getElementById('input-extra-outros').value) || 0;
+  const extraImovel = numOr('input-extra-imovel', 0);
+  const extraOutros = numOr('input-extra-outros', 0);
   const totalExtra = extraImovel + extraOutros;
 
   if (totalExtra <= 0) return;
 
   const origem = document.querySelector('input[name="origem-extra"]:checked')?.value || 'auto';
-  const selicAtual = parseFloat(document.getElementById('input-selic-inicial').value) || 0;
-  const ipcaAtual  = parseFloat(document.getElementById('input-ipca-inicial').value) || 0;
-  const patAtual   = parseFloat(document.getElementById('input-patrimonio').value) || 0;
-  const meta       = parseFloat(document.getElementById('input-meta-selic').value) || 0;
+  const selicAtual = numOr('input-selic-inicial', 0);
+  const ipcaAtual  = numOr('input-ipca-inicial', 0);
+  const patAtual   = numOr('input-patrimonio', 0);
+  const meta       = numOr('input-meta-selic', 0);
 
   let tiraSelic = 0;
   let tiraIPCA  = 0;
@@ -1667,8 +1722,7 @@ function limparHistoricoExtra() {
 
 ['input-extra-imovel', 'input-extra-outros'].forEach(id => {
   document.getElementById(id)?.addEventListener('change', () => {
-    const total = (parseFloat(document.getElementById('input-extra-imovel').value) || 0) +
-                  (parseFloat(document.getElementById('input-extra-outros').value) || 0);
+    const total = numOr('input-extra-imovel', 0) + numOr('input-extra-outros', 0);
     if (total > 0) aplicarSaqueExtra();
   });
 });
@@ -1850,7 +1904,7 @@ rentSelicManual: !!salvo.rentSelicManual,
 rentIPCAManual: !!salvo.rentIPCAManual,
 divisaoManual: !!salvo.divisaoManual
 } };
-if (salvo.rentSelicManual) { const t = document.getElementById('rent-selic-auto-tag'); if (t) t.textContent = 'Manual (ajustado por você)'; }
+if (salvo.rentSelicManual) { const t = document.getElementById('rent-selic-auto-tag'); if (t) { t.textContent = 'Manual (ajustado por você)'; t.className = 'text-[10px] block mt-0.5 auto-tag-normal'; } }
 }
 
 document.getElementById('select-saque').addEventListener('change', e => {
@@ -1875,7 +1929,7 @@ if (!estado) estado = { inputs: {} };
 if (id === 'input-rent-selic') {
 estado.inputs.rentSelicManual = true;
 const tagEl = document.getElementById('rent-selic-auto-tag');
-if (tagEl) tagEl.textContent = 'Manual (ajustado por você)';
+if (tagEl) { tagEl.textContent = 'Manual (ajustado por você)'; tagEl.className = 'text-[10px] block mt-0.5 auto-tag-normal'; }
 }
 if (id === 'input-rent-ipca') estado.inputs.rentIPCAManual = true;
 if (id === 'input-taxa-real-ipca') recalcularIPCANominal(true);
