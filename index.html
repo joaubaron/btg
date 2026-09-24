@@ -911,7 +911,7 @@ return proxAnoFev;
 
 /* =========================================================
 RENTABILIDADE SELIC LÍQUIDA — AUTOMÁTICA
-CORRIGIDO: avisa quando o valor calculado sai da faixa do slider
+Avisa quando o valor calculado sai da faixa do slider
 ========================================================= */
 function recalcularSelicLiquida(forcarPorAcaoDoUsuario) {
 const selicEl = document.getElementById('input-rent-selic');
@@ -946,7 +946,7 @@ if (forcarPorAcaoDoUsuario) { if (!estado) estado = { inputs: {} }; estado.input
 
 /* =========================================================
 TAXA REAL IPCA+ → NOMINAL
-CORRIGIDO: avisa quando o valor calculado sai da faixa do slider
+Avisa quando o valor calculado sai da faixa do slider
 ========================================================= */
 function recalcularIPCANominal(forcarPorAcaoDoUsuario) {
 const realEl = document.getElementById('input-taxa-real-ipca');
@@ -1022,8 +1022,7 @@ if (elMarido) elMarido.value = Math.round(marido);
 }
 
 /* =========================================================
-INPUTS
-CORRIGIDO: usa numOr() que distingue "0 válido" de "vazio"
+INPUTS — usa numOr() que distingue "0 válido" de "vazio"
 ========================================================= */
 function aliquotaIR(inputs) { return (inputs.irEfetivo > 0) ? inputs.irEfetivo / 100 : calcularIR(800); }
 function calcularRendimentos(inputs) {
@@ -1341,6 +1340,7 @@ document.getElementById(txtId).textContent = texto;
 
 /* =========================================================
 SIMULAÇÃO PRINCIPAL
+BUG CORRIGIDO: saldo Selic agora considera a origem real do saque extraordinário
 ========================================================= */
 function atualizarSimulacao() {
 const inputs = coletarInputs();
@@ -1375,8 +1375,12 @@ elSaqueMax.className = 'text-[10px] block mt-0.5 ' + (saqueMensal <= saquePreser
 const elPayout = document.getElementById('payout-info');
 if (elPayout) elPayout.textContent = '= ' + formatarMoeda(saqueMensal) + '/mês · payout que preserva poder de compra: ~' + (pres.payoutMaxReal * 100).toFixed(0) + '%';
 
-const totalExtra = inputs.extraImovel + inputs.extraOutros;
-const saldoSelicAtual = Math.max(0, selicBase - totalExtra);
+// === BUG FIX 1: Saldo Selic real, considerando a origem do saque ===
+// O saque extraordinário já foi aplicado em aplicarSaqueExtra() e o input
+// de Selic já foi decrementado na hora. Aqui só lemos o valor atual.
+// Não subtraímos o `extraImovel`/`extraOutros` de novo — isso seria
+// uma dupla contagem que inflava artificialmente o rombo da reserva.
+const saldoSelicAtual = Math.max(0, selicBase);
 
 const dataBase = inputs.dataBase ? new Date(inputs.dataBase + 'T12:00:00') : new Date();
 const aliqIR = (inputs.irEfetivo > 0) ? (inputs.irEfetivo / 100) : calcularIR(800);
@@ -1600,6 +1604,8 @@ opcoes.innerHTML = `
 
 /* =========================================================
 APLICAR SAQUE EXTRAORDINÁRIO NA ALOCAÇÃO
+BUG CORRIGIDO: agora não subtrai do `patrimônio total` (já é feito ao digitar)
+e registra corretamente no histórico
 ========================================================= */
 function aplicarSaqueExtra() {
   const extraImovel = numOr('input-extra-imovel', 0);
