@@ -415,8 +415,9 @@ Parâmetros
 <span class="text-base font-bold text-emerald-400" id="metric-rendimento">—</span>
 </div>
 <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-<span class="text-[10px] uppercase tracking-wider text-slate-400 block">Saque Anual</span>
+<span class="text-[10px] uppercase tracking-wider text-slate-400 block">Saque Anual (bruto)</span>
 <span class="text-base font-bold text-indigo-400" id="metric-saque-anual">—</span>
+<span class="text-[10px] text-slate-500 block" id="metric-saque-anual-liq">líquido: —</span>
 </div>
 <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
 <span class="text-[10px] uppercase tracking-wider text-slate-400 block">Saldo Selic</span>
@@ -598,9 +599,6 @@ taxaRetiradaSegura: 4.0
 }
 };
 
-/* =========================================================
-CONSTANTES DE PERSISTÊNCIA (movidas para o topo — robustez)
-========================================================= */
 const BCB_CACHE_KEY = 'gestao32m_bcb_last';
 const BCB_CACHE_MAX_AGE_DAYS = 30;
 const HIST_EXTRA_KEY = 'gestao32m_hist_extra';
@@ -640,8 +638,6 @@ try {
 localStorage.setItem(CFG.STORAGE_KEY, JSON.stringify({ inputs: coletarInputs(), ts: Date.now() }));
 } catch (e) {}
 }
-
-/* Validação completa do schema — nunca quebra por storage corrompido */
 function carregarEstado() {
   try {
     const raw = localStorage.getItem(CFG.STORAGE_KEY);
@@ -676,7 +672,6 @@ function carregarEstado() {
     };
   } catch { return null; }
 }
-
 function limparStorage() {
 if (confirm('Apagar todos os dados salvos?')) {
 localStorage.removeItem(CFG.STORAGE_KEY);
@@ -1009,25 +1004,20 @@ estado.inputs.divisaoManual = false;
 function atualizarBadgeDivisao(saqueMensal, vCasa, vEsposa, vMarido) {
   const badge = document.getElementById('divisao-badge');
   if (!badge) return;
-
   const manual = estado?.inputs?.divisaoManual;
-
   if (!manual) {
     badge.textContent = '(Automático 70/15/15)';
     badge.className = 'text-[9px] text-emerald-400 font-normal normal-case';
     return;
   }
-
   if (saqueMensal <= 0) {
     badge.textContent = '(Manual)';
     badge.className = 'text-[9px] text-amber-400 font-normal normal-case';
     return;
   }
-
   const pCasa   = Math.round((vCasa   / saqueMensal) * 100);
   const pEsposa = Math.round((vEsposa / saqueMensal) * 100);
   const pMarido = Math.round((vMarido / saqueMensal) * 100);
-
   badge.textContent = `(Casa ${pCasa}% / Esposa ${pEsposa}% / Marido ${pMarido}%)`;
   badge.className = 'text-[9px] text-amber-400 font-normal normal-case';
 }
@@ -1206,18 +1196,12 @@ document.getElementById('input-ipca-inicial').value = Math.round(Math.max(0, tot
 atualizarSomaAlocada(); atualizarSimulacao();
 }
 
-/* =========================================================
-CORRIGIDO: durabilidade agora corrige o saque pela inflação
-(nominal vs. real deixa de ser misturado — métrica realista)
-========================================================= */
 function calcularSaude(patrimonioTotal, rendTotalLiq, ipcaProjetado, saqueMensal, saldoSelic, metaSelic) {
 const saqueAnual = saqueMensal * 12;
 const rentNominalLiq = patrimonioTotal > 0 ? rendTotalLiq / patrimonioTotal * 100 : 0;
 const retornoReal = ((1 + rentNominalLiq/100) / (1 + ipcaProjetado/100) - 1) * 100;
 const taxaRetirada = patrimonioTotal > 0 ? saqueAnual / patrimonioTotal * 100 : 0;
 
-// Simulação em termos REAIS: retorno real e saque corrigido pela inflação ano a ano.
-// Ambos os lados na mesma unidade — métrica confiável.
 const retornoRealMensal = Math.pow(1 + retornoReal/100, 1/12) - 1;
 const inflacaoMensal = Math.pow(1 + ipcaProjetado/100, 1/12) - 1;
 let saldo = patrimonioTotal;
@@ -1402,8 +1386,9 @@ const irMensal = rendimentoNoResgate * aliqIR;
 const resgateBruto = saqueMensal + irMensal;
 const custoMensal = patrimonioTotal * ((inputs.custoBTG || 0.3) / 100 / 12);
 
-const saqueAnual = saqueMensal * 12;
-const sobraAnual = rendTotalLiq - saqueAnual;
+const saqueAnualBruto = resgateBruto * 12;
+const saqueAnualLiq = saqueMensal * 12;
+const sobraAnual = rendTotalLiq - saqueAnualBruto;
 
 const ipcaProjetado = dadosBCB.ipca || CFG.FALLBACK.ipca;
 const cupomLiq = calcularCupomIPCA(ipcaBase, aliqIR);
@@ -1422,7 +1407,8 @@ document.getElementById('ind-rend-ipca').textContent = formatarMoeda(rendIPCALiq
 document.getElementById('ind-rend-ipca-base').textContent = formatarMoeda(ipcaBase) + ' · já c/ IR';
 
 document.getElementById('metric-rendimento').textContent = formatarMoeda(rendTotalLiq) + '/ano';
-document.getElementById('metric-saque-anual').textContent = formatarMoeda(saqueAnual) + '/ano';
+document.getElementById('metric-saque-anual').textContent = formatarMoeda(saqueAnualBruto) + '/ano';
+document.getElementById('metric-saque-anual-liq').textContent = 'líquido: ' + formatarMoeda(saqueAnualLiq) + '/ano';
 document.getElementById('metric-saldo-selic').textContent = formatarMoeda(saldoSelicAtual);
 
 const sobraEl = document.getElementById('metric-sobra');
@@ -1515,11 +1501,21 @@ banner.className = 'card-glass rounded-2xl p-5 sm:p-6 shadow-xl border-l-4 borde
 title.textContent = '✗ REDUZIR SAQUE MENSAL';
 title.className = 'text-xl sm:text-2xl font-bold text-red-400 mt-1';
 const saqueMax = rendTotalLiq / 12;
-desc.innerHTML = `Rendimento líquido <strong>${formatarMoeda(rendTotalLiq)}/ano</strong> não cobre saques de <strong>${formatarMoeda(saqueMensal*12)}/ano</strong>. <u>Reduzir antes de consumir principal.</u>`
+desc.innerHTML = `Rendimento líquido <strong>${formatarMoeda(rendTotalLiq)}/ano</strong> não cobre saques de <strong>${formatarMoeda(saqueMensal*12)}/ano</strong> (custo bruto anual: <strong>${formatarMoeda(resgateBruto*12)}</strong>). <u>Reduzir antes de consumir principal.</u>`
 + (reservaAbaixo ? ` Além disso, a reserva Selic também está <strong>${formatarMoeda(metaSelic - saldoSelic)}</strong> abaixo da meta.` : '');
 rec.textContent = 'Máx: ' + formatarMoeda(saqueMax);
 rec.className = 'text-base sm:text-lg font-bold text-red-400';
 mostrarPainelAjuste('reduzir', { saqueMax, saqueMensal, sobraAnual, rendTotalLiq });
+return;
+}
+if (consomeReal) {
+banner.className = 'card-glass rounded-2xl p-5 sm:p-6 shadow-xl border-l-4 border-amber-500 bg-amber-950/20';
+title.textContent = '⚠ SAQUE CONSOME PODER DE COMPRA';
+title.className = 'text-xl sm:text-2xl font-bold text-amber-400 mt-1';
+desc.innerHTML = `Saque de <strong>${formatarMoeda(saqueMensal*12)}/ano</strong> acima do retorno real de <strong>${formatarMoeda(presAcao.saqueMaxRealAnual)}/ano</strong>. O patrimônio se preserva só em valor nominal. Payout que preserva: <strong>~${(presAcao.payoutMaxReal*100).toFixed(0)}%</strong>.`;
+rec.textContent = 'Preserva: ' + formatarMoeda(presAcao.saqueMaxRealAnual / 12) + '/mês';
+rec.className = 'text-base sm:text-lg font-bold text-amber-400';
+mostrarPainelAjuste('reduzir', { saqueMax: presAcao.saqueMaxRealAnual/12, saqueMensal, sobraAnual, rendTotalLiq });
 return;
 }
 if (reservaAbaixo) {
@@ -1537,18 +1533,9 @@ if (saqueMensal * 12 / patAcao >= CFG.TETO_TAXA_ANUAL - 1e-9 && sobraAnual >= 0)
 banner.className = 'card-glass rounded-2xl p-5 sm:p-6 shadow-xl border-l-4 border-indigo-500 bg-indigo-950/20';
 title.textContent = '✓ TETO LIBERADO (≈ ' + (CFG.TETO_TAXA_ANUAL * 100).toFixed(1) + '% a.a. do patrimônio) — não garantido';
 title.className = 'text-xl sm:text-2xl font-bold text-indigo-300 mt-1';
-desc.textContent = 'Carteira sustenta o teto hoje, mas não é garantido em todos os cenários — monitorar revisão anual BTG.' + (consomeReal ? ' Nesse nível o saque consome poder de compra do principal.' : '');
+desc.textContent = 'Carteira sustenta o teto hoje, mas não é garantido em todos os cenários — monitorar revisão anual BTG.';
 rec.textContent = 'Aprovado ' + formatarMoeda(saqueMensal);
 rec.className = 'text-base sm:text-lg font-bold text-indigo-400';
-return;
-}
-if (consomeReal) {
-banner.className = 'card-glass rounded-2xl p-5 sm:p-6 shadow-xl border-l-4 border-amber-500 bg-amber-950/20';
-title.textContent = '⚠ SAQUE CONSOME PODER DE COMPRA';
-title.className = 'text-xl sm:text-2xl font-bold text-amber-400 mt-1';
-desc.innerHTML = `Saque de <strong>${formatarMoeda(saqueMensal*12)}/ano</strong> acima do retorno real de <strong>${formatarMoeda(presAcao.saqueMaxRealAnual)}/ano</strong>. O patrimônio se preserva só em valor nominal. Payout que preserva: <strong>~${(presAcao.payoutMaxReal*100).toFixed(0)}%</strong>.`;
-rec.textContent = 'Preserva: ' + formatarMoeda(presAcao.saqueMaxRealAnual / 12) + '/mês';
-rec.className = 'text-base sm:text-lg font-bold text-amber-400';
 return;
 }
 banner.className = 'card-glass rounded-2xl p-5 sm:p-6 shadow-xl border-l-4 border-emerald-500 bg-emerald-950/20';
@@ -1567,8 +1554,8 @@ painel.classList.remove('hidden');
 
 if (tipo === 'reduzir') {
 const deficitAnual = Math.abs(dados.sobraAnual);
-const reducaoNecessaria = dados.saqueMensal - dados.saqueMax;
-motivo.innerHTML = `Seu rendimento líquido cobre apenas <strong>${formatarMoeda(dados.saqueMax)}/mês</strong>, mas você tenta sacar <strong>${formatarMoeda(dados.saqueMensal)}/mês</strong>. <u>Déficit de ${formatarMoeda(deficitAnual)}/ano.</u>`;
+const reducaoNecessaria = Math.max(0, dados.saqueMensal - dados.saqueMax);
+motivo.innerHTML = `Seu rendimento líquido cobre até <strong>${formatarMoeda(dados.saqueMax)}/mês</strong>, mas você tenta sacar <strong>${formatarMoeda(dados.saqueMensal)}/mês</strong>. <u>Diferença de ${formatarMoeda(reducaoNecessaria)}/mês.</u>`;
 opcoes.innerHTML = `
 <button onclick="aplicarFix('reduzirSaque', ${dados.saqueMax})" class="btn-fix text-left p-3 bg-emerald-900/30 hover:bg-emerald-900/50 border border-emerald-700/50 rounded-xl">
 <div class="flex items-start gap-2"><span class="text-emerald-400 text-lg">✓</span>
@@ -1685,7 +1672,6 @@ function registrarHistoricoExtra(valor, tiraSelic, tiraIPCA) {
   renderizarHistoricoExtra();
 }
 
-/* Histórico agora usa timestamp como chave (robusto a remoções) */
 function renderizarHistoricoExtra() {
   const lista = carregarHistoricoExtra();
   const el = document.getElementById('historico-extra-lista');
