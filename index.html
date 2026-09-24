@@ -540,6 +540,42 @@ Timeline Real (estimativa)
 
 </main>
 
+<!-- BOTÃO: Como preservar o patrimônio -->
+<button onclick="abrirComoPreservar()" class="w-full max-w-6xl mx-auto block mt-6 p-4 bg-emerald-950/40 border border-emerald-700/50 hover:bg-emerald-900/40 rounded-2xl text-left transition" style="margin-left:auto;margin-right:auto;">
+  <div class="flex items-center gap-3">
+    <div class="p-2 bg-emerald-500/20 text-emerald-400 rounded-lg shrink-0">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+    </div>
+    <div class="flex-1 min-w-0">
+      <h3 class="font-bold text-emerald-300 text-sm">Como preservar o patrimônio (conta BTG)</h3>
+      <p class="text-[11px] text-slate-400 mt-0.5">3 passos práticos pra o dinheiro não acabar</p>
+    </div>
+    <svg class="w-5 h-5 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+  </div>
+</button>
+
+<!-- MODAL: Como preservar o patrimônio -->
+<div id="modal-preservar" class="hidden fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="card-glass rounded-2xl p-5 max-w-md w-full space-y-4">
+    <h3 class="font-bold text-white text-lg">Como preservar o patrimônio</h3>
+    <div class="space-y-4 text-xs text-slate-300">
+      <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800">
+        <h4 class="font-bold text-emerald-400 mb-1">1. Payout 45%</h4>
+        <p>Quando o rendimento líquido entrar na conta BTG, você transfere só <strong>45%</strong> pra conta corrente. Os outros <strong>55%</strong> ficam investidos (o BTG reinveste automaticamente em Selic ou você direciona).</p>
+      </div>
+      <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800">
+        <h4 class="font-bold text-purple-400 mb-1">2. Cupons IPCA+</h4>
+        <p>Os dois pagamentos semestrais (<strong>15/02 e 15/08</strong>) caem na conta BTG. Em vez de transferir pra conta corrente, você <strong>deixa lá</strong> e manda reinvestir (Selic ou IPCA+ novo). Não é transferência manual mês a mês — é só não tirar.</p>
+      </div>
+      <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800">
+        <h4 class="font-bold text-sky-400 mb-1">3. Reserva Selic na meta</h4>
+        <p>Se a reserva Selic cair abaixo de <strong>R$ 12M</strong> (por causa de saque extraordinário, por exemplo), você direciona os cupons dos próximos semestres pra ela em vez de reinvestir em IPCA+. O app já te avisa quando isso acontece (<strong>"⚠ Recompor Selic"</strong>).</p>
+      </div>
+    </div>
+    <button onclick="fecharComoPreservar()" class="w-full p-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm">Fechar</button>
+  </div>
+</div>
+
 <div id="modal-config" class="hidden fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
 <div class="card-glass rounded-2xl p-5 max-w-md w-full space-y-4">
 <h3 class="font-bold text-white text-lg">Configurações & Dados</h3>
@@ -1866,6 +1902,8 @@ renderizarHistoricoExtra();
 }
 function abrirConfig() { document.getElementById('modal-config').classList.remove('hidden'); }
 function fecharConfig() { document.getElementById('modal-config').classList.add('hidden'); }
+function abrirComoPreservar() { document.getElementById('modal-preservar').classList.remove('hidden'); }
+function fecharComoPreservar() { document.getElementById('modal-preservar').classList.add('hidden'); }
 
 document.addEventListener('DOMContentLoaded', () => {
 const dbEl = document.getElementById('input-data-base');
