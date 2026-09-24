@@ -58,6 +58,9 @@ header.sticky{padding-top:calc(0.75rem + env(safe-area-inset-top,0px))}
 .toggle-slider:before{position:absolute;content:"";height:14px;width:14px;left:3px;bottom:3px;background:#94a3b8;transition:.3s;border-radius:50%}
 .toggle-switch input:checked + .toggle-slider{background:#10b981}
 .toggle-switch input:checked + .toggle-slider:before{transform:translateX(16px);background:#fff}
+.saude-explicacao{background:rgba(15,23,42,.5);border-left:3px solid #f59e0b;padding:8px 12px;border-radius:6px;font-size:12px;color:#cbd5e1;margin-bottom:16px}
+.saude-explicacao.ok{border-left-color:#10b981}
+.saude-explicacao.critico{border-left-color:#f43f5e}
 @media (max-width:380px){
   #action-banner .flex-col{gap:.75rem}
   .btn-fix{font-size:11px;padding:.5rem .6rem}
@@ -122,23 +125,26 @@ Saúde do Investimento — você está perdendo dinheiro?
 <span id="saude-veredito" class="text-xs font-bold px-3 py-1 rounded-full">—</span>
 </div>
 
+<!-- NOVO: explicação dinâmica do veredito -->
+<p id="saude-explicacao" class="saude-explicacao">—</p>
+
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-<div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+<div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800" title="Retorno nominal líquido acima do IPCA. Mede se o patrimônio ganha da inflação.">
 <span class="text-[10px] uppercase tracking-wider text-slate-400 block">Retorno real (acima do IPCA)</span>
 <span class="text-lg font-bold" id="saude-retorno-real">—</span>
 <span class="text-[10px] text-slate-500 block" id="saude-retorno-real-desc">—</span>
 </div>
-<div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+<div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800" title="Percentual do patrimônio sacado por ano. Acima de 4–5% tende a consumir o principal.">
 <span class="text-[10px] uppercase tracking-wider text-slate-400 block">Taxa de retirada</span>
 <span class="text-lg font-bold" id="saude-tx-retirada">—</span>
 <span class="text-[10px] text-slate-500 block" id="saude-tx-retirada-desc">—</span>
 </div>
-<div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+<div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800" title="Quantos anos o patrimônio dura mantendo o saque atual, em termos reais.">
 <span class="text-[10px] uppercase tracking-wider text-slate-400 block">Durabilidade do principal</span>
 <span class="text-lg font-bold" id="saude-durabilidade">—</span>
 <span class="text-[10px] text-slate-500 block" id="saude-durabilidade-desc">—</span>
 </div>
-<div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+<div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800" title="Quanto vale hoje o patrimônio futuro, descontada a inflação projetada.">
 <span class="text-[10px] uppercase tracking-wider text-slate-400 block">Poder de compra em 10 anos</span>
 <span class="text-lg font-bold" id="saude-poder-compra">—</span>
 <span class="text-[10px] text-slate-500 block" id="saude-poder-compra-desc">—</span>
@@ -262,7 +268,7 @@ Parâmetros
 <span id="payout-info" class="text-[10px] text-slate-400 block mt-0.5">—</span>
 </div>
 
-<!-- ============ DIVISÃO DO SAQUE (NOVO) ============ -->
+<!-- ============ DIVISÃO DO SAQUE ============ -->
 <div class="pt-2 border-t border-slate-700/50 space-y-2">
 <div class="flex items-center justify-between">
 <label class="block text-xs font-medium text-slate-300">Divisão do saque</label>
@@ -772,7 +778,7 @@ estado.inputs.divisaoManual = false;
 }
 }
 function aplicarDivisaoAutomatica(saqueMensal) {
-if (estado?.inputs?.divisaoManual) return; // modo manual: não mexe
+if (estado?.inputs?.divisaoManual) return;
 const casa   = saqueMensal * CFG.DIVISAO.casa;
 const esposa = saqueMensal * CFG.DIVISAO.esposa;
 const marido = saqueMensal * CFG.DIVISAO.marido;
@@ -1018,7 +1024,7 @@ preservaPrincipal
 ? `Sim. Retorno real ${saude.retornoReal.toFixed(1)}% e retirada ${saude.taxaRetirada.toFixed(1)}% — principal preservado.`
 : saude.retornoReal < 0
 ? `Não. Retorno real negativo (${saude.retornoReal.toFixed(1)}%) — você está consumindo o principal.`
-: `Risco. Retirada de ${saude.taxaRetirada.toFixed(1)}% acima do sustentável (4–5%).`
+: `Risco. Retirada de ${saude.taxaRetirada.toFixed(1)}% acima do sustentável (4–5%). Reduza o saque para preservar.`
 );
 
 setCard('saude-card-real', 'saude-dot-real', 'saude-txt-real',
@@ -1038,15 +1044,25 @@ reservaOk
 );
 
 const veredito = document.getElementById('saude-veredito');
+const explicacao = document.getElementById('saude-explicacao');
+
 if (preservaPrincipal && preservaReal && reservaOk) {
 veredito.textContent = '✓ SAUDÁVEL';
 veredito.className = 'text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-700/50';
+explicacao.className = 'saude-explicacao ok';
+explicacao.innerHTML = '<strong class="text-emerald-300">Tudo em ordem.</strong> Retorno real positivo, retirada dentro do sustentável (≤ 5%) e reserva Selic na meta. O poder de compra e o principal estão preservados.';
 } else if (!preservaReal || !preservaPrincipal) {
 veredito.textContent = '⚠ ATENÇÃO';
 veredito.className = 'text-xs font-bold px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-700/50';
+explicacao.className = 'saude-explicacao';
+const taxa = saude.taxaRetirada.toFixed(1);
+const ret = saude.retornoReal.toFixed(1);
+explicacao.innerHTML = `<strong class="text-amber-300">Atenção:</strong> retirada de <strong>${taxa}% ao ano</strong> está acima do sustentável (4–5%). Retorno real de +${ret}% a.a. preserva o poder de compra, mas o principal é consumido em termos reais. <strong>Sugestão:</strong> reduza o saque para o máximo sustentável ou aceite consumir principal.`;
 } else {
 veredito.textContent = '⚠ REPOR RESERVA';
 veredito.className = 'text-xs font-bold px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-700/50';
+explicacao.className = 'saude-explicacao';
+explicacao.innerHTML = `<strong class="text-amber-300">Reserva Selic abaixo da meta.</strong> Os cupons IPCA+ vão recompor automaticamente. Nenhuma ação imediata necessária.`;
 }
 }
 
@@ -1076,10 +1092,8 @@ const metaSelic = inputs.metaSelic;
 const { rendSelicLiq, rendIPCALiq, rendTotalLiq } = calcularRendimentos(inputs);
 const saqueMensal = calcularSaqueMensal(inputs, rendTotalLiq);
 
-// === APLICA DIVISÃO AUTOMÁTICA 70/15/15 (se modo auto) ===
 aplicarDivisaoAutomatica(saqueMensal);
 
-// Re-lê as mesadas (podem ter sido atualizadas pela divisão automática)
 const mesadaEsposa = numInput('input-mesada-esposa', 0, 0);
 const mesadaMarido = numInput('input-mesada-marido', 0, 0);
 
