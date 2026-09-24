@@ -65,26 +65,19 @@ header.sticky{padding-top:calc(0.75rem + env(safe-area-inset-top,0px))}
   #action-banner .flex-col{gap:.75rem}
   .btn-fix{font-size:11px;padding:.5rem .6rem}
 }
-/* Banner de status BCB offline */
 #bcb-banner{display:none;margin-top:.5rem;padding:.5rem .75rem;border-radius:.5rem;font-size:11px;line-height:1.35;border:1px solid transparent}
 #bcb-banner.on{display:block}
 #bcb-banner.fresco{background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.35);color:#fcd34d}
 #bcb-banner.atencao{background:rgba(249,115,22,.12);border-color:rgba(249,115,22,.4);color:#fdba74}
 #bcb-banner.obsoleto{background:rgba(244,63,94,.12);border-color:rgba(244,63,94,.4);color:#fda4af}
 #bcb-banner strong{font-weight:700}
-
-/* Aviso de truncamento de rentabilidade */
 .auto-tag-normal{color:#94a3b8}
 .auto-tag-truncado{color:#fbbf24;font-weight:600}
-
-/* Cores dos dots de status — inline para não depender do build do Tailwind */
 .bg-emerald-400{background-color:#34d399!important}
 .bg-amber-400{background-color:#fbbf24!important}
 .bg-rose-400{background-color:#fb7185!important}
 .bg-slate-500{background-color:#64748b!important}
 .bg-sky-400{background-color:#38bdf8!important}
-
-/* Ring/glow dos dots — também inline */
 .ring-2{box-shadow:0 0 0 2px var(--tw-ring-color, transparent)!important}
 .ring-emerald-400\/20{--tw-ring-color:rgba(52,211,153,.2)!important}
 .ring-slate-500\/20{--tw-ring-color:rgba(100,116,139,.2)!important}
@@ -92,7 +85,6 @@ header.sticky{padding-top:calc(0.75rem + env(safe-area-inset-top,0px))}
 </head>
 <body class="pb-12">
 
-<!-- ============ HEADER ============ -->
 <header class="sticky top-0 z-50 card-glass border-b border-slate-700/50 px-4 py-3 shadow-lg">
 <div class="max-w-6xl mx-auto flex justify-between items-center gap-3">
 <div class="flex items-center gap-2 min-w-0">
@@ -120,14 +112,12 @@ header.sticky{padding-top:calc(0.75rem + env(safe-area-inset-top,0px))}
 </div>
 </header>
 
-<!-- Banner BCB offline (só aparece quando há cache offline) -->
 <div class="max-w-6xl mx-auto px-4">
   <div id="bcb-banner"></div>
 </div>
 
 <main class="max-w-6xl mx-auto px-4 mt-6 space-y-6">
 
-<!-- ============ BANNER DE AÇÃO ============ -->
 <section id="action-banner" class="card-glass rounded-2xl p-5 sm:p-6 shadow-xl border-l-4 border-emerald-500">
 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
 <div class="flex-1">
@@ -143,7 +133,6 @@ header.sticky{padding-top:calc(0.75rem + env(safe-area-inset-top,0px))}
 </div>
 </section>
 
-<!-- ============ PAINEL DE SAÚDE DO INVESTIMENTO ============ -->
 <section id="painel-saude" class="card-glass rounded-2xl p-5 shadow-xl border border-slate-700/50">
 <div class="flex items-center justify-between mb-4">
 <h3 class="font-bold text-slate-100 text-base flex items-center gap-2">
@@ -204,7 +193,6 @@ Saúde do Investimento — você está perdendo dinheiro?
 </div>
 </section>
 
-<!-- ============ PAINEL DE AJUSTE ============ -->
 <section id="painel-ajuste" class="hidden card-glass rounded-2xl p-5 shadow-xl border border-amber-500/30 bg-amber-950/10">
 <div class="flex items-start gap-3">
 <div class="p-2 bg-amber-500/20 text-amber-400 rounded-lg shrink-0 mt-0.5">
@@ -226,7 +214,6 @@ Saúde do Investimento — você está perdendo dinheiro?
 </div>
 </section>
 
-<!-- ============ INDICADORES DE MERCADO ============ -->
 <section class="grid grid-cols-2 sm:grid-cols-4 gap-3">
 <div class="card-glass rounded-xl p-3">
 <span class="text-[10px] uppercase text-slate-400 block">Selic meta (BCB s.432)</span>
@@ -250,7 +237,6 @@ Saúde do Investimento — você está perdendo dinheiro?
 </div>
 </section>
 
-<!-- ============ SIMULADOR ============ -->
 <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 <div class="card-glass rounded-2xl p-5 space-y-4 lg:col-span-1">
 <h3 class="font-bold text-slate-200 text-base border-b border-slate-700 pb-2 flex items-center justify-between">
@@ -305,7 +291,6 @@ Parâmetros
 <span id="payout-info" class="text-[10px] text-slate-400 block mt-0.5">—</span>
 </div>
 
-<!-- ============ DIVISÃO DO SAQUE ============ -->
 <div class="pt-2 border-t border-slate-700/50 space-y-2">
 <div class="flex items-center justify-between">
 <label class="block text-xs font-medium text-slate-300">Divisão do saque</label>
@@ -381,7 +366,6 @@ Parâmetros
 </div>
 </div>
 
-<!-- NOVO: Origem do saque extraordinário -->
 <div class="mt-2 p-2.5 bg-slate-900/40 border border-amber-500/20 rounded-lg">
 <p class="text-[10px] text-amber-300 font-bold mb-2">De onde tirar?</p>
 <div class="space-y-1.5">
@@ -407,7 +391,6 @@ Parâmetros
 
 <button onclick="carregarExemploPDF()" class="w-full text-xs py-1.5 mt-2 bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-lg hover:bg-amber-500/20 transition">Carregar exemplo de saque extraordinário (R$ 3,5Mi)</button>
 
-<!-- NOVO: Histórico de saques extraordinários -->
 <div id="historico-extra" class="mt-3 pt-3 border-t border-slate-700/50">
   <div class="flex items-center justify-between mb-2">
     <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">📋 Histórico de saques</span>
@@ -483,7 +466,6 @@ Parâmetros
 </div>
 </section>
 
-<!-- ============ PROJEÇÃO 24 MESES ============ -->
 <section class="card-glass rounded-2xl p-5">
 <h3 class="font-bold text-slate-200 text-base border-b border-slate-700 pb-2 flex items-center gap-2">
 <svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>
@@ -494,7 +476,6 @@ Projeção 24 meses (Selic + Cupons − Saques)
 </div>
 </section>
 
-<!-- ============ PREMISSAS DO PDF ============ -->
 <section class="card-glass rounded-2xl p-5 border-l-4 border-amber-500/50">
 <h3 class="font-bold text-slate-200 text-sm mb-2">📄 Premissas do Planejamento (referência)</h3>
 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-[11px]">
@@ -506,7 +487,6 @@ Projeção 24 meses (Selic + Cupons − Saques)
 <p class="text-[10px] text-slate-500 mt-3">⚠ Teto de R$ 250k/mês <u>não é garantido</u> em todos os cenários — se a rentabilidade não cobrir, o saque deve ser reduzido antes de consumir o principal. Meta da reserva Selic será definida com o BTG.</p>
 </section>
 
-<!-- ============ REGRAS + FLUXO + TIMELINE ============ -->
 <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
 <div class="card-glass rounded-2xl p-5 space-y-3">
 <h3 class="font-bold text-slate-200 text-base border-b border-slate-700 pb-2 flex items-center gap-2">
@@ -556,7 +536,6 @@ Timeline Real (estimativa)
 
 </main>
 
-<!-- ============ MODAL CONFIG ============ -->
 <div id="modal-config" class="hidden fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
 <div class="card-glass rounded-2xl p-5 max-w-md w-full space-y-4">
 <h3 class="font-bold text-white text-lg">Configurações & Dados</h3>
@@ -602,7 +581,7 @@ IR_FAIXAS: [
 ],
 VALIDACAO: { selicMin: 6, selicMax: 20, ipcaMin: 1.5, ipcaMax: 15 },
 FALLBACK: { selic: 12.0, ipca: 5.0, rentSelicLiq: 10.5, rentIPCALiq: 8.0 },
-STORAGE_KEY: 'gestao32m-v35',
+STORAGE_KEY: 'gestao32m-v36',
 API_TIMEOUT: 8000,
 DIVISAO: { casa: 0.70, esposa: 0.15, marido: 0.15 },
 LIMITES_RENT: {
@@ -621,9 +600,6 @@ let chartProjecao = null;
 let estado = null;
 let dadosBCB = { selic: null, ipca: null, selicData: null, ipcaData: null, online: false, valido: false };
 
-/* =========================================================
-HELPERS DE PARSE — distinguem "vazio/NaN" de "0 válido"
-========================================================= */
 function parseValor(id) {
   const el = document.getElementById(id);
   if (!el) return NaN;
@@ -753,9 +729,6 @@ return { valor: parseFloat(String(json[0].valor).replace(',', '.')), data: json[
 } catch (e) { return null; } finally { clearTimeout(timer); }
 }
 
-/* =========================================================
-CACHE DO ÚLTIMO DADO BCB VÁLIDO
-========================================================= */
 const BCB_CACHE_KEY = 'gestao32m_bcb_last';
 const BCB_CACHE_MAX_AGE_DAYS = 30;
 
@@ -885,17 +858,11 @@ atualizarSimulacao();
 }
 function forcarAtualizacaoAPI() { atualizarDadosBCB(); fecharConfig(); }
 
-/* =========================================================
-IR REGRESSIVO
-========================================================= */
 function calcularIR(diasCorridos) {
 for (const faixa of CFG.IR_FAIXAS) { if (diasCorridos <= faixa.maxDias) return faixa.aliq; }
 return 0.15;
 }
 
-/* =========================================================
-CÁLCULOS
-========================================================= */
 function calcularCupomIPCA(valorIPCA, aliqIR) {
 const cupomSemestral = Math.pow(1 + CFG.CUPOM_FIXO_AA / 100, 0.5) - 1;
 return valorIPCA * cupomSemestral * (1 - (aliqIR || 0));
@@ -909,10 +876,6 @@ if (d <= ago) return ago;
 return proxAnoFev;
 }
 
-/* =========================================================
-RENTABILIDADE SELIC LÍQUIDA — AUTOMÁTICA
-Avisa quando o valor calculado sai da faixa do slider
-========================================================= */
 function recalcularSelicLiquida(forcarPorAcaoDoUsuario) {
 const selicEl = document.getElementById('input-rent-selic');
 const tagEl = document.getElementById('rent-selic-auto-tag');
@@ -944,10 +907,6 @@ if (tagEl) {
 if (forcarPorAcaoDoUsuario) { if (!estado) estado = { inputs: {} }; estado.inputs.rentSelicManual = false; }
 }
 
-/* =========================================================
-TAXA REAL IPCA+ → NOMINAL
-Avisa quando o valor calculado sai da faixa do slider
-========================================================= */
 function recalcularIPCANominal(forcarPorAcaoDoUsuario) {
 const realEl = document.getElementById('input-taxa-real-ipca');
 const nominalEl = document.getElementById('input-rent-ipca');
@@ -986,9 +945,6 @@ if (tagIPCA) {
 if (forcarPorAcaoDoUsuario) { if (!estado) estado = { inputs: {} }; estado.inputs.rentIPCAManual = false; }
 }
 
-/* =========================================================
-DIVISÃO DO SAQUE — AUTOMÁTICO (70/15/15) OU MANUAL
-========================================================= */
 function sincronizarModoDivisao() {
 const manual = document.getElementById('toggle-divisao-manual')?.checked;
 const campos = ['input-mesada-esposa', 'input-mesada-marido'];
@@ -1002,7 +958,7 @@ const label = document.getElementById('divisao-modo-label');
 const badge = document.getElementById('divisao-badge');
 if (manual) {
 if (label) label.innerHTML = '🔓 <strong class="text-amber-400">Modo manual</strong>: edite as mesadas livremente';
-if (badge) { badge.textContent = '(Manual)'; badge.className = 'text-[9px] text-amber-400 font-normal normal-case'; }
+// Badge será atualizado por atualizarBadgeDivisao() em atualizarSimulacao()
 } else {
 if (label) label.innerHTML = '🔒 Modo automático: <strong class="text-emerald-400">70% Casa / 15% Esposa / 15% Marido</strong>';
 if (badge) { badge.textContent = '(Automático 70/15/15)'; badge.className = 'text-[9px] text-emerald-400 font-normal normal-case'; }
@@ -1010,6 +966,34 @@ if (!estado) estado = { inputs: {} };
 estado.inputs.divisaoManual = false;
 }
 }
+
+/* Calcula e mostra as % reais no badge do modo manual */
+function atualizarBadgeDivisao(saqueMensal, vCasa, vEsposa, vMarido) {
+  const badge = document.getElementById('divisao-badge');
+  if (!badge) return;
+
+  const manual = estado?.inputs?.divisaoManual;
+
+  if (!manual) {
+    badge.textContent = '(Automático 70/15/15)';
+    badge.className = 'text-[9px] text-emerald-400 font-normal normal-case';
+    return;
+  }
+
+  if (saqueMensal <= 0) {
+    badge.textContent = '(Manual)';
+    badge.className = 'text-[9px] text-amber-400 font-normal normal-case';
+    return;
+  }
+
+  const pCasa   = Math.round((vCasa   / saqueMensal) * 100);
+  const pEsposa = Math.round((vEsposa / saqueMensal) * 100);
+  const pMarido = Math.round((vMarido / saqueMensal) * 100);
+
+  badge.textContent = `(Casa ${pCasa}% / Esposa ${pEsposa}% / Marido ${pMarido}%)`;
+  badge.className = 'text-[9px] text-amber-400 font-normal normal-case';
+}
+
 function aplicarDivisaoAutomatica(saqueMensal) {
 if (estado?.inputs?.divisaoManual) return;
 const casa   = saqueMensal * CFG.DIVISAO.casa;
@@ -1021,9 +1005,6 @@ if (elEsposa) elEsposa.value = Math.round(esposa);
 if (elMarido) elMarido.value = Math.round(marido);
 }
 
-/* =========================================================
-INPUTS — usa numOr() que distingue "0 válido" de "vazio"
-========================================================= */
 function aliquotaIR(inputs) { return (inputs.irEfetivo > 0) ? inputs.irEfetivo / 100 : calcularIR(800); }
 function calcularRendimentos(inputs) {
 const rendSelicLiq = inputs.selicInicial * (inputs.rentSelic / 100);
@@ -1149,9 +1130,6 @@ sincronizarModoDivisao();
 atualizarSomaAlocada();
 }
 
-/* =========================================================
-HELPERS DE ALOCAÇÃO
-========================================================= */
 function atualizarSomaAlocada() {
 const total = numOr('input-patrimonio', 0);
 const selic = numOr('input-selic-inicial', 0);
@@ -1190,9 +1168,6 @@ document.getElementById('input-ipca-inicial').value = Math.round(Math.max(0, tot
 atualizarSomaAlocada(); atualizarSimulacao();
 }
 
-/* =========================================================
-PAINEL DE SAÚDE DO INVESTIMENTO
-========================================================= */
 function calcularSaude(patrimonioTotal, rendTotalLiq, ipcaProjetado, saqueMensal, saldoSelic, metaSelic) {
 const saqueAnual = saqueMensal * 12;
 const rentNominalLiq = patrimonioTotal > 0 ? rendTotalLiq / patrimonioTotal * 100 : 0;
@@ -1210,7 +1185,6 @@ anos++;
 }
 const poderCompra10 = patrimonioTotal / Math.pow(1 + ipcaProjetado/100, 10);
 
-// ---- CAGR e Rentabilidade Acumulada (projeção 24 meses) ----
 const MESES_PROJ = 24;
 const aliqIRsaude = (estado?.inputs?.irEfetivo > 0) ? (estado.inputs.irEfetivo / 100) : calcularIR(800);
 const cupomSemestral = calcularCupomIPCA(estado?.inputs?.ipcaInicial || CFG.TESOURO_IPCA, aliqIRsaude);
@@ -1259,7 +1233,6 @@ elPC.textContent = formatarMoeda(saude.poderCompra10);
 elPC.className = 'text-lg font-bold text-slate-200';
 document.getElementById('saude-poder-compra-desc').textContent = 'Mesmo patrimônio, preços de hoje';
 
-// ---- CAGR ----
 const elCagr = document.getElementById('saude-cagr');
 if (elCagr) {
   elCagr.textContent = (saude.cagr >= 0 ? '+' : '') + saude.cagr.toFixed(2) + '% a.a.';
@@ -1268,7 +1241,6 @@ if (elCagr) {
     saude.cagr >= 6 ? 'Acima de referências conservadoras' :
     saude.cagr >= 3 ? 'Moderado' : 'Abaixo do esperado';
 }
-// ---- Rent. acumulada ----
 const elRent = document.getElementById('saude-rent-acum');
 if (elRent) {
   elRent.textContent = (saude.rentAcumulada >= 0 ? '+' : '') + saude.rentAcumulada.toFixed(2) + '%';
@@ -1338,10 +1310,6 @@ card.className = 'p-3 rounded-xl border ' + (ok ? 'bg-emerald-950/20 border-emer
 document.getElementById(txtId).textContent = texto;
 }
 
-/* =========================================================
-SIMULAÇÃO PRINCIPAL
-BUG CORRIGIDO: saldo Selic agora considera a origem real do saque extraordinário
-========================================================= */
 function atualizarSimulacao() {
 const inputs = coletarInputs();
 estado = estado || { inputs: {} };
@@ -1375,11 +1343,6 @@ elSaqueMax.className = 'text-[10px] block mt-0.5 ' + (saqueMensal <= saquePreser
 const elPayout = document.getElementById('payout-info');
 if (elPayout) elPayout.textContent = '= ' + formatarMoeda(saqueMensal) + '/mês · payout que preserva poder de compra: ~' + (pres.payoutMaxReal * 100).toFixed(0) + '%';
 
-// === BUG FIX 1: Saldo Selic real, considerando a origem do saque ===
-// O saque extraordinário já foi aplicado em aplicarSaqueExtra() e o input
-// de Selic já foi decrementado na hora. Aqui só lemos o valor atual.
-// Não subtraímos o `extraImovel`/`extraOutros` de novo — isso seria
-// uma dupla contagem que inflava artificialmente o rombo da reserva.
 const saldoSelicAtual = Math.max(0, selicBase);
 
 const dataBase = inputs.dataBase ? new Date(inputs.dataBase + 'T12:00:00') : new Date();
@@ -1453,12 +1416,13 @@ somaMesadas: vEsposa + vMarido
 renderizarProjecao(saldoSelicAtual, metaSelic, rendSelicLiq, cupomLiq, saqueMensal, dataBase);
 avaliarRegraAcao(saqueMensal, sobraAnual, saldoSelicAtual, metaSelic, resgateBruto, rendTotalLiq);
 atualizarGrafico(saldoSelicAtual, metaSelic, selicBase, ipcaBase, patrimonioTotal);
+
+// ATUALIZA O BADGE COM AS % REAIS (auto ou manual)
+atualizarBadgeDivisao(saqueMensal, vCasa, vEsposa, vMarido);
+
 salvarEstado();
 }
 
-/* =========================================================
-PROJEÇÃO DE RECOMPOSIÇÃO
-========================================================= */
 function renderizarProjecao(saldoSelic, meta, rendSelicAnual, cupomSemestral, saqueMensal, dataBase) {
 const el = document.getElementById('projecao-conteudo');
 const rendMensal = rendSelicAnual / 12;
@@ -1486,9 +1450,6 @@ el.innerHTML = `Déficit: <strong>${formatarMoeda(deficit)}</strong> · Sobra me
 }
 }
 
-/* =========================================================
-DIAGNÓSTICO / AÇÃO
-========================================================= */
 function avaliarRegraAcao(saqueMensal, sobraAnual, saldoSelic, metaSelic, resgateBruto, rendTotalLiq) {
 const banner = document.getElementById('action-banner');
 const title = document.getElementById('action-title');
@@ -1551,9 +1512,6 @@ rec.textContent = 'Manter R$ ' + (saqueMensal/1000).toFixed(0) + 'k/mês';
 rec.className = 'text-base sm:text-lg font-bold text-emerald-400';
 }
 
-/* =========================================================
-PAINEL DE AJUSTE
-========================================================= */
 function mostrarPainelAjuste(tipo, dados) {
 const painel = document.getElementById('painel-ajuste');
 const motivo = document.getElementById('ajuste-motivo');
@@ -1602,11 +1560,6 @@ opcoes.innerHTML = `
 }
 }
 
-/* =========================================================
-APLICAR SAQUE EXTRAORDINÁRIO NA ALOCAÇÃO
-BUG CORRIGIDO: agora não subtrai do `patrimônio total` (já é feito ao digitar)
-e registra corretamente no histórico
-========================================================= */
 function aplicarSaqueExtra() {
   const extraImovel = numOr('input-extra-imovel', 0);
   const extraOutros = numOr('input-extra-outros', 0);
@@ -1648,16 +1601,12 @@ function aplicarSaqueExtra() {
   document.getElementById('input-extra-imovel').value = 0;
   document.getElementById('input-extra-outros').value = 0;
 
-  // ---- Registra no histórico ----
   registrarHistoricoExtra(totalExtra, tiraSelic, tiraIPCA);
 
   atualizarSomaAlocada();
   atualizarSimulacao();
 }
 
-/* =========================================================
-HISTÓRICO DE SAQUES EXTRAORDINÁRIOS
-========================================================= */
 const HIST_EXTRA_KEY = 'gestao32m_hist_extra';
 
 function carregarHistoricoExtra() {
@@ -1733,9 +1682,6 @@ function limparHistoricoExtra() {
   });
 });
 
-/* =========================================================
-APLICAR FIX
-========================================================= */
 function aplicarFix(tipo, valor) {
 if (!estado) estado = { inputs: {} };
 if (tipo === 'reduzirSaque') {
@@ -1768,9 +1714,6 @@ atualizarSimulacao(); return;
 }
 }
 
-/* =========================================================
-GRÁFICOS
-========================================================= */
 function initCharts() {
 const ctx1 = document.getElementById('chartPatrimonio').getContext('2d');
 chartAlocacao = new Chart(ctx1, {
@@ -1848,9 +1791,6 @@ chartProjecao.data.datasets[1].data = metaLine;
 chartProjecao.update('none');
 }
 
-/* =========================================================
-UTILITÁRIOS
-========================================================= */
 function formatarMoeda(v) {
 if (!isFinite(v)) return 'R$ 0';
 return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(v);
@@ -1895,9 +1835,6 @@ renderizarHistoricoExtra();
 function abrirConfig() { document.getElementById('modal-config').classList.remove('hidden'); }
 function fecharConfig() { document.getElementById('modal-config').classList.add('hidden'); }
 
-/* =========================================================
-INIT
-========================================================= */
 document.addEventListener('DOMContentLoaded', () => {
 const dbEl = document.getElementById('input-data-base');
 if (!dbEl.value) dbEl.value = new Date().toISOString().slice(0,10);
