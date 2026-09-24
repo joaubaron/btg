@@ -1202,16 +1202,15 @@ const rentNominalLiq = patrimonioTotal > 0 ? rendTotalLiq / patrimonioTotal * 10
 const retornoReal = ((1 + rentNominalLiq/100) / (1 + ipcaProjetado/100) - 1) * 100;
 const taxaRetirada = patrimonioTotal > 0 ? saqueAnual / patrimonioTotal * 100 : 0;
 
+// Simulação em termos REAIS: retorno real e saque real (constante).
+// Tudo na mesma unidade — sem misturar nominal com real.
 const retornoRealMensal = Math.pow(1 + retornoReal/100, 1/12) - 1;
-const inflacaoMensal = Math.pow(1 + ipcaProjetado/100, 1/12) - 1;
 let saldo = patrimonioTotal;
-let saqueCorrigido = saqueMensal;
 let anos = 0;
 const maxAnos = 100;
 while (saldo > 0 && anos < maxAnos) {
 for (let m = 0; m < 12 && saldo > 0; m++) {
-saldo = saldo * (1 + retornoRealMensal) - saqueCorrigido;
-saqueCorrigido *= (1 + inflacaoMensal);
+saldo = saldo * (1 + retornoRealMensal) - saqueMensal;
 }
 anos++;
 }
@@ -1671,7 +1670,7 @@ valor,
 tiraSelic: tiraSelic || 0,
 tiraIPCA: tiraIPCA || 0,
 origem: tiraSelic > 0 && tiraIPCA > 0 ? 'misto' :
-    tiraSelic > 0 ? 'Selic' : 'IPCA+'
+tiraSelic > 0 ? 'Selic' : 'IPCA+'
 });
 salvarHistoricoExtra(lista);
 renderizarHistoricoExtra();
@@ -1690,11 +1689,11 @@ el.innerHTML = lista.map((item) => `
 <div class="flex items-center justify-between p-1.5 bg-slate-900/60 rounded border border-slate-800">
 <div class="flex-1 min-w-0">
 <div class="flex items-center gap-1.5">
-  <span class="text-amber-300 font-bold">${fm(item.valor)}</span>
-  <span class="text-slate-500">· ${item.data}</span>
+<span class="text-amber-300 font-bold">${fm(item.valor)}</span>
+<span class="text-slate-500">· ${item.data}</span>
 </div>
 <div class="text-slate-400 text-[9px]">
-  ${item.tiraSelic > 0 ? `Selic: ${fm(item.tiraSelic)} ` : ''}${item.tiraIPCA > 0 ? `IPCA+: ${fm(item.tiraIPCA)}` : ''}
+${item.tiraSelic > 0 ? `Selic: ${fm(item.tiraSelic)} ` : ''}${item.tiraIPCA > 0 ? `IPCA+: ${fm(item.tiraIPCA)}` : ''}
 </div>
 </div>
 <button onclick="removerHistoricoExtra(${item.ts})" class="text-slate-600 hover:text-rose-400 text-xs px-1" title="remover">×</button>
