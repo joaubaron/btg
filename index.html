@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Gestão Patrimonial v2.11</title>
+<title>Gestão Patrimonial v2.12</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
 
 <meta name="theme-color" content="#0f172a">
@@ -36,9 +36,7 @@ document.getElementById('app-manifest').href =
 URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' }));
 </script>
 
-<!-- Tailwind local (antes era CDN) -->
 <link rel="stylesheet" href="./tailwind.css">
-<!-- Chart.js local (antes era CDN) -->
 <script src="./chart.js"></script>
 
 <style>
@@ -53,6 +51,13 @@ input[type=number]{-moz-appearance:textfield}
 .btn-fix{transition:all .2s ease}
 .btn-fix:hover{transform:translateY(-1px)}
 header.sticky{padding-top:calc(0.75rem + env(safe-area-inset-top,0px))}
+.readonly-field{background:#0b1220 !important;color:#94a3b8 !important;cursor:not-allowed;border-color:#1e293b !important;opacity:.85}
+.toggle-switch{position:relative;display:inline-block;width:36px;height:20px}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#334155;transition:.3s;border-radius:20px}
+.toggle-slider:before{position:absolute;content:"";height:14px;width:14px;left:3px;bottom:3px;background:#94a3b8;transition:.3s;border-radius:50%}
+.toggle-switch input:checked + .toggle-slider{background:#10b981}
+.toggle-switch input:checked + .toggle-slider:before{transform:translateX(16px);background:#fff}
 @media (max-width:380px){
   #action-banner .flex-col{gap:.75rem}
   .btn-fix{font-size:11px;padding:.5rem .6rem}
@@ -69,7 +74,7 @@ header.sticky{padding-top:calc(0.75rem + env(safe-area-inset-top,0px))}
 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
 </div>
 <div class="min-w-0">
-<h1 class="font-bold text-base sm:text-lg leading-tight text-white truncate">Gestão Patrimonial <span class="text-emerald-400">v2.11</span></h1>
+<h1 class="font-bold text-base sm:text-lg leading-tight text-white truncate">Gestão Patrimonial <span class="text-emerald-400">v2.12</span></h1>
 <p class="text-[11px] text-slate-400 truncate">Base: <span id="header-base">R$ 32.000.000</span> · <span id="header-data">--/--/----</span></p>
 </div>
 </div>
@@ -256,18 +261,30 @@ Parâmetros
 <input type="number" id="input-payout" value="60" min="0" max="100" step="1" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
 <span id="payout-info" class="text-[10px] text-slate-400 block mt-0.5">—</span>
 </div>
+
+<!-- ============ DIVISÃO DO SAQUE (NOVO) ============ -->
 <div class="pt-2 border-t border-slate-700/50 space-y-2">
-<label class="block text-xs font-medium text-slate-300">Divisão do saque <span class="text-[9px] text-slate-400 font-normal">(Casa = saque − mesadas)</span></label>
-<div class="grid grid-cols-2 gap-2">
+<div class="flex items-center justify-between">
+<label class="block text-xs font-medium text-slate-300">Divisão do saque</label>
+<label class="toggle-switch" title="Ativar/desativar modo manual">
+<input type="checkbox" id="toggle-divisao-manual">
+<span class="toggle-slider"></span>
+</label>
+</div>
+<p class="text-[10px] text-slate-400" id="divisao-modo-label">🔒 Modo automático: <strong class="text-emerald-400">70% Casa / 15% Esposa / 15% Marido</strong></p>
+
+<div class="grid grid-cols-2 gap-2 mt-2">
 <div><span class="text-[10px] text-slate-400">Mesada Esposa (R$/mês)</span>
-<input type="number" id="input-mesada-esposa" value="24000" min="0" step="1000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white"></div>
+<input type="number" id="input-mesada-esposa" value="24000" min="0" step="1000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white readonly-field" readonly></div>
 <div><span class="text-[10px] text-slate-400">Mesada Marido (R$/mês)</span>
-<input type="number" id="input-mesada-marido" value="24000" min="0" step="1000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white"></div>
+<input type="number" id="input-mesada-marido" value="24000" min="0" step="1000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white readonly-field" readonly></div>
 </div>
-<div><span class="text-[10px] text-slate-400">Piso da Casa (R$/mês, opcional)</span>
+<div class="mt-2"><span class="text-[10px] text-slate-400">Piso da Casa (R$/mês, opcional)</span>
 <input type="number" id="input-piso-casa" value="0" min="0" step="5000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white"></div>
-<button onclick="reajustarMesadasIPCA()" class="w-full text-[10px] py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700">Reajustar mesadas e piso pelo IPCA (12m, 1×/ano)</button>
+<p class="text-[10px] text-slate-500 mt-1">💡 Modo automático aplica 70/15/15 sobre o saque. Ative o toggle para editar manualmente.</p>
+<button onclick="reajustarMesadasIPCA()" class="w-full text-[10px] py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 mt-2">Reajustar mesadas e piso pelo IPCA (12m, 1×/ano)</button>
 </div>
+
 <div>
 <label class="block text-xs font-medium text-slate-300 mb-1">Rentabilidade Selic <span class="text-[9px] text-emerald-400">(líquida % a.a.)</span></label>
 <div class="flex items-center gap-2">
@@ -369,7 +386,7 @@ Parâmetros
 </div>
 
 <div class="bg-slate-900/40 border border-slate-800 p-4 rounded-xl">
-<h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Divisão Mensal (Casa = saque − mesadas)</h4>
+<h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Divisão Mensal <span class="text-[9px] text-emerald-400 font-normal normal-case" id="divisao-badge">(Automático 70/15/15)</span></h4>
 <div class="grid grid-cols-3 gap-2 text-center">
 <div class="p-2 bg-slate-800/80 rounded-lg"><span class="text-[10px] text-slate-400 block">Casa</span><span class="text-sm font-bold text-white" id="dist-casa">—</span></div>
 <div class="p-2 bg-slate-800/80 rounded-lg"><span class="text-[10px] text-slate-400 block">Esposa</span><span class="text-sm font-bold text-purple-300" id="dist-esposa">—</span></div>
@@ -420,7 +437,7 @@ Projeção 24 meses (Selic + Cupons − Saques)
 Regras do Planejamento
 </h3>
 <ul class="space-y-2.5 text-xs text-slate-300">
-<li class="flex items-start gap-2"><span class="p-1 bg-indigo-500/20 text-indigo-400 rounded mt-0.5 shrink-0">1</span><span><strong>Teto R$ 250k:</strong> condicionado ao desempenho. Se não cobrir, reduzir <u>antes de consumir principal</u>.</span></li>
+<li class="flex items-start gap-2"><span class="p-1 bg-indigo-500/20 text-indigo-400 rounded mt-0.5 shrink-0">1</span><span><strong>Divisão 70/15/15:</strong> Casa 70%, Esposa 15%, Marido 15% — automático sobre o saque.</span></li>
 <li class="flex items-start gap-2"><span class="p-1 bg-indigo-500/20 text-indigo-400 rounded mt-0.5 shrink-0">2</span><span><strong>Cupons IPCA+:</strong> destinados <u>prioritariamente à recomposição da Selic</u> até o nível definido.</span></li>
 <li class="flex items-start gap-2"><span class="p-1 bg-indigo-500/20 text-indigo-400 rounded mt-0.5 shrink-0">3</span><span><strong>Saques extraordinários:</strong> aprovados pelo casal, tratados à parte do saque mensal.</span></li>
 <li class="flex items-start gap-2"><span class="p-1 bg-indigo-500/20 text-indigo-400 rounded mt-0.5 shrink-0">4</span><span><strong>Revisão anual BTG:</strong> rentabilidade, reserva, inflação e sustentabilidade.</span></li>
@@ -478,7 +495,7 @@ Timeline Real (estimativa)
 </div>
 <div class="text-[10px] text-slate-500 border-t border-slate-700 pt-3 space-y-1">
 <p><strong>API BCB:</strong> Selic s.432 · IPCA s.13522 (12m acum.) — via fetch</p>
-<p><strong>Premissas do plano:</strong> Selic 11–13% · IPCA 4–6% · Rent. líq. 8,5–10%</p>
+<p><strong>Divisão padrão:</strong> 70% Casa / 15% Esposa / 15% Marido (modo automático)</p>
 <p><strong>Rentabilidades:</strong> Selic e IPCA+ líquidas calculadas (BCB, IR efetivo e custo BTG); ajuste manual possível</p>
 <p><strong>IR:</strong> incide apenas sobre rendimento do resgate</p>
 </div>
@@ -507,8 +524,9 @@ IR_FAIXAS: [
 ],
 VALIDACAO: { selicMin: 6, selicMax: 20, ipcaMin: 1.5, ipcaMax: 15 },
 FALLBACK: { selic: 12.0, ipca: 5.0, rentSelicLiq: 10.5, rentIPCALiq: 8.0 },
-STORAGE_KEY: 'gestao32m_v26',
+STORAGE_KEY: 'gestao32m_v27',
 API_TIMEOUT: 8000,
+DIVISAO: { casa: 0.70, esposa: 0.15, marido: 0.15 },
 PDF: {
 rentLiqMin: 8.5, rentLiqMax: 10.0,
 rendMin: 2720000, rendMax: 3200000,
@@ -553,9 +571,11 @@ if (data.inputs) {
 aplicarInputs(data.inputs);
 estado = { inputs: {
 rentSelicManual: !!data.inputs.rentSelicManual,
-rentIPCAManual: !!data.inputs.rentIPCAManual
+rentIPCAManual: !!data.inputs.rentIPCAManual,
+divisaoManual: !!data.inputs.divisaoManual
 } };
 document.getElementById('rent-selic-auto-tag').textContent = data.inputs.rentSelicManual ? 'Manual (ajustado por você)' : 'Auto: derivada da Selic BCB, IR e custo BTG';
+if (data.inputs.divisaoManual) { document.getElementById('toggle-divisao-manual').checked = true; sincronizarModoDivisao(); }
 salvarEstado(); atualizarSimulacao(); alert('Importado com sucesso!');
 }
 } catch { alert('Arquivo inválido.'); }
@@ -728,6 +748,41 @@ if (forcarPorAcaoDoUsuario) { if (!estado) estado = { inputs: {} }; estado.input
 }
 
 /* =========================================================
+DIVISÃO DO SAQUE — AUTOMÁTICO (70/15/15) OU MANUAL
+========================================================= */
+function sincronizarModoDivisao() {
+const manual = document.getElementById('toggle-divisao-manual')?.checked;
+const campos = ['input-mesada-esposa', 'input-mesada-marido'];
+campos.forEach(id => {
+const el = document.getElementById(id);
+if (!el) return;
+if (manual) { el.readOnly = false; el.classList.remove('readonly-field'); }
+else { el.readOnly = true; el.classList.add('readonly-field'); }
+});
+const label = document.getElementById('divisao-modo-label');
+const badge = document.getElementById('divisao-badge');
+if (manual) {
+if (label) label.innerHTML = '🔓 <strong class="text-amber-400">Modo manual</strong>: edite as mesadas livremente';
+if (badge) { badge.textContent = '(Manual)'; badge.className = 'text-[9px] text-amber-400 font-normal normal-case'; }
+} else {
+if (label) label.innerHTML = '🔒 Modo automático: <strong class="text-emerald-400">70% Casa / 15% Esposa / 15% Marido</strong>';
+if (badge) { badge.textContent = '(Automático 70/15/15)'; badge.className = 'text-[9px] text-emerald-400 font-normal normal-case'; }
+if (!estado) estado = { inputs: {} };
+estado.inputs.divisaoManual = false;
+}
+}
+function aplicarDivisaoAutomatica(saqueMensal) {
+if (estado?.inputs?.divisaoManual) return; // modo manual: não mexe
+const casa   = saqueMensal * CFG.DIVISAO.casa;
+const esposa = saqueMensal * CFG.DIVISAO.esposa;
+const marido = saqueMensal * CFG.DIVISAO.marido;
+const elEsposa = document.getElementById('input-mesada-esposa');
+const elMarido = document.getElementById('input-mesada-marido');
+if (elEsposa) elEsposa.value = Math.round(esposa);
+if (elMarido) elMarido.value = Math.round(marido);
+}
+
+/* =========================================================
 INPUTS
 ========================================================= */
 function numInput(id, def, min, max) {
@@ -788,6 +843,10 @@ const caixaAnual = d.rendSelicLiq + d.cupomLiq * 2;
 if (d.saqueMensal * 12 > caixaAnual) {
 itens.push(['aviso', `Rendimento em caixa (Selic + cupons) de ${fm(caixaAnual)}/ano cobre menos que o saque de ${fm(d.saqueMensal * 12)}/ano: a diferença exigirá vender IPCA+ antes do vencimento (marcação a mercado).`]);
 }
+if (d.divisaoManual && d.somaMesadas !== d.saqueMensal) {
+const dif = d.saqueMensal - d.somaMesadas;
+itens.push([dif > 0 ? 'aviso' : 'erro', `Modo manual: mesadas (${fm(d.somaMesadas)}) ${dif > 0 ? 'abaixo' : 'acima'} do saque (${fm(d.saqueMensal)}). Diferença de ${fm(Math.abs(dif))} fica ${dif > 0 ? 'na Casa' : 'descoberta'}.`]);
+}
 if (!itens.length) {
 el.innerHTML = '<div class="p-2 rounded-lg border bg-emerald-950/20 border-emerald-800/40 text-emerald-300">✓ Divisão, poder de compra e rendimento em caixa dentro dos limites.</div>';
 return;
@@ -819,7 +878,8 @@ mesadaEsposa: numInput('input-mesada-esposa', CFG.MESADA_PADRAO, 0),
 mesadaMarido: numInput('input-mesada-marido', CFG.MESADA_PADRAO, 0),
 pisoCasa: numInput('input-piso-casa', 0, 0),
 rentSelicManual: estado?.inputs?.rentSelicManual || false,
-rentIPCAManual: estado?.inputs?.rentIPCAManual || false
+rentIPCAManual: estado?.inputs?.rentIPCAManual || false,
+divisaoManual: estado?.inputs?.divisaoManual || false
 };
 }
 
@@ -853,6 +913,8 @@ if (inp.dataBase) document.getElementById('input-data-base').value = inp.dataBas
 sincronizarModoSaque();
 document.getElementById('val-rent-selic').textContent = (inp.rentSelic || 10.5).toFixed(1) + '%';
 document.getElementById('val-rent-ipca').textContent = (inp.rentIPCA || 8.0).toFixed(1) + '%';
+if (inp.divisaoManual) { const t = document.getElementById('toggle-divisao-manual'); if (t) t.checked = true; }
+sincronizarModoDivisao();
 atualizarSomaAlocada();
 }
 
@@ -1013,6 +1075,14 @@ const metaSelic = inputs.metaSelic;
 
 const { rendSelicLiq, rendIPCALiq, rendTotalLiq } = calcularRendimentos(inputs);
 const saqueMensal = calcularSaqueMensal(inputs, rendTotalLiq);
+
+// === APLICA DIVISÃO AUTOMÁTICA 70/15/15 (se modo auto) ===
+aplicarDivisaoAutomatica(saqueMensal);
+
+// Re-lê as mesadas (podem ter sido atualizadas pela divisão automática)
+const mesadaEsposa = numInput('input-mesada-esposa', 0, 0);
+const mesadaMarido = numInput('input-mesada-marido', 0, 0);
+
 const pres = calcularPreservacaoReal(patrimonioTotal, rendTotalLiq);
 const consomeReal = saqueMensal * 12 > pres.saqueMaxRealAnual + 1;
 
@@ -1045,8 +1115,8 @@ const ipcaProjetado = dadosBCB.ipca || CFG.FALLBACK.ipca;
 const cupomLiq = calcularCupomIPCA(ipcaBase, aliqIR);
 const proxCupom = proximoPagamentoCupom(dataBase);
 
-const vEsposa = inputs.mesadaEsposa;
-const vMarido = inputs.mesadaMarido;
+const vEsposa = mesadaEsposa;
+const vMarido = mesadaMarido;
 const vCasa = saqueMensal - vEsposa - vMarido;
 
 document.getElementById('header-base').textContent = formatarMoeda(patrimonioTotal);
@@ -1090,7 +1160,12 @@ document.getElementById('rec-saque-bruto').textContent = 'bruto: ' + formatarMoe
 
 const saude = calcularSaude(patrimonioTotal, rendTotalLiq, ipcaProjetado, saqueMensal, saldoSelicAtual, metaSelic);
 renderizarSaude(saude, saldoSelicAtual, metaSelic);
-renderizarAlertas({ saqueMensal, vCasa, vEsposa, vMarido, pisoCasa: inputs.pisoCasa, consomeReal, pres, rendSelicLiq, cupomLiq });
+renderizarAlertas({
+saqueMensal, vCasa, vEsposa, vMarido, pisoCasa: inputs.pisoCasa,
+consomeReal, pres, rendSelicLiq, cupomLiq,
+divisaoManual: estado?.inputs?.divisaoManual || false,
+somaMesadas: vEsposa + vMarido
+});
 
 renderizarProjecao(saldoSelicAtual, metaSelic, rendSelicLiq, cupomLiq, saqueMensal, dataBase);
 avaliarRegraAcao(saqueMensal, sobraAnual, saldoSelicAtual, metaSelic, resgateBruto, rendTotalLiq);
@@ -1393,7 +1468,9 @@ document.getElementById('input-meta-selic').value = 12000000;
 document.getElementById('input-extra-imovel').value = 0;
 document.getElementById('input-extra-outros').value = 0;
 document.getElementById('input-data-base').value = new Date().toISOString().slice(0,10);
-estado = { inputs: { rentSelicManual: false, rentIPCAManual: false } };
+document.getElementById('toggle-divisao-manual').checked = false;
+estado = { inputs: { rentSelicManual: false, rentIPCAManual: false, divisaoManual: false } };
+sincronizarModoDivisao();
 recalcularSelicLiquida(true);
 recalcularIPCANominal(true);
 atualizarSomaAlocada(); atualizarSimulacao();
@@ -1411,12 +1488,23 @@ if (!dbEl.value) dbEl.value = new Date().toISOString().slice(0,10);
 const salvo = carregarEstado();
 if (salvo) {
 aplicarInputs(salvo);
-estado = { inputs: { rentSelicManual: !!salvo.rentSelicManual, rentIPCAManual: !!salvo.rentIPCAManual } };
+estado = { inputs: {
+rentSelicManual: !!salvo.rentSelicManual,
+rentIPCAManual: !!salvo.rentIPCAManual,
+divisaoManual: !!salvo.divisaoManual
+} };
 if (salvo.rentSelicManual) { const t = document.getElementById('rent-selic-auto-tag'); if (t) t.textContent = 'Manual (ajustado por você)'; }
 }
 
 document.getElementById('select-saque').addEventListener('change', e => {
 sincronizarModoSaque();
+atualizarSimulacao();
+});
+
+document.getElementById('toggle-divisao-manual').addEventListener('change', e => {
+if (!estado) estado = { inputs: {} };
+estado.inputs.divisaoManual = e.target.checked;
+sincronizarModoDivisao();
 atualizarSimulacao();
 });
 
@@ -1445,6 +1533,7 @@ atualizarSimulacao();
 });
 
 sincronizarModoSaque();
+sincronizarModoDivisao();
 recalcularSelicLiquida();
 recalcularIPCANominal();
 initCharts();
