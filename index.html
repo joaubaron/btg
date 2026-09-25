@@ -556,7 +556,7 @@ Timeline Real (estimativa)
 
 <!-- MODAL: Como preservar o patrimônio -->
 <div id="modal-sw" class="hidden fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-<div class="card-glass rounded-2xl p-5 max-w-md w-full space-y-4">
+<div class="card-glass rounded-2xl p-5 max-w-md w-full space-y-4 max-h-[90vh] overflow-y-auto">
 <h3 class="font-bold text-white text-lg" id="modal-sw-titulo">⚙ Service Worker</h3>
 <p class="text-xs text-slate-300" id="modal-sw-texto">—</p>
 <button onclick="fecharModalSW()" class="w-full p-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm">Fechar</button>
@@ -564,7 +564,7 @@ Timeline Real (estimativa)
 </div>
 
 <div id="modal-limpar-dados" class="hidden fixed inset-0 z-[110] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-<div class="card-glass rounded-2xl p-5 max-w-md w-full space-y-4">
+<div class="card-glass rounded-2xl p-5 max-w-md w-full space-y-4 max-h-[90vh] overflow-y-auto">
 <h3 class="font-bold text-rose-300 text-lg">🗑 Apagar todos os dados?</h3>
 <p class="text-xs text-slate-300">Isso apaga o patrimônio inicial configurado, os parâmetros ajustados e o histórico de saques. O app reinicia do zero e vai pedir um novo valor inicial.</p>
 <div class="space-y-3">
@@ -590,7 +590,7 @@ Timeline Real (estimativa)
 </div>
 
 <div id="modal-onboarding" class="hidden fixed inset-0 z-[110] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-<div class="card-glass rounded-2xl p-5 max-w-md w-full space-y-4">
+<div class="card-glass rounded-2xl p-5 max-w-md w-full space-y-4 max-h-[90vh] overflow-y-auto">
 <h3 class="font-bold text-white text-lg">👋 Bem-vindo</h3>
 <p class="text-xs text-slate-300">Antes de começar, informe o patrimônio total que você quer simular. O app divide automaticamente entre Selic e Tesouro IPCA+ (você pode ajustar essa divisão depois em Configurações).</p>
 <div>
@@ -608,7 +608,7 @@ Timeline Real (estimativa)
 </div>
 
 <div id="modal-preservar" class="hidden fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-  <div class="card-glass rounded-2xl p-5 max-w-md w-full space-y-4">
+  <div class="card-glass rounded-2xl p-5 max-w-md w-full space-y-4 max-h-[90vh] overflow-y-auto">
     <h3 class="font-bold text-white text-lg">Como preservar o patrimônio</h3>
     <div class="space-y-4 text-xs text-slate-300">
       <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800">
@@ -763,6 +763,7 @@ divisaoManual:   !!inp.divisaoManual
 } catch { return null; }
 }
 function limparStorage() {
+document.getElementById('modal-config').classList.add('hidden');
 document.getElementById('modal-limpar-dados').classList.remove('hidden');
 }
 function fecharModalLimparDados() {
