@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Gestão Patrimonial v2.12</title>
+<title>Gestão Patrimonial v2.14</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
 
 <meta name="theme-color" content="#0f172a">
@@ -92,7 +92,7 @@ header.sticky{padding-top:calc(0.75rem + env(safe-area-inset-top,0px))}
 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
 </div>
 <div class="min-w-0">
-<h1 class="font-bold text-base sm:text-lg leading-tight text-white truncate">Gestão Patrimonial <span class="text-emerald-400">v2.12</span></h1>
+<h1 class="font-bold text-base sm:text-lg leading-tight text-white truncate">Gestão Patrimonial <span class="text-emerald-400">v2.14</span></h1>
 <p class="text-[11px] text-slate-400 truncate">Base: <span id="header-base">R$ 38.000.000</span> · <span id="header-data">--/--/----</span></p>
 </div>
 </div>
@@ -624,6 +624,7 @@ FALLBACK: { selic: 12.0, ipca: 5.0, rentSelicLiq: 10.5, rentIPCALiq: 8.0 },
 STORAGE_KEY: 'gestao32m-v36',
 API_TIMEOUT: 8000,
 DIVISAO: { casa: 0.70, esposa: 0.15, marido: 0.15 },
+TAXA_RETIRADA_SEGURA_40ANOS: 3.5, // horizonte ~40 anos (60→100); regra clássica de 4-5% é calibrada p/ ~30 anos
 LIMITES_RENT: {
 selicMin: 2, selicMax: 14,
 ipcaMin: 6, ipcaMax: 14
@@ -934,8 +935,9 @@ for (const faixa of CFG.IR_FAIXAS) { if (diasCorridos <= faixa.maxDias) return f
 return 0.15;
 }
 
-function calcularCupomIPCA(valorIPCA, aliqIR) {
-const cupomSemestral = Math.pow(1 + CFG.CUPOM_FIXO_AA / 100, 0.5) - 1;
+function calcularCupomIPCA(valorIPCA, aliqIR, taxaRealAA) {
+const taxa = (taxaRealAA !== undefined && taxaRealAA !== null && !isNaN(taxaRealAA)) ? taxaRealAA : CFG.CUPOM_FIXO_AA;
+const cupomSemestral = Math.pow(1 + taxa / 100, 0.5) - 1;
 return valorIPCA * cupomSemestral * (1 - (aliqIR || 0));
 }
 function proximoPagamentoCupom(dataBase) {
@@ -1254,7 +1256,7 @@ const poderCompra10 = patrimonioTotal / Math.pow(1 + ipcaProjetado/100, 10);
 
 const MESES_PROJ = 24;
 const aliqIRsaude = (estado?.inputs?.irEfetivo > 0) ? (estado.inputs.irEfetivo / 100) : calcularIR(800);
-const cupomSemestral = calcularCupomIPCA(estado?.inputs?.ipcaInicial || CFG.TESOURO_IPCA, aliqIRsaude);
+const cupomSemestral = calcularCupomIPCA(estado?.inputs?.ipcaInicial || CFG.TESOURO_IPCA, aliqIRsaude, estado?.inputs?.taxaRealIPCA);
 const rentSelicAnual = (estado?.inputs?.selicInicial || CFG.SELIC_INICIAL) * ((estado?.inputs?.rentSelic || 10.5) / 100);
 const resgateBrutoMensal = saqueMensal * 1.02;
 
@@ -1282,10 +1284,10 @@ saude.retornoReal >= 0 ? 'Ganha da inflação' : 'Perde para a inflação';
 
 const elTx = document.getElementById('saude-tx-retirada');
 elTx.textContent = saude.taxaRetirada.toFixed(2) + '% a.a.';
-elTx.className = 'text-lg font-bold ' + (saude.taxaRetirada <= 4 ? 'text-emerald-400' : saude.taxaRetirada <= 6 ? 'text-amber-400' : 'text-rose-400');
+elTx.className = 'text-lg font-bold ' + (saude.taxaRetirada <= CFG.TAXA_RETIRADA_SEGURA_40ANOS ? 'text-emerald-400' : saude.taxaRetirada <= 5 ? 'text-amber-400' : 'text-rose-400');
 document.getElementById('saude-tx-retirada-desc').textContent =
-saude.taxaRetirada <= 4 ? 'Abaixo da taxa segura (4%)' :
-saude.taxaRetirada <= 6 ? 'Zona de atenção' : 'Acima do sustentável';
+saude.taxaRetirada <= CFG.TAXA_RETIRADA_SEGURA_40ANOS ? `Segura p/ horizonte de 40 anos (≤${CFG.TAXA_RETIRADA_SEGURA_40ANOS}%)` :
+saude.taxaRetirada <= 5 ? 'Sustentável p/ 30 anos, apertada p/ 40' : 'Acima do sustentável';
 
 const elDur = document.getElementById('saude-durabilidade');
 elDur.textContent = saude.durabilidade >= 100 ? '∞ (perpétuo)' : saude.durabilidade + ' anos+';
@@ -1317,7 +1319,7 @@ saude.rentAcumulada >= 12 ? 'Ganho composto em 24 meses' :
 saude.rentAcumulada >= 6 ? 'Ganho moderado' : 'Ganho baixo';
 }
 
-const preservaPrincipal = saude.retornoReal >= 0 && saude.taxaRetirada <= 5;
+const preservaPrincipal = saude.retornoReal >= 0 && saude.taxaRetirada <= CFG.TAXA_RETIRADA_SEGURA_40ANOS;
 const preservaReal = saude.retornoReal >= 2;
 const reservaOk = saldoSelic >= metaSelic;
 
@@ -1327,7 +1329,7 @@ preservaPrincipal
 ? `Sim. Retorno real ${saude.retornoReal.toFixed(1)}% e retirada ${saude.taxaRetirada.toFixed(1)}% — principal preservado.`
 : saude.retornoReal < 0
 ? `Não. Retorno real negativo (${saude.retornoReal.toFixed(1)}%) — você está consumindo o principal.`
-: `Risco. Retirada de ${saude.taxaRetirada.toFixed(1)}% acima do sustentável (4–5%). Reduza o saque para preservar.`
+: `Risco. Retirada de ${saude.taxaRetirada.toFixed(1)}% acima do recomendado p/ 40 anos (${CFG.TAXA_RETIRADA_SEGURA_40ANOS}%). Reduza o saque para preservar.`
 );
 
 setCard('saude-card-real', 'saude-dot-real', 'saude-txt-real',
@@ -1353,14 +1355,20 @@ if (preservaPrincipal && preservaReal && reservaOk) {
 veredito.textContent = '✓ SAUDÁVEL';
 veredito.className = 'text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-700/50';
 explicacao.className = 'saude-explicacao ok';
-explicacao.innerHTML = '<strong class="text-emerald-300">Tudo em ordem.</strong> Retorno real positivo, retirada dentro do sustentável (≤ 5%) e reserva Selic na meta. O poder de compra e o principal estão preservados.';
+explicacao.innerHTML = `<strong class="text-emerald-300">Tudo em ordem.</strong> Retorno real positivo, retirada dentro da faixa segura p/ horizonte de 40 anos (≤ ${CFG.TAXA_RETIRADA_SEGURA_40ANOS}%) e reserva Selic na meta. O poder de compra e o principal estão preservados.`;
 } else if (!preservaReal || !preservaPrincipal) {
 veredito.textContent = '⚠ ATENÇÃO';
 veredito.className = 'text-xs font-bold px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-700/50';
 explicacao.className = 'saude-explicacao';
 const taxa = saude.taxaRetirada.toFixed(1);
 const ret = saude.retornoReal.toFixed(1);
-explicacao.innerHTML = `<strong class="text-amber-300">Atenção:</strong> retirada de <strong>${taxa}% ao ano</strong> está acima do sustentável (4–5%). Retorno real de +${ret}% a.a. preserva o poder de compra, mas o principal é consumido em termos reais. <strong>Sugestão:</strong> reduza o saque para o máximo sustentável ou aceite consumir principal.`;
+if (saude.retornoReal < 0) {
+explicacao.innerHTML = `<strong class="text-amber-300">Atenção:</strong> retorno real negativo (${ret}% a.a.) — a inflação está corroendo o patrimônio, independente da taxa de retirada.`;
+} else if (saude.taxaRetirada <= 5) {
+explicacao.innerHTML = `<strong class="text-amber-300">Atenção:</strong> retirada de <strong>${taxa}% ao ano</strong> é sustentável pela regra clássica (4–5%, calibrada p/ ~30 anos), mas seu horizonte é de ~40 anos (até os 100 anos) — para isso o ideal é ficar em até <strong>${CFG.TAXA_RETIRADA_SEGURA_40ANOS}%</strong>. Reduzir o saque aumenta a margem de segurança contra anos ruins de Selic/IPCA.`;
+} else {
+explicacao.innerHTML = `<strong class="text-amber-300">Atenção:</strong> retirada de <strong>${taxa}% ao ano</strong> está acima do recomendado p/ um horizonte de 40 anos (até ${CFG.TAXA_RETIRADA_SEGURA_40ANOS}%). Retorno real de +${ret}% a.a. preserva o poder de compra, mas o principal é consumido em termos reais. <strong>Sugestão:</strong> reduza o saque para o máximo sustentável ou aceite consumir principal.`;
+}
 } else {
 veredito.textContent = '⚠ REPOR RESERVA';
 veredito.className = 'text-xs font-bold px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-700/50';
@@ -1426,7 +1434,7 @@ const saqueAnualLiq = saqueMensal * 12;
 const sobraAnual = rendTotalLiq - saqueAnualBruto;
 
 const ipcaProjetado = dadosBCB.ipca || CFG.FALLBACK.ipca;
-const cupomLiq = calcularCupomIPCA(ipcaBase, aliqIR);
+const cupomLiq = calcularCupomIPCA(ipcaBase, aliqIR, inputs.taxaRealIPCA);
 const proxCupom = proximoPagamentoCupom(dataBase);
 
 const vEsposa = mesadaEsposa;
@@ -1836,7 +1844,7 @@ if (!estado || !chartProjecao) return;
 const inputs = estado.inputs;
 const rentSelicAnual = (selicBase || CFG.SELIC_INICIAL) * (inputs.rentSelic / 100);
 const ipcaProjetado = dadosBCB.ipca || CFG.FALLBACK.ipca;
-const cupom = calcularCupomIPCA(ipcaBase || CFG.TESOURO_IPCA, aliquotaIR(inputs));
+const cupom = calcularCupomIPCA(ipcaBase || CFG.TESOURO_IPCA, aliquotaIR(inputs), inputs.taxaRealIPCA);
 const saqueMensal = calcularSaqueMensal(inputs, calcularRendimentos(inputs).rendTotalLiq);
 const resgateBrutoMensal = saqueMensal * 1.02;
 
