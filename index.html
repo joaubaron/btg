@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Gestão Patrimonial v2.14</title>
+<title>Gestão Patrimonial v2.15</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
 
 <meta name="theme-color" content="#0f172a">
@@ -92,7 +92,7 @@ header.sticky{padding-top:calc(0.75rem + env(safe-area-inset-top,0px))}
 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
 </div>
 <div class="min-w-0">
-<h1 class="font-bold text-base sm:text-lg leading-tight text-white truncate">Gestão Patrimonial <span class="text-emerald-400">v2.14</span></h1>
+<h1 class="font-bold text-base sm:text-lg leading-tight text-white truncate">Gestão Patrimonial <span class="text-emerald-400">v2.15</span></h1>
 <p class="text-[11px] text-slate-400 truncate">Base: <span id="header-base">R$ 38.000.000</span> · <span id="header-data">--/--/----</span></p>
 </div>
 </div>
@@ -547,7 +547,7 @@ Timeline Real (estimativa)
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
     </div>
     <div class="flex-1 min-w-0">
-      <h3 class="font-bold text-emerald-300 text-sm">Preservando seu patrimônio (conta BTG)</h3>
+      <h3 class="font-bold text-emerald-300 text-sm">Como preservar o patrimônio (conta BTG)</h3>
       <p class="text-[11px] text-slate-400 mt-0.5">3 passos práticos pra o dinheiro não acabar</p>
     </div>
     <svg class="w-5 h-5 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
@@ -555,6 +555,24 @@ Timeline Real (estimativa)
 </button>
 
 <!-- MODAL: Como preservar o patrimônio -->
+<div id="modal-onboarding" class="hidden fixed inset-0 z-[110] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+<div class="card-glass rounded-2xl p-5 max-w-md w-full space-y-4">
+<h3 class="font-bold text-white text-lg">👋 Bem-vindo</h3>
+<p class="text-xs text-slate-300">Antes de começar, informe o patrimônio total que você quer simular. O app divide automaticamente entre Selic e Tesouro IPCA+ (você pode ajustar essa divisão depois em Configurações).</p>
+<div>
+<label class="text-[10px] font-semibold text-slate-400 uppercase block mb-1">Patrimônio total inicial (R$)</label>
+<input type="number" id="input-onboarding-patrimonio" step="100000" min="0" inputmode="numeric" placeholder="ex: 5000000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white">
+</div>
+<div>
+<label class="text-[10px] font-semibold text-slate-400 uppercase block mb-1">Data base</label>
+<input type="date" id="input-onboarding-data" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white">
+</div>
+<p id="onboarding-erro" class="hidden text-[11px] text-rose-400">Informe um valor maior que zero.</p>
+<button onclick="confirmarOnboarding()" class="w-full p-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium">Começar</button>
+<button onclick="pularOnboarding()" class="w-full p-2 text-slate-400 hover:text-slate-300 text-xs">Pular e usar valor de exemplo (R$ 38.000.000)</button>
+</div>
+</div>
+
 <div id="modal-preservar" class="hidden fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
   <div class="card-glass rounded-2xl p-5 max-w-md w-full space-y-4">
     <h3 class="font-bold text-white text-lg">Como preservar o patrimônio</h3>
@@ -639,6 +657,7 @@ taxaRetiradaSegura: 4.0
 const BCB_CACHE_KEY = 'gestao32m_bcb_last';
 const BCB_CACHE_MAX_AGE_DAYS = 30;
 const HIST_EXTRA_KEY = 'gestao32m_hist_extra';
+const BASELINE_KEY = 'gestao32m_baseline';
 
 let chartAlocacao = null;
 let chartProjecao = null;
@@ -710,12 +729,27 @@ divisaoManual:   !!inp.divisaoManual
 } catch { return null; }
 }
 function limparStorage() {
-if (confirm('Apagar todos os dados salvos?')) {
+if (confirm('Isso apaga TUDO (inclusive o patrimônio inicial que você configurou) e reinicia o app do zero, pedindo um novo valor inicial. Continuar?')) {
 localStorage.removeItem(CFG.STORAGE_KEY);
 localStorage.removeItem(BCB_CACHE_KEY);
 localStorage.removeItem(HIST_EXTRA_KEY);
+localStorage.removeItem(BASELINE_KEY);
 location.reload();
 }
+}
+function salvarBaseline(patrimonioTotal, selicInicial, ipcaInicial, dataBase) {
+try {
+localStorage.setItem(BASELINE_KEY, JSON.stringify({ patrimonioTotal, selicInicial, ipcaInicial, dataBase, ts: Date.now() }));
+} catch (e) {}
+}
+function carregarBaseline() {
+try {
+const raw = localStorage.getItem(BASELINE_KEY);
+if (!raw) return null;
+const b = JSON.parse(raw);
+if (!b || typeof b.patrimonioTotal !== 'number' || !isFinite(b.patrimonioTotal) || b.patrimonioTotal <= 0) return null;
+return b;
+} catch { return null; }
 }
 function exportarJSON() {
 const blob = new Blob([JSON.stringify({
@@ -1877,12 +1911,20 @@ document.getElementById('input-extra-imovel').value = 3000000;
 document.getElementById('input-extra-outros').value = 500000;
 }
 function resetarTudo() {
+const baseline = carregarBaseline();
+if (!confirm(baseline
+? `Isso descarta todos os ajustes e volta ao seu patrimônio inicial (${formatarMoeda(baseline.patrimonioTotal)}), mantendo os demais parâmetros nos padrões. Continuar?`
+: 'Isso descarta todos os ajustes e volta aos valores de exemplo do app. Continuar?')) return;
 localStorage.removeItem(CFG.STORAGE_KEY);
 localStorage.removeItem(BCB_CACHE_KEY);
 localStorage.removeItem(HIST_EXTRA_KEY);
-document.getElementById('input-patrimonio').value = CFG.PATRIMONIO_TOTAL;
-document.getElementById('input-selic-inicial').value = CFG.SELIC_INICIAL;
-document.getElementById('input-ipca-inicial').value = CFG.TESOURO_IPCA;
+const patrimonioBase = baseline ? baseline.patrimonioTotal : CFG.PATRIMONIO_TOTAL;
+const selicBase = baseline ? baseline.selicInicial : CFG.SELIC_INICIAL;
+const ipcaBase = baseline ? baseline.ipcaInicial : CFG.TESOURO_IPCA;
+const dataBaseVal = baseline?.dataBase || new Date().toISOString().slice(0,10);
+document.getElementById('input-patrimonio').value = patrimonioBase;
+document.getElementById('input-selic-inicial').value = selicBase;
+document.getElementById('input-ipca-inicial').value = ipcaBase;
 document.getElementById('select-saque').value = 'auto';
 document.getElementById('input-saque-custom').value = 200000;
 document.getElementById('input-payout').value = CFG.PAYOUT_PADRAO;
@@ -1896,10 +1938,10 @@ document.getElementById('input-taxa-real-ipca').value = 6.0;
 document.getElementById('val-taxa-real-ipca').textContent = '6.0%';
 document.getElementById('input-custo-btg').value = 0.3;
 document.getElementById('input-ir-efetivo').value = 15;
-document.getElementById('input-meta-selic').value = 12000000;
+document.getElementById('input-meta-selic').value = Math.round(selicBase);
 document.getElementById('input-extra-imovel').value = 0;
 document.getElementById('input-extra-outros').value = 0;
-document.getElementById('input-data-base').value = new Date().toISOString().slice(0,10);
+document.getElementById('input-data-base').value = dataBaseVal;
 document.getElementById('toggle-divisao-manual').checked = false;
 estado = { inputs: { rentSelicManual: false, rentIPCAManual: false, divisaoManual: false } };
 sincronizarModoDivisao();
@@ -1912,6 +1954,35 @@ function abrirConfig() { document.getElementById('modal-config').classList.remov
 function fecharConfig() { document.getElementById('modal-config').classList.add('hidden'); }
 function abrirComoPreservar() { document.getElementById('modal-preservar').classList.remove('hidden'); }
 function fecharComoPreservar() { document.getElementById('modal-preservar').classList.add('hidden'); }
+
+function mostrarOnboarding() {
+document.getElementById('input-onboarding-data').value = new Date().toISOString().slice(0,10);
+document.getElementById('modal-onboarding').classList.remove('hidden');
+}
+function aplicarPatrimonioInicial(patrimonioTotal, dataBase) {
+const pctSelic = CFG.SELIC_INICIAL / CFG.PATRIMONIO_TOTAL;
+const selicInicial = Math.round(patrimonioTotal * pctSelic);
+const ipcaInicial = Math.round(patrimonioTotal - selicInicial);
+salvarBaseline(patrimonioTotal, selicInicial, ipcaInicial, dataBase);
+document.getElementById('input-patrimonio').value = patrimonioTotal;
+document.getElementById('input-selic-inicial').value = selicInicial;
+document.getElementById('input-ipca-inicial').value = ipcaInicial;
+document.getElementById('input-meta-selic').value = selicInicial;
+document.getElementById('input-data-base').value = dataBase;
+document.getElementById('modal-onboarding').classList.add('hidden');
+atualizarSomaAlocada(); atualizarSimulacao();
+}
+function confirmarOnboarding() {
+const v = parseFloat(document.getElementById('input-onboarding-patrimonio').value);
+const erro = document.getElementById('onboarding-erro');
+if (!v || v <= 0 || !isFinite(v)) { erro.classList.remove('hidden'); return; }
+erro.classList.add('hidden');
+const dataBase = document.getElementById('input-onboarding-data').value || new Date().toISOString().slice(0,10);
+aplicarPatrimonioInicial(v, dataBase);
+}
+function pularOnboarding() {
+aplicarPatrimonioInicial(CFG.PATRIMONIO_TOTAL, new Date().toISOString().slice(0,10));
+}
 
 document.addEventListener('DOMContentLoaded', () => {
 const dbEl = document.getElementById('input-data-base');
@@ -1926,6 +1997,8 @@ rentIPCAManual: !!salvo.rentIPCAManual,
 divisaoManual: !!salvo.divisaoManual
 } };
 if (salvo.rentSelicManual) { const t = document.getElementById('rent-selic-auto-tag'); if (t) { t.textContent = 'Manual (ajustado por você)'; t.className = 'text-[10px] block mt-0.5 auto-tag-normal'; } }
+} else {
+mostrarOnboarding();
 }
 
 document.getElementById('select-saque').addEventListener('change', e => {
