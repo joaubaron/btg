@@ -1419,7 +1419,8 @@ meses: MESES_PROJ
 });
 
 // IPCA+ mês a mês, juro composto, com cupom semestral e resgate mensal proporcional
-const rendIPCA_mensal = Math.pow(1 + rendIPCAAnual / 100, 1/12) - 1;
+const rentIPCA_taxa = (inputs.rentIPCA / 100);
+const rendIPCA_mensal = Math.pow(1 + rentIPCA_taxa, 1/12) - 1;
 let ipcaProj = inputs.ipcaInicial;
 const serieIPCA = [ipcaProj];
 for (let m = 1; m <= MESES_PROJ; m++) {
