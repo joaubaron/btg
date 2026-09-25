@@ -365,6 +365,10 @@ Parâmetros
 <input type="number" id="input-extra-outros" value="0" step="50000" inputmode="numeric" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white">
 </div>
 </div>
+<div class="mb-2">
+<span class="text-[10px] text-slate-400">Finalidade (opcional)</span>
+<input type="text" id="input-extra-finalidade" placeholder="ex: presente filhos" maxlength="40" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white">
+</div>
 
 <div class="mt-2 p-2.5 bg-slate-900/40 border border-amber-500/20 rounded-lg">
 <p class="text-[10px] text-amber-300 font-bold mb-2">De onde tirar?</p>
@@ -1838,7 +1842,9 @@ document.getElementById('input-patrimonio').value = Math.max(0, patAtual - total
 document.getElementById('input-extra-imovel').value = 0;
 document.getElementById('input-extra-outros').value = 0;
 
-registrarHistoricoExtra(totalExtra, tiraSelic, tiraIPCA);
+const finalidade = document.getElementById('input-extra-finalidade')?.value.trim() || '';
+registrarHistoricoExtra(totalExtra, tiraSelic, tiraIPCA, finalidade);
+document.getElementById('input-extra-finalidade').value = '';
 
 atualizarSomaAlocada();
 atualizarSimulacao();
@@ -1859,7 +1865,7 @@ localStorage.setItem(HIST_EXTRA_KEY, JSON.stringify(lista));
 } catch {}
 }
 
-function registrarHistoricoExtra(valor, tiraSelic, tiraIPCA) {
+function registrarHistoricoExtra(valor, tiraSelic, tiraIPCA, finalidade) {
 if (!valor || valor <= 0) return;
 const lista = carregarHistoricoExtra();
 lista.unshift({
@@ -1869,7 +1875,8 @@ valor,
 tiraSelic: tiraSelic || 0,
 tiraIPCA: tiraIPCA || 0,
 origem: tiraSelic > 0 && tiraIPCA > 0 ? 'misto' :
-tiraSelic > 0 ? 'Selic' : 'IPCA+'
+tiraSelic > 0 ? 'Selic' : 'IPCA+',
+finalidade: (finalidade || '').trim()
 });
 salvarHistoricoExtra(lista);
 renderizarHistoricoExtra();
@@ -1894,6 +1901,7 @@ el.innerHTML = lista.map((item) => `
 <div class="text-slate-400 text-[9px]">
 ${item.tiraSelic > 0 ? `Selic: ${fm(item.tiraSelic)} ` : ''}${item.tiraIPCA > 0 ? `IPCA+: ${fm(item.tiraIPCA)}` : ''}
 </div>
+${item.finalidade ? `<div class="text-slate-500 text-[9px] italic mt-0.5">${item.finalidade}</div>` : ''}
 </div>
 <button onclick="removerHistoricoExtra(${item.ts})" class="text-slate-600 hover:text-rose-400 text-xs px-1" title="remover">×</button>
 </div>
