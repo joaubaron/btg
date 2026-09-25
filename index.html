@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Gestão Patrimonial v2.15</title>
+<title>Gestão Patrimonial v2.16</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
 
 <meta name="theme-color" content="#0f172a">
@@ -92,7 +92,7 @@ header.sticky{padding-top:calc(0.75rem + env(safe-area-inset-top,0px))}
 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
 </div>
 <div class="min-w-0">
-<h1 class="font-bold text-base sm:text-lg leading-tight text-white truncate">Gestão Patrimonial <span class="text-emerald-400">v2.15</span></h1>
+<h1 class="font-bold text-base sm:text-lg leading-tight text-white truncate">Gestão Patrimonial <span class="text-emerald-400">v2.16</span></h1>
 <p class="text-[11px] text-slate-400 truncate">Base: <span id="header-base">R$ 38.000.000</span> · <span id="header-data">--/--/----</span></p>
 </div>
 </div>
@@ -569,7 +569,7 @@ Timeline Real (estimativa)
 </div>
 <p id="onboarding-erro" class="hidden text-[11px] text-rose-400">Informe um valor maior que zero.</p>
 <button onclick="confirmarOnboarding()" class="w-full p-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium">Começar</button>
-<button onclick="pularOnboarding()" class="w-full p-2 text-slate-400 hover:text-slate-300 text-xs">Pular e usar valor de exemplo (R$ 38.000.000)</button>
+<button id="btn-onboarding-pular" onclick="pularOnboarding()" class="w-full p-2 text-slate-400 hover:text-slate-300 text-xs">Pular e usar valor de exemplo (R$ 38.000.000)</button>
 </div>
 </div>
 
@@ -1956,7 +1956,10 @@ function abrirComoPreservar() { document.getElementById('modal-preservar').class
 function fecharComoPreservar() { document.getElementById('modal-preservar').classList.add('hidden'); }
 
 function mostrarOnboarding() {
-document.getElementById('input-onboarding-data').value = new Date().toISOString().slice(0,10);
+document.getElementById('input-onboarding-data').value = document.getElementById('input-data-base').value || new Date().toISOString().slice(0,10);
+const patrimonioAtual = numOr('input-patrimonio', CFG.PATRIMONIO_TOTAL);
+const btnPular = document.getElementById('btn-onboarding-pular');
+if (btnPular) btnPular.textContent = 'Usar valor já preenchido (' + formatarMoeda(patrimonioAtual) + ')';
 document.getElementById('modal-onboarding').classList.remove('hidden');
 }
 function aplicarPatrimonioInicial(patrimonioTotal, dataBase) {
@@ -1981,7 +1984,14 @@ const dataBase = document.getElementById('input-onboarding-data').value || new D
 aplicarPatrimonioInicial(v, dataBase);
 }
 function pularOnboarding() {
-aplicarPatrimonioInicial(CFG.PATRIMONIO_TOTAL, new Date().toISOString().slice(0,10));
+// Mantém o que já está preenchido nos campos (seja o exemplo padrão, seja um valor de uma sessão anterior)
+// e só registra isso como baseline — não sobrescreve nada.
+const patrimonioAtual = numOr('input-patrimonio', CFG.PATRIMONIO_TOTAL);
+const selicAtual = numOr('input-selic-inicial', CFG.SELIC_INICIAL);
+const ipcaAtual = numOr('input-ipca-inicial', CFG.TESOURO_IPCA);
+const dataAtual = document.getElementById('input-data-base').value || new Date().toISOString().slice(0,10);
+salvarBaseline(patrimonioAtual, selicAtual, ipcaAtual, dataAtual);
+document.getElementById('modal-onboarding').classList.add('hidden');
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1997,7 +2007,8 @@ rentIPCAManual: !!salvo.rentIPCAManual,
 divisaoManual: !!salvo.divisaoManual
 } };
 if (salvo.rentSelicManual) { const t = document.getElementById('rent-selic-auto-tag'); if (t) { t.textContent = 'Manual (ajustado por você)'; t.className = 'text-[10px] block mt-0.5 auto-tag-normal'; } }
-} else {
+}
+if (!carregarBaseline()) {
 mostrarOnboarding();
 }
 
