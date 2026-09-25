@@ -1376,12 +1376,15 @@ const taxaRetirada = patrimonioTotal > 0 ? saqueAnual / patrimonioTotal * 100 : 
 
 // Durabilidade em termos reais
 const retornoRealMensal = Math.pow(1 + retornoReal/100, 1/12) - 1;
+const ipcaMensal = Math.pow(1 + ipcaProjetado/100, 1/12) - 1;
 let saldoDur = patrimonioTotal;
+let saqueReal = saqueMensal;
 let anos = 0;
 const maxAnos = 100;
 while (saldoDur > 0 && anos < maxAnos) {
 for (let m = 0; m < 12 && saldoDur > 0; m++) {
-saldoDur = saldoDur * (1 + retornoRealMensal) - saqueMensal;
+saldoDur = saldoDur * (1 + retornoRealMensal) - saqueReal;
+saqueReal = saqueReal * (1 + ipcaMensal);
 }
 anos++;
 }
