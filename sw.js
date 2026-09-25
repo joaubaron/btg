@@ -1,7 +1,7 @@
 /* =========================================================
    Service Worker — Gestão Patrimonial
 ========================================================= */
-const CACHE = 'gestao32m-v43';   // ← bump força atualização (fix: modais sem scroll travavam botões de confirmação fora da tela)
+const CACHE = 'gestao32m-v44';   // ← bump força atualização (fix: modais sem scroll travavam botões de confirmação fora da tela)
 const ASSETS = [
   './',
   './index.html',
