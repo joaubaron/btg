@@ -299,7 +299,7 @@ Parâmetros
 <span class="toggle-slider"></span>
 </label>
 </div>
-<p class="text-[10px] text-slate-400" id="divisao-modo-label">🔒 Modo automático: <strong class="text-emerald-400">70% Casa / 15% Esposa / 15% Marido</strong></p>
+<p class="text-[10px] text-slate-400" id="divisao-modo-label">🔒 Modo automático: <strong class="text-emerald-400">76% Casa / 12% Esposa / 12% Marido</strong></p>
 
 <div class="grid grid-cols-2 gap-2 mt-2">
 <div><span class="text-[10px] text-slate-400">Mesada Esposa (R$/mês)</span>
@@ -309,7 +309,7 @@ Parâmetros
 </div>
 <div class="mt-2"><span class="text-[10px] text-slate-400">Piso da Casa (R$/mês, opcional)</span>
 <input type="number" id="input-piso-casa" value="0" min="0" step="5000" inputmode="numeric" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white"></div>
-<p class="text-[10px] text-slate-500 mt-1">💡 Modo automático aplica 70/15/15 sobre o saque. Ative o toggle para editar manualmente.</p>
+<p class="text-[10px] text-slate-500 mt-1">💡 Modo automático aplica 76/12/12 sobre o saque. Ative o toggle para editar manualmente.</p>
 <button onclick="reajustarMesadasIPCA()" class="w-full text-[10px] py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 mt-2">Reajustar mesadas e piso pelo IPCA (12m, 1×/ano)</button>
 </div>
 
@@ -450,7 +450,7 @@ Parâmetros
 </div>
 
 <div class="bg-slate-900/40 border border-slate-800 p-4 rounded-xl">
-<h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Divisão Mensal <span class="text-[9px] text-emerald-400 font-normal normal-case" id="divisao-badge">(Automático 70/15/15)</span></h4>
+<h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Divisão Mensal <span class="text-[9px] text-emerald-400 font-normal normal-case" id="divisao-badge">(Automático 76/12/12)</span></h4>
 <div class="grid grid-cols-3 gap-2 text-center">
 <div class="p-2 bg-slate-800/80 rounded-lg"><span class="text-[10px] text-slate-400 block">Casa</span><span class="text-sm font-bold text-white" id="dist-casa">—</span></div>
 <div class="p-2 bg-slate-800/80 rounded-lg"><span class="text-[10px] text-slate-400 block">Esposa</span><span class="text-sm font-bold text-purple-300" id="dist-esposa">—</span></div>
@@ -498,7 +498,7 @@ Projeção 24 meses (Selic + Cupons − Saques)
 Regras do Planejamento
 </h3>
 <ul class="space-y-2.5 text-xs text-slate-300">
-<li class="flex items-start gap-2"><span class="p-1 bg-indigo-500/20 text-indigo-400 rounded mt-0.5 shrink-0">1</span><span><strong>Divisão 70/15/15:</strong> Casa 70%, Esposa 15%, Marido 15% — automático sobre o saque.</span></li>
+<li class="flex items-start gap-2"><span class="p-1 bg-indigo-500/20 text-indigo-400 rounded mt-0.5 shrink-0">1</span><span><strong>Divisão 76/12/12:</strong> Casa 76%, Esposa 12%, Marido 12% — automático sobre o saque.</span></li>
 <li class="flex items-start gap-2"><span class="p-1 bg-indigo-500/20 text-indigo-400 rounded mt-0.5 shrink-0">2</span><span><strong>Cupons IPCA+:</strong> destinados <u>prioritariamente à recomposição da Selic</u> até o nível definido.</span></li>
 <li class="flex items-start gap-2"><span class="p-1 bg-indigo-500/20 text-indigo-400 rounded mt-0.5 shrink-0">3</span><span><strong>Saques extraordinários:</strong> aprovados pelo casal, tratados à parte do saque mensal.</span></li>
 <li class="flex items-start gap-2"><span class="p-1 bg-indigo-500/20 text-indigo-400 rounded mt-0.5 shrink-0">4</span><span><strong>Revisão anual BTG:</strong> rentabilidade, reserva, inflação e sustentabilidade.</span></li>
@@ -643,7 +643,7 @@ Timeline Real (estimativa)
 </div>
 <div class="text-[10px] text-slate-500 border-t border-slate-700 pt-3 space-y-1">
 <p><strong>API BCB:</strong> Selic s.432 · IPCA s.13522 (12m acum.) — via fetch</p>
-<p><strong>Divisão padrão:</strong> 70% Casa / 15% Esposa / 15% Marido (modo automático)</p>
+<p><strong>Divisão padrão:</strong> 76% Casa / 12% Esposa / 12% Marido (modo automático)</p>
 <p><strong>Rentabilidades:</strong> Selic e IPCA+ líquidas calculadas (BCB, IR efetivo e custo BTG); ajuste manual possível</p>
 <p><strong>IR:</strong> incide apenas sobre rendimento do resgate</p>
 <p><strong>Cache offline:</strong> último dado válido do BCB é guardado localmente por até 30 dias</p>
@@ -1112,8 +1112,8 @@ const badge = document.getElementById('divisao-badge');
 if (manual) {
 if (label) label.innerHTML = '🔓 <strong class="text-amber-400">Modo manual</strong>: edite as mesadas livremente';
 } else {
-if (label) label.innerHTML = '🔒 Modo automático: <strong class="text-emerald-400">70% Casa / 15% Esposa / 15% Marido</strong>';
-if (badge) { badge.textContent = '(Automático 70/15/15)'; badge.className = 'text-[9px] text-emerald-400 font-normal normal-case'; }
+if (label) label.innerHTML = '🔒 Modo automático: <strong class="text-emerald-400">76% Casa / 12% Esposa / 12% Marido</strong>';
+if (badge) { badge.textContent = '(Automático 76/12/12)'; badge.className = 'text-[9px] text-emerald-400 font-normal normal-case'; }
 estado.flags.divisaoManual = false;
 }
 }
@@ -1128,7 +1128,7 @@ return;
 }
 const manual = estado?.flags?.divisaoManual;
 if (!manual) {
-badge.textContent = '(Automático 70/15/15)';
+badge.textContent = '(Automático 76/12/12)';
 badge.className = 'text-[9px] text-emerald-400 font-normal normal-case';
 return;
 }
