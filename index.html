@@ -165,12 +165,12 @@ Saúde do Investimento — você está perdendo dinheiro?
 <span class="text-lg font-bold" id="saude-poder-compra">—</span>
 <span class="text-[10px] text-slate-500 block" id="saude-poder-compra-desc">—</span>
 </div>
-<div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800" title="Taxa de crescimento anual composta, projetada para 24 meses.">
+<div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800" title="Taxa de crescimento anual composta, projetada para 24 meses (Selic + IPCA+).">
 <span class="text-[10px] uppercase tracking-wider text-slate-400 block">CAGR (projetado 24m)</span>
 <span class="text-lg font-bold" id="saude-cagr">—</span>
 <span class="text-[10px] text-slate-500 block" id="saude-cagr-desc">—</span>
 </div>
-<div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800" title="Ganho total no período de 24 meses, sem anualizar.">
+<div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800" title="Ganho total no período de 24 meses, sem anualizar (Selic + IPCA+).">
 <span class="text-[10px] uppercase tracking-wider text-slate-400 block">Rent. acumulada (24m)</span>
 <span class="text-lg font-bold" id="saude-rent-acum">—</span>
 <span class="text-[10px] text-slate-500 block" id="saude-rent-acum-desc">—</span>
@@ -1163,7 +1163,6 @@ return inputs.saqueSelect === 'custom' ? inputs.saqueCustom : parseFloat(inputs.
 
 /* =========================================================
 1.1 — RESGATE BRUTO UNIFICADO
-Usado por métricas, gráfico e projeção. Fim do `* 1.02`.
 ========================================================= */
 function calcularResgateBruto(saqueMensal, inputs, rendTotalLiq) {
 const rend = (typeof rendTotalLiq === 'number') ? rendTotalLiq : calcularRendimentos(inputs).rendTotalLiq;
@@ -1339,31 +1338,64 @@ document.getElementById('input-ipca-inicial').value = Math.round(Math.max(0, tot
 atualizarSomaAlocada(); atualizarSimulacao();
 }
 
+/* =========================================================
+2.2 — PROJEÇÃO DA SELIC UNIFICADA
+Retorna { serie, estourou }. Usada no gráfico E no renderizarProjecao.
+Regra: cupom só vai pra Selic se saldo < meta (recomposição).
+========================================================= */
+function projetarSelic({ saldoInicial, meta, rendSelicAnual, cupomSemestral, resgateMensal, meses }) {
+const rendMensal = rendSelicAnual / 12;
+const serie = [];
+let saldo = saldoInicial;
+let estourou = false;
+
+for (let m = 0; m <= meses; m++) {
+serie.push(Math.max(0, saldo));
+saldo += rendMensal;
+if (m % 6 === 5 && saldo < meta) {
+saldo += cupomSemestral; // recomposição da reserva Selic
+}
+saldo -= resgateMensal;
+if (saldo < 0) {
+estourou = true;
+saldo = 0;
+}
+}
+return { serie, estourou };
+}
+
+/* =========================================================
+2.3 — calcularSaude agora projeta Selic + IPCA+ (24m)
+Antes ignorava rendimento do IPCA+ e consumo dele.
+========================================================= */
 function calcularSaude(patrimonioTotal, rendTotalLiq, ipcaProjetado, saqueMensal, saldoSelic, metaSelic, inputs) {
 const saqueAnual = saqueMensal * 12;
 const rentNominalLiq = patrimonioTotal > 0 ? rendTotalLiq / patrimonioTotal * 100 : 0;
 const retornoReal = ((1 + rentNominalLiq/100) / (1 + ipcaProjetado/100) - 1) * 100;
 const taxaRetirada = patrimonioTotal > 0 ? saqueAnual / patrimonioTotal * 100 : 0;
 
+// Durabilidade em termos reais
 const retornoRealMensal = Math.pow(1 + retornoReal/100, 1/12) - 1;
-let saldo = patrimonioTotal;
+let saldoDur = patrimonioTotal;
 let anos = 0;
 const maxAnos = 100;
-while (saldo > 0 && anos < maxAnos) {
-for (let m = 0; m < 12 && saldo > 0; m++) {
-saldo = saldo * (1 + retornoRealMensal) - saqueMensal;
+while (saldoDur > 0 && anos < maxAnos) {
+for (let m = 0; m < 12 && saldoDur > 0; m++) {
+saldoDur = saldoDur * (1 + retornoRealMensal) - saqueMensal;
 }
 anos++;
 }
 const poderCompra10 = patrimonioTotal / Math.pow(1 + ipcaProjetado/100, 10);
 
+// Projeção 24m: Selic + IPCA+ lado a lado
 const MESES_PROJ = 24;
 const aliqIRsaude = aliquotaIR(inputs);
 const cupomSemestral = calcularCupomIPCA(inputs.ipcaInicial, aliqIRsaude, inputs.taxaRealIPCA);
 const rendSelicAnual = inputs.selicInicial * (inputs.rentSelic / 100);
+const rendIPCAAnual = inputs.ipcaInicial * (inputs.rentIPCA / 100);
 const { resgateBruto: resgateBrutoMensal } = calcularResgateBruto(saqueMensal, inputs, rendTotalLiq);
 
-const serie = projetarSelic({
+const { serie: serieSelic } = projetarSelic({
 saldoInicial: saldoSelic,
 meta: metaSelic,
 rendSelicAnual,
@@ -1371,8 +1403,15 @@ cupomSemestral,
 resgateMensal: resgateBrutoMensal,
 meses: MESES_PROJ
 });
-const saldoProj = serie[serie.length - 1];
-const patrimonioFinal = saldoProj + inputs.ipcaInicial;
+
+let ipcaProj = inputs.ipcaInicial;
+const rendIPCA_mensal = rendIPCAAnual / 12;
+for (let m = 0; m <= MESES_PROJ; m++) {
+ipcaProj += rendIPCA_mensal;
+}
+
+const saldoSelicProj = serieSelic[serieSelic.length - 1];
+const patrimonioFinal = saldoSelicProj + ipcaProj;
 const anosProj = MESES_PROJ / 12;
 const rentAcumulada = patrimonioTotal > 0 ? (patrimonioFinal / patrimonioTotal - 1) * 100 : 0;
 const cagr = patrimonioTotal > 0 ? (Math.pow(patrimonioFinal / patrimonioTotal, 1 / anosProj) - 1) * 100 : 0;
@@ -1490,31 +1529,6 @@ card.className = 'p-3 rounded-xl border ' + (ok ? 'bg-emerald-950/20 border-emer
 document.getElementById(txtId).textContent = texto;
 }
 
-/* =========================================================
-1.2 — PROJEÇÃO DA SELIC UNIFICADA
-Usada no gráfico E no renderizarProjecao.
-Regra: cupom só vai pra Selic se saldo < meta (recomposição).
-========================================================= */
-function projetarSelic({ saldoInicial, meta, rendSelicAnual, cupomSemestral, resgateMensal, meses }) {
-const rendMensal = rendSelicAnual / 12;
-const serie = [];
-let saldo = saldoInicial;
-for (let m = 0; m <= meses; m++) {
-serie.push(Math.max(0, saldo));
-saldo += rendMensal;
-if (m % 6 === 5) {
-if (saldo < meta) {
-saldo += cupomSemestral; // recomposição
-} else {
-// fora do escopo desta série: cupom iria pra reinvestimento externo
-// não soma aqui pra não inflar artificialmente a reserva
-}
-}
-saldo -= resgateMensal;
-}
-return serie;
-}
-
 function atualizarSimulacao() {
 const inputs = coletarInputs();
 estado.inputs = { ...inputs };
@@ -1551,7 +1565,6 @@ const saldoSelicAtual = Math.max(0, selicBase);
 
 const dataBase = inputs.dataBase ? new Date(inputs.dataBase + 'T12:00:00') : new Date();
 
-// 1.1 — resgate bruto unificado
 const { resgateBruto, irMensal, aliqIR } = calcularResgateBruto(saqueMensal, inputs, rendTotalLiq);
 const custoMensal = patrimonioTotal * ((inputs.custoBTG || 0.3) / 100 / 12);
 
@@ -1631,7 +1644,7 @@ salvarEstado();
 }
 
 /* =========================================================
-1.2 — renderizarProjecao usando projetarSelic()
+2.2 — renderizarProjecao usando flag estourou (sem O(n²))
 ========================================================= */
 function renderizarProjecao(saldoSelic, meta, rendSelicAnual, cupomSemestral, saqueMensal, dataBase, inputs, resgateBruto) {
 const el = document.getElementById('projecao-conteudo');
@@ -1644,9 +1657,11 @@ if (saldoSelic >= meta) {
 el.innerHTML = `<span class="text-emerald-400">✓ Reserva Selic na meta (${formatarMoeda(saldoSelic)} ≥ ${formatarMoeda(meta)}).</span> Cupons IPCA+ podem ser reinvestidos livremente.`;
 return;
 }
+
 const deficit = meta - saldoSelic;
 const sobraMensal = rendMensal - resgateBrutoMensal;
-const serie = projetarSelic({
+
+const { serie, estourou } = projetarSelic({
 saldoInicial: saldoSelic,
 meta,
 rendSelicAnual,
@@ -1654,17 +1669,15 @@ cupomSemestral,
 resgateMensal: resgateBrutoMensal,
 meses: 120
 });
-let meses = serie.findIndex(v => v >= meta);
-if (meses === -1 || serie.some(v => v < 0 && serie.indexOf(v) > 0 && serie[serie.indexOf(v) - 1] > 0)) {
-// nunca chega na meta ou estourou
-meses = -1;
-}
 
-if (meses === -1) {
+const idxMeta = serie.findIndex(v => v >= meta);
+const recompoe = !estourou && idxMeta !== -1;
+
+if (!recompoe) {
 el.innerHTML = `<span class="text-red-400">✗ Não recompõe em 10 anos.</span> Déficit: ${formatarMoeda(deficit)}. Sobra mensal: ${formatarMoeda(sobraMensal)} + cupom ${formatarMoeda(cupomSemestral)}/sem. <u>Reduzir saque ou aportar</u>.`;
 } else {
 el.innerHTML = `Déficit: <strong>${formatarMoeda(deficit)}</strong> · Sobra mensal: ${formatarMoeda(sobraMensal)} · Cupom: ${formatarMoeda(cupomSemestral)}/sem.<br>
-<span class="text-emerald-400 font-bold">Recomposição em ~${meses} meses (${(meses/12).toFixed(1)} anos)</span>`;
+<span class="text-emerald-400 font-bold">Recomposição em ~${idxMeta} meses (${(idxMeta/12).toFixed(1)} anos)</span>`;
 }
 }
 
@@ -1976,8 +1989,7 @@ x: { ticks: { color: '#94a3b8', maxTicksLimit: 12 }, grid: { display: false } }
 }
 
 /* =========================================================
-1.1 + 1.2 — atualizarGrafico agora usa calcularResgateBruto
-e projetarSelic (mesma regra do renderizarProjecao)
+2.2 — atualizarGrafico desestrutura { serie } de projetarSelic
 ========================================================= */
 function atualizarGrafico(saldoSelic, meta, selicBase, ipcaBase, patrimonioTotal, inputs, resgateBruto, cupomLiq) {
 if (chartAlocacao) {
@@ -1993,7 +2005,7 @@ const rb = (typeof resgateBruto === 'number')
 ? resgateBruto
 : calcularResgateBruto(saqueMensal, inputs, rendTotalLiq).resgateBruto;
 
-const serie = projetarSelic({
+const { serie } = projetarSelic({
 saldoInicial: saldoSelic,
 meta,
 rendSelicAnual,
