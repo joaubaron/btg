@@ -1,13 +1,7 @@
 /* =========================================================
-   Service Worker — Gestão Patrimonial R$ 32M
-   v34: stale-while-revalidate para HTML
-        → sempre serve o HTML do cache (rápido)
-        → busca versão nova em background
-        → próximo reload já pega a versão atualizada
-   v33: corrigiu fallback que servia index.html no lugar
-        de chart.js / tailwind.css (quebrava o parser JS)
+   Service Worker — Gestão Patrimonial
 ========================================================= */
-const CACHE = 'gestao32m-v42';   // ← bump força atualização (fix: modais sem scroll travavam botões de confirmação fora da tela)
+const CACHE = 'gestao32m-v43';   // ← bump força atualização (fix: modais sem scroll travavam botões de confirmação fora da tela)
 const ASSETS = [
   './',
   './index.html',
