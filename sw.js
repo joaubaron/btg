@@ -1,7 +1,7 @@
 /* =========================================================
    Service Worker — Gestão Patrimonial
 ========================================================= */
-const CACHE = 'gestao32m-v53';
+const CACHE = 'gestao32m-v54';
 const ASSETS = [
   './',
   './index.html',
