@@ -7,7 +7,7 @@
    v33: corrigiu fallback que servia index.html no lugar
         de chart.js / tailwind.css (quebrava o parser JS)
 ========================================================= */
-const CACHE = 'gestao32m-v41';   // ← bump força atualização (modais custom p/ SW e limpar dados, com 3 passos práticos)
+const CACHE = 'gestao32m-v42';   // ← bump força atualização (fix: modais sem scroll travavam botões de confirmação fora da tela)
 const ASSETS = [
   './',
   './index.html',
