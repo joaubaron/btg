@@ -7,7 +7,7 @@
    v33: corrigiu fallback que servia index.html no lugar
         de chart.js / tailwind.css (quebrava o parser JS)
 ========================================================= */
-const CACHE = 'gestao32m-v39';   // ← bump força atualização (onboarding de patrimônio inicial + reset baseado em baseline)
+const CACHE = 'gestao32m-v40';   // ← bump força atualização (fix: onboarding não aparecia p/ quem já tinha estado salvo)
 const ASSETS = [
   './',
   './index.html',
