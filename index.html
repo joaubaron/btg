@@ -2001,7 +2001,7 @@ chartAlocacao.update('none');
 }
 if (!inputs || !chartProjecao) return;
 
-const rentSelicAnual = (selicBase || CFG.SELIC_INICIAL) * (inputs.rentSelic / 100);
+const rendSelicAnual = (selicBase || CFG.SELIC_INICIAL) * (inputs.rentSelic / 100);
 const rendTotalLiq = calcularRendimentos(inputs).rendTotalLiq;
 const saqueMensal = calcularSaqueMensal(inputs, rendTotalLiq);
 const rb = (typeof resgateBruto === 'number')
@@ -2011,7 +2011,7 @@ const rb = (typeof resgateBruto === 'number')
 const { serie } = projetarSelic({
 saldoInicial: saldoSelic,
 meta,
-rendSelicAnual,
+rendSelicAnual: rendSelicAnual,
 cupomSemestral: cupomLiq,
 resgateMensal: rb,
 meses: 24
