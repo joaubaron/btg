@@ -1333,7 +1333,7 @@ Retorna { serie, estourou }. Usada no gráfico E no renderizarProjecao.
 Regra: cupom só vai pra Selic se saldo < meta (recomposição).
 ========================================================= */
 function projetarSelic({ saldoInicial, meta, rendSelicAnual, cupomSemestral, resgateMensal, meses }) {
-const rendMensal = Math.pow(1 + rendSelicAnual, 1/12) - 1;
+const rendMensal = rendSelicAnual / 12;
 const serie = [];
 const cupomParaSelic = [];
 let saldo = saldoInicial;
@@ -1708,7 +1708,7 @@ return `<div class="p-2 rounded-lg border bg-${c}-950/20 border-${c}-800/40 text
 
 function renderizarProjecao(saldoSelic, meta, rendSelicAnual, cupomSemestral, saqueMensal, dataBase, inputs, resgateBruto) {
 const el = document.getElementById('projecao-conteudo');
-const rendMensal = Math.pow(1 + rendSelicAnual, 1/12) - 1;
+const rendMensal = rendSelicAnual / 12;
 const resgateBrutoMensal = (typeof resgateBruto === 'number')
 ? resgateBruto
 : calcularResgateBruto(saqueMensal, inputs).resgateBruto;
