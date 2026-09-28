@@ -1,7 +1,8 @@
 /* =========================================================
    Service Worker — Gestão Patrimonial
 ========================================================= */
-const CACHE = 'gestao32m-v54';
+const CACHE_VERSION = '28.09.2026-0823';
+const CACHE = 'gestao32m-' + CACHE_VERSION;
 const ASSETS = [
   './',
   './index.html',
@@ -19,7 +20,7 @@ self.addEventListener('install', e => {
     const cache = await caches.open(CACHE);
     const results = await Promise.allSettled(
       ASSETS.map(url =>
-        cache.add(url).catch(err => {
+        cache.add(new Request(url, { cache: 'reload' })).catch(err => {
           console.warn('[SW] falha ao cachear', url, err);
           throw err;
         })
