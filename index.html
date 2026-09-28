@@ -160,7 +160,7 @@ Saúde do Investimento — você está perdendo dinheiro?
 <span class="text-lg font-bold" id="saude-durabilidade">—</span>
 <span class="text-[10px] text-slate-500 block" id="saude-durabilidade-desc">—</span>
 </div>
-<div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800" title="Quanto vale hoje o patrimônio futuro, descontada a inflação projetada.">
+<div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800" title="Patrimônio que sobraria em 10 anos, em valores de hoje, já descontados os saques e a inflação. Estimativa.">
 <span class="text-[10px] uppercase tracking-wider text-slate-400 block">Poder de compra em 10 anos</span>
 <span class="text-lg font-bold" id="saude-poder-compra">—</span>
 <span class="text-[10px] text-slate-500 block" id="saude-poder-compra-desc">—</span>
@@ -1352,22 +1352,20 @@ Regra: cupom só vai pra Selic se saldo < meta (recomposição).
 function projetarSelic({ saldoInicial, meta, rendSelicAnual, cupomSemestral, resgateMensal, meses }) {
 const rendMensal = rendSelicAnual / 12;
 const serie = [];
+const cupomParaSelic = [];
 let saldo = saldoInicial;
 let estourou = false;
 
 for (let m = 0; m <= meses; m++) {
 serie.push(Math.max(0, saldo));
 saldo += rendMensal;
-if (m % 6 === 5 && saldo < meta) {
-saldo += cupomSemestral;
-}
+const desvia = (m % 6 === 5 && saldo < meta);
+cupomParaSelic.push(desvia);
+if (desvia) saldo += cupomSemestral;
 saldo -= resgateMensal;
-if (saldo < 0) {
-estourou = true;
-saldo = 0;
+if (saldo < 0) { estourou = true; saldo = 0; }
 }
-}
-return { serie, estourou };
+return { serie, estourou, cupomParaSelic };
 }
 
 /* =========================================================
@@ -1384,32 +1382,33 @@ const rentNominalLiq = patrimonioTotal > 0 ? rendTotalLiq / patrimonioTotal * 10
 const retornoReal = ((1 + rentNominalLiq/100) / (1 + ipcaProjetado/100) - 1) * 100;
 const taxaRetirada = patrimonioTotal > 0 ? saqueAnual / patrimonioTotal * 100 : 0;
 
-// Durabilidade em termos reais (retorno real constante, saque corrigido pela inflação)
-const retornoRealMensal = Math.pow(1 + retornoReal/100, 1/12) - 1;
-const ipcaMensal = Math.pow(1 + ipcaProjetado/100, 1/12) - 1;
-let saldoDur = patrimonioTotal;
-let saqueReal = saqueMensal;
-let anos = 0;
-const maxAnos = 100;
-while (saldoDur > 0 && anos < maxAnos) {
-for (let m = 0; m < 12 && saldoDur > 0; m++) {
-saldoDur = saldoDur * (1 + retornoRealMensal) - saqueReal;
-saqueReal = saqueReal * (1 + ipcaMensal);
-}
-anos++;
-}
-const poderCompra10 = patrimonioTotal / Math.pow(1 + ipcaProjetado/100, 10);
+// Tudo em termos REAIS (valores de hoje): retorno real + saque constante
+const rMensal = Math.pow(1 + retornoReal/100, 1/12) - 1;
 
-// Projeção 24m mês a mês: Selic + IPCA+ lado a lado (24 meses exatos)
+// Durabilidade em meses (teto de 100 anos)
+const MAX_MESES = 1200;
+let saldo = patrimonioTotal, mesesDur = 0;
+while (saldo > 0 && mesesDur < MAX_MESES) {
+saldo = saldo * (1 + rMensal) - saqueMensal;
+mesesDur++;
+}
+const durabilidade = saldo > 0 ? 100 : Math.min(99, Math.round(mesesDur / 12));
+
+// Patrimônio restante em 10 anos, em valores de hoje, já com os saques
+let saldo10 = patrimonioTotal;
+for (let m = 0; m < 120 && saldo10 > 0; m++) {
+saldo10 = Math.max(0, saldo10 * (1 + rMensal) - saqueMensal);
+}
+const poderCompra10 = saldo10;
+
+// Projeção 24m (nominal): Selic + IPCA+ sem contar o cupom duas vezes
 const MESES_PROJ = 24;
 const aliqIRsaude = aliquotaIR(inputs);
 const cupomSemestral = calcularCupomIPCA(inputs.ipcaInicial, aliqIRsaude, inputs.taxaRealIPCA);
 const rendSelicAnual = inputs.selicInicial * (inputs.rentSelic / 100);
-const rendIPCAAnual = inputs.ipcaInicial * (inputs.rentIPCA / 100);
 const { resgateBruto: resgateBrutoMensal } = calcularResgateBruto(saqueMensal, inputs, rendTotalLiq);
 
-// Selic mês a mês
-const { serie: serieSelic } = projetarSelic({
+const { serie: serieSelic, cupomParaSelic } = projetarSelic({
 saldoInicial: saldoSelic,
 meta: metaSelic,
 rendSelicAnual,
@@ -1418,28 +1417,21 @@ resgateMensal: resgateBrutoMensal,
 meses: MESES_PROJ
 });
 
-// IPCA+ mês a mês, juro composto, com cupom semestral e resgate mensal proporcional
-const rentIPCA_taxa = (inputs.rentIPCA / 100);
-const rendIPCA_mensal = Math.pow(1 + rentIPCA_taxa, 1/12) - 1;
-let ipcaProj = inputs.ipcaInicial;
-const serieIPCA = [ipcaProj];
+// rentIPCA já é retorno TOTAL (inclui cupom). O cupom só sai do IPCA+
+// quando é desviado para a Selic; senão fica reinvestido.
+const rendIPCAMensal = Math.pow(1 + inputs.rentIPCA / 100, 1/12) - 1;
+let saldoIPCA = inputs.ipcaInicial;
 for (let m = 1; m <= MESES_PROJ; m++) {
-ipcaProj *= (1 + rendIPCA_mensal);
-// Cupom semestral sai do IPCA+ (entra no mês 6, 12, 18, 24)
-// O resgate mensal é debitado da Selic na projeção da Selic; aqui mantemos o IPCA+ rendendo
-// (aproximação: o cupom não está sendo reaplicado de volta no IPCA+ na série, porque o destino
-//  do cupom é a Selic quando ela está abaixo da meta — modelado na projetarSelic).
-serieIPCA.push(ipcaProj);
+saldoIPCA *= (1 + rendIPCAMensal);
+if (m % 6 === 0 && cupomParaSelic[m - 1]) saldoIPCA -= cupomSemestral;
 }
 
-const saldoSelicProj = serieSelic[serieSelic.length - 1]; // índice MESES_PROJ
-const saldoIPCAProj = serieIPCA[serieIPCA.length - 1];    // índice MESES_PROJ
-const patrimonioFinal = saldoSelicProj + saldoIPCAProj;
+const patrimonioFinal = serieSelic[MESES_PROJ] + saldoIPCA;
 const anosProj = MESES_PROJ / 12;
 const rentAcumulada = patrimonioTotal > 0 ? (patrimonioFinal / patrimonioTotal - 1) * 100 : 0;
 const cagr = patrimonioTotal > 0 ? (Math.pow(patrimonioFinal / patrimonioTotal, 1 / anosProj) - 1) * 100 : 0;
 
-return { rentNominalLiq, retornoReal, taxaRetirada, durabilidade: anos, poderCompra10, saqueAnual, cagr, rentAcumulada };
+return { rentNominalLiq, retornoReal, taxaRetirada, durabilidade, poderCompra10, saqueAnual, cagr, rentAcumulada };
 }
 
 function renderizarSaude(saude, saldoSelic, metaSelic) {
@@ -1467,7 +1459,7 @@ saude.durabilidade >= 25 ? 'Estimativa: pode acabar em uma geração' : 'Estimat
 const elPC = document.getElementById('saude-poder-compra');
 elPC.textContent = formatarMoeda(saude.poderCompra10);
 elPC.className = 'text-lg font-bold text-slate-200';
-document.getElementById('saude-poder-compra-desc').textContent = 'Estimativa, preços de hoje';
+document.getElementById('saude-poder-compra-desc').textContent = 'Após 10 anos de saques, preços de hoje';
 
 const elCagr = document.getElementById('saude-cagr');
 if (elCagr) {
