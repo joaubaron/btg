@@ -13,29 +13,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Gestão">
 
-<link rel="manifest" id="app-manifest">
-<script>
-const base = location.origin + location.pathname.replace(/[^/]*$/, '');
-const manifest = {
-name: "Gestão Patrimonial",
-short_name: "Gestão",
-start_url: base,
-scope: base,
-display: "standalone",
-orientation: "portrait-primary",
-background_color: "#0f172a",
-theme_color: "#0f172a",
-icons: [{
-src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230f172a'/%3E%3Ctext x='50' y='68' font-size='55' text-anchor='middle'%3E%F0%9F%92%B0%3C/text%3E%3C/svg%3E",
-sizes: "512x512",
-type: "image/svg+xml",
-purpose: "any maskable"
-}]
-};
-document.getElementById('app-manifest').href =
-URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' }));
-</script>
-
+<link rel="manifest" href="./manifest.json">
 <link rel="stylesheet" href="./tailwind.css">
 <script src="./chart.js"></script>
 
