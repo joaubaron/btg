@@ -561,16 +561,16 @@ Timeline Real (estimativa)
 
 <!-- BOTÃO: Como preservar o patrimônio -->
 <button onclick="abrirComoPreservar()" class="w-full max-w-6xl mx-auto block mt-6 p-4 bg-emerald-950/40 border border-emerald-700/50 hover:bg-emerald-900/40 rounded-2xl text-left transition box-border" style="margin-left:auto;margin-right:auto;max-width:calc(100vw - 2rem);">
-  <div class="flex items-center gap-3">
-    <div class="p-2 bg-emerald-500/20 text-emerald-400 rounded-lg shrink-0">
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-    </div>
-    <div class="flex-1 min-w-0">
-      <h3 class="font-bold text-emerald-300 text-sm">Preserve o patrimônio (conta BTG)</h3>
-      <p class="text-[11px] text-slate-400 mt-0.5">3 passos práticos pra o dinheiro não acabar</p>
-    </div>
-    <svg class="w-5 h-5 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-  </div>
+<div class="flex items-center gap-3">
+<div class="p-2 bg-emerald-500/20 text-emerald-400 rounded-lg shrink-0">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+</div>
+<div class="flex-1 min-w-0">
+<h3 class="font-bold text-emerald-300 text-sm">Preserve o patrimônio (conta BTG)</h3>
+<p class="text-[11px] text-slate-400 mt-0.5">3 passos práticos pra o dinheiro não acabar</p>
+</div>
+<svg class="w-5 h-5 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+</div>
 </button>
 
 <!-- MODAL: Como preservar o patrimônio -->
@@ -615,24 +615,24 @@ Timeline Real (estimativa)
 
 <!-- ===== DIFF 7: MODAL PRESERVAR COM SPANS DINÂMICOS ===== -->
 <div id="modal-preservar" class="hidden fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-  <div class="card-glass rounded-2xl p-5 max-w-md w-full space-y-4 max-h-[90vh] overflow-y-auto">
-    <h3 class="font-bold text-white text-lg">Como preservar o patrimônio</h3>
-    <div class="space-y-4 text-xs text-slate-300">
-      <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800">
-        <h4 class="font-bold text-emerald-400 mb-1">1. Payout <span class="pv-payout">36</span>%</h4>
-        <p>Quando o rendimento líquido entrar na conta BTG, você transfere só <strong><span class="pv-payout">36</span>%</strong> pra conta corrente. Os outros <strong><span class="pv-resto">64</span>%</strong> ficam investidos (o BTG reinveste automaticamente em Selic ou você direciona).</p>
-      </div>
-      <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800">
-        <h4 class="font-bold text-purple-400 mb-1">2. Cupons IPCA+</h4>
-        <p>Os dois pagamentos semestrais (<strong>15/02 e 15/08</strong>) caem na conta BTG. Em vez de transferir pra conta corrente, você <strong>deixa lá</strong> e manda reinvestir (Selic ou IPCA+ novo). Não é transferência manual mês a mês — é só não tirar.</p>
-      </div>
-      <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800">
-        <h4 class="font-bold text-sky-400 mb-1">3. Reserva Selic na meta</h4>
-        <p>Se a reserva Selic cair abaixo de <strong id="pv-meta">R$ 18M</strong> (por causa de saque extraordinário, por exemplo), você direciona os cupons dos próximos semestres pra ela em vez de reinvestir em IPCA+. O app já te avisa quando isso acontece (<strong>"⚠ Recompor Selic"</strong>).</p>
-      </div>
-    </div>
-    <button onclick="fecharComoPreservar()" class="w-full p-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm">Fechar</button>
-  </div>
+<div class="card-glass rounded-2xl p-5 max-w-md w-full space-y-4 max-h-[90vh] overflow-y-auto">
+<h3 class="font-bold text-white text-lg">Como preservar o patrimônio</h3>
+<div class="space-y-4 text-xs text-slate-300">
+<div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800">
+<h4 class="font-bold text-emerald-400 mb-1">1. Payout <span class="pv-payout">36</span>%</h4>
+<p>Quando o rendimento líquido entrar na conta BTG, você transfere só <strong><span class="pv-payout">36</span>%</strong> pra conta corrente. Os outros <strong><span class="pv-resto">64</span>%</strong> ficam investidos (o BTG reinveste automaticamente em Selic ou você direciona).</p>
+</div>
+<div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800">
+<h4 class="font-bold text-purple-400 mb-1">2. Cupons IPCA+</h4>
+<p>Os dois pagamentos semestrais (<strong>15/02 e 15/08</strong>) caem na conta BTG. Em vez de transferir pra conta corrente, você <strong>deixa lá</strong> e manda reinvestir (Selic ou IPCA+ novo). Não é transferência manual mês a mês — é só não tirar.</p>
+</div>
+<div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800">
+<h4 class="font-bold text-sky-400 mb-1">3. Reserva Selic na meta</h4>
+<p>Se a reserva Selic cair abaixo de <strong id="pv-meta">R$ 18M</strong> (por causa de saque extraordinário, por exemplo), você direciona os cupons dos próximos semestres pra ela em vez de reinvestir em IPCA+. O app já te avisa quando isso acontece (<strong>"⚠ Recompor Selic"</strong>).</p>
+</div>
+</div>
+<button onclick="fecharComoPreservar()" class="w-full p-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm">Fechar</button>
+</div>
 </div>
 <!-- ===== FIM DIFF 7 ===== -->
 
@@ -1376,10 +1376,10 @@ return { serie, estourou, cupomParaSelic };
 /* =========================================================
 2.3 — calcularSaude: projeção mês a mês de Selic + IPCA+
 Correções:
- - off-by-one corrigido (24 meses exatos)
- - juro composto no IPCA+ (não mais soma linear)
- - IPCA+ projetado mês a mês com cupom semestral explícito
- - durabilidade em termos reais, com saque corrigido pela inflação
+- off-by-one corrigido (24 meses exatos)
+- juro composto no IPCA+ (não mais soma linear)
+- IPCA+ projetado mês a mês com cupom semestral explícito
+- durabilidade em termos reais, com saque corrigido pela inflação
 ========================================================= */
 // Anos que o patrimônio dura (termos reais: retorno real constante, saque constante). Infinity = não acaba em 100 anos.
 function duracaoAnos(saldoInicial, retornoRealPct, saqueMensal) {
@@ -2266,6 +2266,13 @@ atualizarSimulacao();
 renderizarHistoricoExtra();
 registrarSW();
 atualizarDadosBCB();
+
+['input-onboarding-patrimonio', 'input-onboarding-data'].forEach(id => {
+const el = document.getElementById(id);
+if (el) el.addEventListener('keydown', e => {
+if (e.key === 'Enter') { e.preventDefault(); confirmarOnboarding(); }
+});
+});
 });
 </script>
 </body>
