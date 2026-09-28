@@ -360,7 +360,10 @@ Parâmetros
 </div>
 <div class="mb-2">
 <span class="text-[10px] text-slate-400">Finalidade (opcional)</span>
-<input type="text" id="input-extra-finalidade" placeholder="ex: presente filhos" maxlength="40" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white">
+<div class="flex gap-2">
+<input type="text" id="input-extra-finalidade" placeholder="ex: presente filhos" maxlength="40" class="flex-1 min-w-0 bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white">
+<button onclick="aplicarSaqueExtra()" class="shrink-0 text-xs px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg transition font-medium">Aplicar saque</button>
+</div>
 </div>
 
 <div class="mt-2 p-2.5 bg-slate-900/40 border border-amber-500/20 rounded-lg">
@@ -384,11 +387,6 @@ Parâmetros
 </label>
 </div>
 <p class="text-[10px] text-slate-500 mt-2 italic">Digite o valor e clique em <strong>Aplicar saque extraordinário</strong>.</p>
-</div>
-
-<div class="flex gap-2 mt-2">
-<button onclick="carregarExemploPDF()" class="flex-1 text-xs py-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-lg hover:bg-amber-500/20 transition">Exemplo (R$ 3,5Mi)</button>
-<button onclick="aplicarSaqueExtra()" class="flex-1 text-xs py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg transition font-medium">Aplicar saque</button>
 </div>
 
 <div id="historico-extra" class="mt-3 pt-3 border-t border-slate-700/50">
@@ -2110,10 +2108,6 @@ chartProjecao.update('none');
 function formatarMoeda(v) {
 if (!isFinite(v)) return 'R$ 0';
 return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(v);
-}
-function carregarExemploPDF() {
-document.getElementById('input-extra-imovel').value = 3000000;
-document.getElementById('input-extra-outros').value = 500000;
 }
 function resetarTudo() {
 const baseline = carregarBaseline();
