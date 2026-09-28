@@ -155,7 +155,7 @@ Saúde do Investimento — você está perdendo dinheiro?
 <span class="text-lg font-bold" id="saude-tx-retirada">—</span>
 <span class="text-[10px] text-slate-500 block" id="saude-tx-retirada-desc">—</span>
 </div>
-<div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800" title="Estimativa sob as premissas atuais — não é garantia.">
+<div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800" title="Quantos anos o patrimônio dura com o saque escolhido, em termos reais. Conservador = retorno real fixo de 2%; Modelo = retorno real das premissas atuais. Estimativa, não garantia.">
 <span class="text-[10px] uppercase tracking-wider text-slate-400 block">Estimativa de durabilidade</span>
 <span class="text-lg font-bold" id="saude-durabilidade">—</span>
 <span class="text-[10px] text-slate-500 block" id="saude-durabilidade-desc">—</span>
@@ -683,6 +683,8 @@ STORAGE_KEY: 'gestao45m-v39',
 API_TIMEOUT: 8000,
 DIVISAO: { casa: 0.76, esposa: 0.12, marido: 0.12 },
 TAXA_RETIRADA_SEGURA_40ANOS: 3.5,
+HORIZONTE_ANOS: 40,
+RETORNO_REAL_CONSERVADOR: 2,
 LIMITES_RENT: {
 selicMin: 2, selicMax: 14,
 ipcaMin: 6, ipcaMax: 14
@@ -1376,6 +1378,14 @@ Correções:
  - IPCA+ projetado mês a mês com cupom semestral explícito
  - durabilidade em termos reais, com saque corrigido pela inflação
 ========================================================= */
+// Anos que o patrimônio dura (termos reais: retorno real constante, saque constante). Infinity = não acaba em 100 anos.
+function duracaoAnos(saldoInicial, retornoRealPct, saqueMensal) {
+const r = Math.pow(1 + retornoRealPct/100, 1/12) - 1;
+let saldo = saldoInicial, meses = 0;
+while (saldo > 0 && meses < 1200) { saldo = saldo * (1 + r) - saqueMensal; meses++; }
+return saldo > 0 ? Infinity : meses / 12;
+}
+
 function calcularSaude(patrimonioTotal, rendTotalLiq, ipcaProjetado, saqueMensal, saldoSelic, metaSelic, inputs) {
 const saqueAnual = saqueMensal * 12;
 const rentNominalLiq = patrimonioTotal > 0 ? rendTotalLiq / patrimonioTotal * 100 : 0;
@@ -1393,6 +1403,10 @@ saldo = saldo * (1 + rMensal) - saqueMensal;
 mesesDur++;
 }
 const durabilidade = saldo > 0 ? 100 : Math.min(99, Math.round(mesesDur / 12));
+
+// Durabilidade em cenário conservador (retorno real fixo, menor que o do modelo)
+const duracaoConserv = duracaoAnos(patrimonioTotal, CFG.RETORNO_REAL_CONSERVADOR, saqueMensal);
+const duracaoModelo = duracaoAnos(patrimonioTotal, retornoReal, saqueMensal);
 
 // Patrimônio restante em 10 anos, em valores de hoje, já com os saques
 let saldo10 = patrimonioTotal;
@@ -1431,7 +1445,7 @@ const anosProj = MESES_PROJ / 12;
 const rentAcumulada = patrimonioTotal > 0 ? (patrimonioFinal / patrimonioTotal - 1) * 100 : 0;
 const cagr = patrimonioTotal > 0 ? (Math.pow(patrimonioFinal / patrimonioTotal, 1 / anosProj) - 1) * 100 : 0;
 
-return { rentNominalLiq, retornoReal, taxaRetirada, durabilidade, poderCompra10, saqueAnual, cagr, rentAcumulada };
+return { rentNominalLiq, retornoReal, taxaRetirada, durabilidade, duracaoConserv, duracaoModelo, poderCompra10, saqueAnual, cagr, rentAcumulada };
 }
 
 function renderizarSaude(saude, saldoSelic, metaSelic) {
@@ -1449,12 +1463,16 @@ saude.taxaRetirada <= CFG.TAXA_RETIRADA_SEGURA_40ANOS ? `Faixa de referência p/
 saude.taxaRetirada <= 5 ? 'Referência 30 anos, apertada p/ 40' : 'Acima da referência';
 
 const elDur = document.getElementById('saude-durabilidade');
-elDur.textContent = saude.durabilidade >= 100 ? '∞ (estimativa)' : '~' + saude.durabilidade + ' anos (est.)';
-elDur.className = 'text-lg font-bold ' + (saude.durabilidade >= 50 ? 'text-emerald-400' : saude.durabilidade >= 25 ? 'text-amber-400' : 'text-rose-400');
-document.getElementById('saude-durabilidade-desc').textContent =
-saude.durabilidade >= 100 ? 'Estimativa: principal preservado indefinidamente sob as premissas' :
-saude.durabilidade >= 50 ? 'Estimativa: sustenta por décadas sob as premissas' :
-saude.durabilidade >= 25 ? 'Estimativa: pode acabar em uma geração' : 'Estimativa: risco de exaustão';
+const H = CFG.HORIZONTE_ANOS;
+const fAnos = a => isFinite(a) ? '~' + Math.round(a) + ' anos' : '∞';
+const cons = saude.duracaoConserv, modelo = saude.duracaoModelo;
+elDur.textContent = fAnos(cons) + ' (conservador)';
+elDur.className = 'text-lg font-bold ' + (cons >= H ? 'text-emerald-400' : modelo >= H ? 'text-amber-400' : 'text-rose-400');
+const veredDur = cons >= H ? '✓ Boa: cobre os ' + H + ' anos mesmo com retorno real de ' + CFG.RETORNO_REAL_CONSERVADOR + '%.'
+: modelo >= H ? '⚠ Depende do retorno: só cobre os ' + H + ' anos se o retorno real ficar acima de ' + CFG.RETORNO_REAL_CONSERVADOR + '%.'
+: '✗ Ruim: não cobre os ' + H + ' anos nem no cenário do modelo.';
+document.getElementById('saude-durabilidade-desc').innerHTML =
+veredDur + '<br>Modelo (' + saude.retornoReal.toFixed(1) + '% real): ' + fAnos(modelo) + ' · estimativa';
 
 const elPC = document.getElementById('saude-poder-compra');
 elPC.textContent = formatarMoeda(saude.poderCompra10);
