@@ -1798,6 +1798,18 @@ rec.className = 'text-base sm:text-lg font-bold text-amber-400';
 mostrarPainelAjuste('selic_abaixo', { def, saldoSelic, metaSelic, saqueMensal, sobraAnual, rendTotalLiq });
 return;
 }
+const taxaAtual = (saqueMensal * 12) / patAcao * 100;
+if (taxaAtual > CFG.TAXA_RETIRADA_SEGURA_40ANOS) {
+const saqueRef = patAcao * CFG.TAXA_RETIRADA_SEGURA_40ANOS / 100 / 12;
+banner.className = 'card-glass rounded-2xl p-5 sm:p-6 shadow-xl border-l-4 border-amber-500 bg-amber-950/20';
+title.textContent = '⚠ ACIMA DA REFERÊNCIA P/ 40 ANOS';
+title.className = 'text-xl sm:text-2xl font-bold text-amber-400 mt-1';
+desc.innerHTML = `Retirada de <strong>${taxaAtual.toFixed(2)}% a.a.</strong> acima da referência de ${CFG.TAXA_RETIRADA_SEGURA_40ANOS}% p/ 40 anos. Para ficar na referência: até <strong>${formatarMoeda(saqueRef)}/mês</strong>.`;
+rec.textContent = 'Reduzir: ' + formatarMoeda(saqueRef) + '/mês';
+rec.className = 'text-base sm:text-lg font-bold text-amber-400';
+mostrarPainelAjuste('reduzir', { saqueMax: saqueRef, saqueMensal, sobraAnual, rendTotalLiq });
+return;
+}
 banner.className = 'card-glass rounded-2xl p-5 sm:p-6 shadow-xl border-l-4 border-emerald-500 bg-emerald-950/20';
 title.textContent = '✓ CENÁRIO ESTÁVEL';
 title.className = 'text-xl sm:text-2xl font-bold text-emerald-400 mt-1';
