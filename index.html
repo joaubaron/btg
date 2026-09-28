@@ -107,9 +107,10 @@ header.sticky{padding-top:calc(0.75rem + env(safe-area-inset-top,0px))}
 <p class="text-xs sm:text-sm text-slate-300 mt-1" id="action-desc">Aguarde...</p>
 </div>
 <div class="bg-slate-800/80 p-3 rounded-xl text-center border border-slate-700/50 min-w-[180px]">
-<span class="block text-[10px] text-slate-400 uppercase">Saque Recomendado</span>
+<span class="block text-[10px] text-slate-400 uppercase">Saque Atual</span>
 <span class="text-base sm:text-lg font-bold text-emerald-400" id="rec-saque">—</span>
 <span class="block text-[10px] text-slate-500 mt-0.5" id="rec-saque-bruto">bruto: —</span>
+<span id="rec-saque-aviso" class="hidden text-[10px] text-amber-400 mt-1 font-medium"></span>
 </div>
 </div>
 </section>
@@ -1640,10 +1641,20 @@ document.getElementById('fluxo-casa').textContent = formatarMoeda(vCasa);
 document.getElementById('fluxo-esposa').textContent = formatarMoeda(vEsposa);
 document.getElementById('fluxo-marido').textContent = formatarMoeda(vMarido);
 
-document.getElementById('rec-saque-bruto').textContent = 'bruto: ' + formatarMoeda(resgateBruto);
-
 const saude = calcularSaude(patrimonioTotal, rendTotalLiq, ipcaProjetado, saqueMensal, saldoSelicAtual, metaSelic, inputs);
 renderizarSaude(saude, saldoSelicAtual, metaSelic);
+
+document.getElementById('rec-saque-bruto').textContent = 'bruto: ' + formatarMoeda(resgateBruto) + ' · ' + saude.taxaRetirada.toFixed(2) + '% a.a.';
+const avisoEl = document.getElementById('rec-saque-aviso');
+if (avisoEl) {
+if (saude.taxaRetirada > CFG.TAXA_RETIRADA_SEGURA_40ANOS) {
+avisoEl.classList.remove('hidden');
+avisoEl.textContent = '⚠ Acima da referência de ' + CFG.TAXA_RETIRADA_SEGURA_40ANOS + '% p/ 40 anos';
+} else {
+avisoEl.classList.add('hidden');
+}
+}
+
 renderizarAlertas({
 saqueMensal, vCasa, vEsposa, vMarido, pisoCasa: inputs.pisoCasa,
 consomeReal, pres, rendSelicLiq, cupomLiq,
