@@ -2206,7 +2206,7 @@ document.getElementById('modal-onboarding').classList.add('hidden');
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-document.getElementById('app-version').textContent = APP_VERSION;   // <-- adicione aqui
+document.getElementById('app-version').textContent = APP_VERSION;
 const dbEl = document.getElementById('input-data-base');
 if (!dbEl.value) dbEl.value = new Date().toISOString().slice(0,10);
 
@@ -2267,6 +2267,12 @@ atualizarSimulacao();
 renderizarHistoricoExtra();
 registrarSW();
 atualizarDadosBCB();
+
+if ('serviceWorker' in navigator) {
+navigator.serviceWorker.addEventListener('controllerchange', () => {
+if (confirm('Nova versão disponível. Recarregar agora?')) location.reload();
+});
+}
 
 ['input-onboarding-patrimonio', 'input-onboarding-data'].forEach(id => {
 const el = document.getElementById(id);
