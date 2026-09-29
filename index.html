@@ -2066,11 +2066,25 @@ function initCharts() {
         legend: {
           labels: {
             color: '#cbd5e1',
-            font: { size: 10 },
+            font: { size: 11 },
+            boxWidth: 70,
+            boxHeight: 6,
             usePointStyle: true,
             pointStyle: 'line',
-            boxWidth: 60,
-            boxHeight: 3
+            generateLabels(chart) {
+              return chart.data.datasets.map((ds, i) => ({
+                text: ds.label,
+                fontColor: '#cbd5e1',
+                strokeStyle: ds.borderColor,
+                fillStyle: ds.borderColor,
+                lineWidth: 4,
+                lineDash: ds.borderDash || [],
+                lineDashOffset: 0,
+                pointStyle: 'line',
+                hidden: !chart.isDatasetVisible(i),
+                datasetIndex: i
+              }));
+            }
           }
         },
         tooltip: { callbacks: { label: c => c.dataset.label + ': ' + formatarMoeda(c.raw) } }
