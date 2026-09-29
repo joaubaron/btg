@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Gestão Patrimonial v2.20</title>
+<title>Gestão Patrimonial v2.21</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
 <link rel="apple-touch-icon" href="./icon-192.png">
 <meta name="theme-color" content="#0f172a">
@@ -2154,9 +2154,12 @@ function fecharConfig() { document.getElementById('modal-config').classList.add(
 
 // ===== DIFF 7: abrirComoPreservar com valores dinâmicos =====
 function abrirComoPreservar() {
-const p = numOr('input-payout', CFG.PAYOUT_PADRAO);
+const inp = coletarInputs();
+const { rendTotalLiq } = calcularRendimentos(inp);
+const saque = calcularSaqueMensal(inp, rendTotalLiq);
+const p = rendTotalLiq > 0 ? Math.round(saque * 12 / rendTotalLiq * 100) : 0;
 document.querySelectorAll('.pv-payout').forEach(e => e.textContent = p);
-document.querySelectorAll('.pv-resto').forEach(e => e.textContent = 100 - p);
+document.querySelectorAll('.pv-resto').forEach(e => e.textContent = Math.max(0, 100 - p));
 document.getElementById('pv-meta').textContent = formatarMoeda(numOr('input-meta-selic', 18000000));
 document.getElementById('modal-preservar').classList.remove('hidden');
 }
