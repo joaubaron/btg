@@ -1788,17 +1788,10 @@ const H = CFG.HORIZONTE_ANOS;
 const durConserv = saude?.duracaoConserv ?? Infinity;
 const durModelo  = saude?.duracaoModelo ?? Infinity;
 const durTxt = (() => {
-const fmt = a => isFinite(a) ? '~' + Math.round(a) + ' anos' : '∞';
-if (!isFinite(durConserv) || durConserv >= 100) {
-return 'Nessas premissas, o patrimônio se mantém por prazo indeterminado (>100 anos) mesmo no cenário conservador.';
-}
-if (durConserv >= H) {
-return `Nessas premissas, o patrimônio dura <strong>${fmt(durConserv)}</strong> no cenário conservador (retorno real de ${CFG.RETORNO_REAL_CONSERVADOR}% a.a.).`;
-}
-if (isFinite(durModelo) && durModelo >= H) {
-return `Nessas premissas, o patrimônio dura <strong>${fmt(durModelo)}</strong> se o retorno real ficar em ${(saude?.retornoReal ?? 0).toFixed(1)}% a.a. No cenário conservador (${CFG.RETORNO_REAL_CONSERVADOR}% a.a.), duraria <strong>${fmt(durConserv)}</strong>.`;
-}
-return `Nessas premissas, o patrimônio dura <strong>${fmt(durModelo)}</strong>. No cenário conservador, <strong>${fmt(durConserv)}</strong>.`;
+const fmt = a => isFinite(a) ? '~' + Math.round(a) + ' anos' : 'indeterminado';
+if (!isFinite(durConserv) || durConserv >= 100) return 'Dura: indeterminado.';
+if (durConserv >= H) return `Dura: ${fmt(durConserv)} (conservador).`;
+return `Dura: ${fmt(durModelo)} (modelo) · ${fmt(durConserv)} (conservador).`;
 })();
 
 if (sobraAnual < 0) {
@@ -1806,8 +1799,7 @@ banner.className = 'card-glass rounded-2xl p-5 sm:p-6 shadow-xl border-l-4 borde
 title.textContent = '✗ REDUZIR SAQUE MENSAL';
 title.className = 'text-xl sm:text-2xl font-bold text-red-400 mt-1';
 const saqueMax = rendTotalLiq / 12;
-desc.innerHTML = `O rendimento líquido de <strong>${formatarMoeda(rendTotalLiq)}/ano</strong> não cobre saques de <strong>${formatarMoeda(saqueMensal*12)}/ano</strong> (custo bruto anual: <strong>${formatarMoeda(resgateBruto*12)}</strong>). <u>${durTxt}</u> Reduza antes de consumir o principal.`
-+ (reservaAbaixo ? ` A reserva Selic também está <strong>${formatarMoeda(metaSelic - saldoSelic)}</strong> abaixo da meta.` : '');
+desc.innerHTML = `Rendimento não cobre o saque. ${durTxt} Reduza para <strong>${formatarMoeda(rendTotalLiq / 12)}/mês</strong>.`;
 rec.textContent = 'Máx: ' + formatarMoeda(saqueMax);
 rec.className = 'text-base sm:text-lg font-bold text-red-400';
 mostrarPainelAjuste('reduzir', { saqueMax, saqueMensal, sobraAnual, rendTotalLiq });
@@ -1817,7 +1809,7 @@ if (consomeReal) {
 banner.className = 'card-glass rounded-2xl p-5 sm:p-6 shadow-xl border-l-4 border-amber-500 bg-amber-950/20';
 title.textContent = '⚠ SAQUE CONSOME PODER DE COMPRA';
 title.className = 'text-xl sm:text-2xl font-bold text-amber-400 mt-1';
-desc.innerHTML = `O saque de <strong>${formatarMoeda(saqueMensal*12)}/ano</strong> está acima do retorno real de <strong>${formatarMoeda(presAcao.saqueMaxRealAnual)}/ano</strong>. <u>${durTxt}</u> O payout que preserva poder de compra é <strong>~${(presAcao.payoutMaxReal*100).toFixed(0)}%</strong>.`;
+desc.innerHTML = `Saque acima do retorno real. ${durTxt} Preserva: <strong>${formatarMoeda(presAcao.saqueMaxRealAnual / 12)}/mês</strong>.`;
 rec.textContent = 'Preserva: ' + formatarMoeda(presAcao.saqueMaxRealAnual / 12) + '/mês';
 rec.className = 'text-base sm:text-lg font-bold text-amber-400';
 mostrarPainelAjuste('reduzir', { saqueMax: presAcao.saqueMaxRealAnual/12, saqueMensal, sobraAnual, rendTotalLiq });
@@ -1828,7 +1820,7 @@ const def = metaSelic - saldoSelic;
 banner.className = 'card-glass rounded-2xl p-5 sm:p-6 shadow-xl border-l-4 border-amber-500 bg-amber-950/20';
 title.textContent = '⚠ RECOMPOR RESERVA SELIC';
 title.className = 'text-xl sm:text-2xl font-bold text-amber-400 mt-1';
-desc.innerHTML = `Selic em <strong>${formatarMoeda(saldoSelic)}</strong> · faltam <strong>${formatarMoeda(def)}</strong> para a meta. <u>Cupons IPCA+ vão 100% para recomposição.</u> ${durTxt}`;
+desc.innerHTML = `Reserva Selic ${formatarMoeda(def)} abaixo da meta. ${durTxt} Direcione cupons para recompor.`;
 rec.textContent = 'Manter R$ ' + (saqueMensal/1000).toFixed(0) + 'k/mês';
 rec.className = 'text-base sm:text-lg font-bold text-amber-400';
 mostrarPainelAjuste('selic_abaixo', { def, saldoSelic, metaSelic, saqueMensal, sobraAnual, rendTotalLiq });
@@ -1840,7 +1832,7 @@ const saqueRef = patAcao * CFG.TAXA_RETIRADA_SEGURA_40ANOS / 100 / 12;
 banner.className = 'card-glass rounded-2xl p-5 sm:p-6 shadow-xl border-l-4 border-amber-500 bg-amber-950/20';
 title.textContent = '⚠ RETIRADA ACIMA DO IDEAL';
 title.className = 'text-xl sm:text-2xl font-bold text-amber-400 mt-1';
-desc.innerHTML = `Retirada de <strong>${taxaAtual.toFixed(2)}% a.a.</strong> — um pouco acima do ideal para o horizonte de ${H} anos. <u>${durTxt}</u> Para maior segurança, considere reduzir para até <strong>${formatarMoeda(saqueRef)}/mês</strong>.`;
+desc.innerHTML = `Retirada de <strong>${taxaAtual.toFixed(2)}% a.a.</strong> ${durTxt} Seguro: até <strong>${formatarMoeda(saqueRef)}/mês</strong>.`;
 rec.textContent = 'Reduzir: ' + formatarMoeda(saqueRef) + '/mês';
 rec.className = 'text-base sm:text-lg font-bold text-amber-400';
 mostrarPainelAjuste('reduzir', { saqueMax: saqueRef, saqueMensal, sobraAnual, rendTotalLiq });
@@ -1849,7 +1841,7 @@ return;
 banner.className = 'card-glass rounded-2xl p-5 sm:p-6 shadow-xl border-l-4 border-emerald-500 bg-emerald-950/20';
 title.textContent = '✓ CENÁRIO ESTÁVEL';
 title.className = 'text-xl sm:text-2xl font-bold text-emerald-400 mt-1';
-desc.innerHTML = `Liquidez e rendimentos equilibrados. <u>${durTxt}</u> Sob as premissas atuais, o fluxo atende sem comprometer o principal.`;
+desc.innerHTML = `Equilíbrio sob as premissas atuais. ${durTxt}`;
 rec.textContent = 'Manter R$ ' + (saqueMensal/1000).toFixed(0) + 'k/mês';
 rec.className = 'text-base sm:text-lg font-bold text-emerald-400';
 }
