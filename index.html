@@ -18,9 +18,9 @@
 <script src="./chart.js"></script>
 
 <style>
-:root{box-sizing:border-box;padding-bottom:env(safe-area-inset-bottom,0px)}
-html{scroll-padding-top:env(safe-area-inset-top,0px);overflow-x:clip}
-body{background:#0f172a;color:#f8fafc;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;overflow-x:clip}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px);overflow-x:hidden}
+body{background:#0f172a;color:#f8fafc;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;overflow-x:hidden}
 .card-glass{background:rgba(30,41,59,.7);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.1)}
 .badge-live{animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
@@ -63,29 +63,6 @@ header.sticky{padding-top:calc(0.75rem + env(safe-area-inset-top,0px))}
 
 .bg-rose-700{background-color:#be123c!important}
 .bg-rose-700:hover{background-color:#9f1239!important}
-
-/* ===== MELHORIAS VISUAIS ===== */
-.card-glass{background:rgba(30,41,59,.88);border:1px solid rgba(255,255,255,.08);-webkit-backdrop-filter:none;backdrop-filter:none}
-header.sticky,#barra-resumo,[id^="modal-"]{-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
-header.sticky{background:rgba(30,41,59,.92)}
-#barra-resumo{bottom:calc(.75rem + env(safe-area-inset-bottom,0px))}
-.text-\[9px\],.text-\[10px\]{font-size:11px!important;line-height:1.35}
-.text-slate-500{color:#94a3b8!important}
-#ind-rend-selic,#ind-rend-ipca,#metric-rendimento,#metric-saque-anual,#metric-saldo-selic,#metric-sobra,
-#saude-retorno-real,#saude-tx-retirada,#saude-durabilidade,#saude-poder-compra,#saude-cagr,#saude-rent-acum,
-#rec-saque,#resgate-bruto,#ir-valor,#custos-btg,#cupom-valor,
-#fluxo-bruto,#fluxo-total,#fluxo-casa,#fluxo-esposa,#fluxo-marido,#dist-casa,#dist-esposa,#dist-marido{
-font-variant-numeric:tabular-nums;font-size:clamp(.9rem,4.2vw,1.125rem)!important;overflow-wrap:anywhere}
-#fluxo-casa,#fluxo-esposa,#fluxo-marido{font-size:clamp(.8rem,3.4vw,.95rem)!important}
-.sec-head{display:flex;flex-wrap:wrap;align-items:center;gap:.25rem .5rem}
-.sec-head>span:last-child{flex-basis:100%;padding-left:2rem}
-@media(min-width:640px){.sec-head>span:last-child{flex-basis:auto;padding-left:0}}
-#api-dot,#sw-dot{width:8px;height:8px;flex:none}
-.veredito-chip{margin-left:.5rem;font-size:11px;font-weight:700;padding:2px 10px;border-radius:999px;background:#1e293b;border:1px solid #334155;color:#e2e8f0;vertical-align:middle}
-#historico-extra button{min-width:36px;min-height:36px}
-summary{min-height:44px}
-:focus-visible{outline:2px solid #38bdf8;outline-offset:2px;border-radius:6px}
-@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 </style>
 </head>
 <body class="pb-12">
@@ -97,7 +74,7 @@ summary{min-height:44px}
 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
 </div>
 <div class="min-w-0">
-<h1 class="text-base sm:text-lg font-bold text-white truncate">Gestão Patrimonial <span class="text-emerald-400" id="app-version"></span></h1>
+<h1 class="...">Gestão Patrimonial <span class="text-emerald-400" id="app-version"></span></h1>
 <p class="hidden"><span id="header-base">R$ 45.000.000</span><span id="header-data">--/--/----</span></p>
 </div>
 </div>
@@ -124,9 +101,9 @@ summary{min-height:44px}
 <main class="max-w-6xl mx-auto px-4 mt-6 space-y-6">
 
 <section id="sec-patrimonio" class="space-y-3">
-<div class="sec-head px-1 pt-2"><span class="w-6 h-6 shrink-0 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold flex items-center justify-center self-center">1</span><h2 class="text-lg font-bold text-slate-100">Patrimônio total</h2><span class="text-xs text-slate-400">Quanto eu tenho hoje?</span></div>
+<div class="flex items-baseline gap-2 px-1 pt-2"><span class="w-6 h-6 shrink-0 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold flex items-center justify-center self-center">1</span><h2 class="text-lg font-bold text-slate-100">Patrimônio total</h2><span class="text-xs text-slate-400">Quanto eu tenho hoje?</span></div>
 <div class="card-glass rounded-2xl p-5 shadow-xl">
-<span class="text-[11px] uppercase tracking-wider text-slate-400">Patrimônio total</span><strong class="veredito-chip" data-mirror="saude-veredito">—</strong>
+<span class="text-[11px] uppercase tracking-wider text-slate-400">Patrimônio total</span>
 <div class="text-3xl sm:text-4xl font-bold text-white mt-1" data-mirror="header-base">—</div>
 <p class="text-xs text-slate-400 mt-1">Reserva Selic hoje: <strong class="text-sky-400" data-mirror="metric-saldo-selic">—</strong> · o restante fica no Tesouro IPCA+</p>
 </div>
@@ -138,7 +115,7 @@ summary{min-height:44px}
 </div>
 <div class="card-glass rounded-xl p-3">
 <span class="text-[10px] uppercase text-slate-400 block">IPCA 12m (BCB s.13522)</span>
-<span class="text-lg font-bold text-slate-100" id="ind-ipca">—%</span>
+<span class="text-lg font-bold text-amber-400" id="ind-ipca">—%</span>
 <span class="text-[10px] text-slate-500 block" id="ind-ipca-data">—</span>
 </div>
 <div class="card-glass rounded-xl p-3">
@@ -155,12 +132,12 @@ summary{min-height:44px}
 </section>
 
 <section id="sec-saque" class="space-y-3">
-<div class="sec-head px-1 pt-2"><span class="w-6 h-6 shrink-0 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold flex items-center justify-center self-center">2</span><h2 class="text-lg font-bold text-slate-100">Saque mensal</h2><span class="text-xs text-slate-400">Quanto posso retirar por mês e como o dinheiro chega?</span></div>
+<div class="flex items-baseline gap-2 px-1 pt-2"><span class="w-6 h-6 shrink-0 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold flex items-center justify-center self-center">2</span><h2 class="text-lg font-bold text-slate-100">Saque mensal</h2><span class="text-xs text-slate-400">Quanto posso retirar por mês e como o dinheiro chega?</span></div>
 <section id="action-banner" class="card-glass rounded-2xl p-5 sm:p-6 shadow-xl border-l-4 border-emerald-500">
 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
 <div class="flex-1">
 <span class="text-[10px] font-semibold tracking-wider text-slate-400 uppercase">Diagnóstico Automático</span>
-<h3 class="text-xl sm:text-2xl font-bold text-emerald-400 mt-1" id="action-title">Carregando...</h3>
+<h2 class="text-xl sm:text-2xl font-bold text-emerald-400 mt-1" id="action-title">Carregando...</h2>
 <p class="text-xs sm:text-sm text-slate-300 mt-1" id="action-desc">Aguarde...</p>
 </div>
 <div class="bg-slate-800/80 p-3 rounded-xl text-center border border-slate-700/50 min-w-[180px]">
@@ -211,7 +188,7 @@ Fluxo Mensal
 </section>
 
 <section id="sec-reserva" class="space-y-3">
-<div class="sec-head px-1 pt-2"><span class="w-6 h-6 shrink-0 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold flex items-center justify-center self-center">3</span><h2 class="text-lg font-bold text-slate-100">Reserva Selic / Tesouro IPCA+</h2><span class="text-xs text-slate-400">Como está a reserva e como ela se recompõe?</span></div>
+<div class="flex items-baseline gap-2 px-1 pt-2"><span class="w-6 h-6 shrink-0 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold flex items-center justify-center self-center">3</span><h2 class="text-lg font-bold text-slate-100">Reserva Selic / Tesouro IPCA+</h2><span class="text-xs text-slate-400">Como está a reserva e como ela se recompõe?</span></div>
 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
 <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
 <span class="text-[10px] uppercase tracking-wider text-slate-400 block">Rend. Líq. Total</span>
@@ -228,7 +205,7 @@ Fluxo Mensal
 </div>
 <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
 <span class="text-[10px] uppercase tracking-wider text-slate-400 block">Sobra/Ano <span id="metric-sobra-sinal" class="font-bold">—</span></span>
-<span class="text-base font-bold text-emerald-400" id="metric-sobra">—</span>
+<span class="text-base font-bold text-amber-400" id="metric-sobra">—</span>
 </div>
 </div>
 <div class="bg-slate-900/40 border border-slate-800 p-4 rounded-xl">
@@ -251,7 +228,7 @@ Fluxo Mensal
 </section>
 
 <section id="sec-saude" class="space-y-3">
-<div class="sec-head px-1 pt-2"><span class="w-6 h-6 shrink-0 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold flex items-center justify-center self-center">4</span><h2 class="text-lg font-bold text-slate-100">Saúde do investimento</h2><span class="text-xs text-slate-400">O plano se sustenta? O que fazer?</span></div>
+<div class="flex items-baseline gap-2 px-1 pt-2"><span class="w-6 h-6 shrink-0 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold flex items-center justify-center self-center">4</span><h2 class="text-lg font-bold text-slate-100">Saúde do investimento</h2><span class="text-xs text-slate-400">O plano se sustenta? O que fazer?</span></div>
 <section id="painel-saude" class="card-glass rounded-2xl p-5 shadow-xl border border-slate-700/50">
 <div class="flex items-center justify-between mb-4">
 <h3 class="font-bold text-slate-100 text-base flex items-center gap-2">
@@ -342,7 +319,7 @@ Saúde do Investimento — você está perdendo dinheiro?
 </section>
 
 <section id="sec-proj" class="space-y-3">
-<div class="sec-head px-1 pt-2"><span class="w-6 h-6 shrink-0 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold flex items-center justify-center self-center">5</span><h2 class="text-lg font-bold text-slate-100">Projeção 24 meses</h2><span class="text-xs text-slate-400">Para onde o patrimônio vai?</span></div>
+<div class="flex items-baseline gap-2 px-1 pt-2"><span class="w-6 h-6 shrink-0 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold flex items-center justify-center self-center">5</span><h2 class="text-lg font-bold text-slate-100">Projeção 24 meses</h2><span class="text-xs text-slate-400">Para onde o patrimônio vai?</span></div>
 <section class="card-glass rounded-2xl p-5">
 <h3 class="font-bold text-slate-200 text-base border-b border-slate-700 pb-2 flex items-center gap-2">
 <svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>
@@ -368,7 +345,7 @@ Projeção 24 meses (estimativa: Selic + Cupons − Saques)
 </section>
 
 <section id="sec-cfg" class="space-y-3">
-<div class="sec-head px-1 pt-2"><span class="w-6 h-6 shrink-0 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold flex items-center justify-center self-center">6</span><h2 class="text-lg font-bold text-slate-100">Configuração</h2><span class="text-xs text-slate-400">Altere valores e veja tudo acima se atualizar</span></div>
+<div class="flex items-baseline gap-2 px-1 pt-2"><span class="w-6 h-6 shrink-0 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold flex items-center justify-center self-center">6</span><h2 class="text-lg font-bold text-slate-100">Configuração</h2><span class="text-xs text-slate-400">Altere valores e veja tudo acima se atualizar</span></div>
 <details id="sec-config" class="group">
 <summary class="cursor-pointer list-none [&::-webkit-details-marker]:hidden card-glass rounded-2xl p-4 flex items-center justify-between gap-3"><span><span class="block font-bold text-slate-100 text-base">⚙ Ajustar valores</span><span class="block text-xs text-slate-400">Patrimônio, saque, rentabilidade, saque extraordinário e histórico</span></span><span class="text-slate-400 text-lg transition group-open:rotate-180">▾</span></summary>
 <div class="mt-4 space-y-4">
@@ -550,7 +527,7 @@ Parâmetros
 </section>
 
 <section id="sec-regras" class="space-y-3">
-<div class="sec-head px-1 pt-2"><span class="w-6 h-6 shrink-0 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold flex items-center justify-center self-center">7</span><h2 class="text-lg font-bold text-slate-100">Regras e premissas</h2><span class="text-xs text-slate-400">Referência — consulte quando precisar</span></div>
+<div class="flex items-baseline gap-2 px-1 pt-2"><span class="w-6 h-6 shrink-0 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold flex items-center justify-center self-center">7</span><h2 class="text-lg font-bold text-slate-100">Regras e premissas</h2><span class="text-xs text-slate-400">Referência — consulte quando precisar</span></div>
 <details id="sec-regras-det" class="group">
 <summary class="cursor-pointer list-none [&::-webkit-details-marker]:hidden card-glass rounded-2xl p-4 flex items-center justify-between gap-3"><span><span class="block font-bold text-slate-100 text-base">📄 Ver regras, premissas e passos com o BTG</span><span class="block text-xs text-slate-400">Conteúdo de referência, sem números que mudam</span></span><span class="text-slate-400 text-lg transition group-open:rotate-180">▾</span></summary>
 <div class="mt-4 space-y-4">
@@ -681,7 +658,7 @@ var cfg=document.getElementById('sec-config');if(cfg&&window.innerWidth>=1024)cf
 </div>
 <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800">
 <h4 class="font-bold text-sky-400 mb-1">3. Reserva Selic na meta</h4>
-<p>Se a reserva Selic cair abaixo de <strong id="pv-meta">a meta configurada</strong> (por causa de saque extraordinário, por exemplo), você direciona os cupons dos próximos semestres pra ela em vez de reinvestir em IPCA+. O app já te avisa quando isso acontece (<strong>"⚠ Recompor Selic"</strong>).</p>
+<p>Se a reserva Selic cair abaixo de <strong id="pv-meta">R$ 18M</strong> (por causa de saque extraordinário, por exemplo), você direciona os cupons dos próximos semestres pra ela em vez de reinvestir em IPCA+. O app já te avisa quando isso acontece (<strong>"⚠ Recompor Selic"</strong>).</p>
 </div>
 </div>
 <button onclick="fecharComoPreservar()" class="w-full p-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm">Fechar</button>
@@ -691,7 +668,7 @@ var cfg=document.getElementById('sec-config');if(cfg&&window.innerWidth>=1024)cf
 
 <div id="modal-config" class="hidden fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
 <div class="card-glass rounded-2xl p-5 max-w-md w-full space-y-4">
-<h3 class="font-bold text-white text-lg">Dados e backup</h3>
+<h3 class="font-bold text-white text-lg">Configurações & Dados</h3>
 <div class="space-y-2 text-xs">
 <button onclick="exportarJSON()" class="w-full p-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium">📥 Exportar JSON</button>
 <label class="w-full p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg font-medium cursor-pointer block text-center">
@@ -735,7 +712,7 @@ IR_FAIXAS: [
 ],
 VALIDACAO: { selicMin: 6, selicMax: 20, ipcaMin: 1.5, ipcaMax: 15 },
 FALLBACK: { selic: 12.0, ipca: 5.0, rentSelicLiq: 10.5, rentIPCALiq: 8.0 },
-STORAGE_KEY: 'gestao45m-v40',
+STORAGE_KEY: 'gestao45m-v39',
 API_TIMEOUT: 8000,
 DIVISAO: { casa: 0.76, esposa: 0.12, marido: 0.12 },
 TAXA_RETIRADA_SEGURA_40ANOS: 3.5,
@@ -1005,7 +982,7 @@ el.innerHTML = `${prefixo} <strong>Sem conexão com o BCB</strong> — usando Se
 async function atualizarDadosBCB() {
 const dot = document.getElementById('api-dot');
 const label = document.getElementById('api-label');
-dot.className = 'w-2 h-2 rounded-full bg-amber-400 badge-live';
+dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-400 badge-live';
 label.textContent = 'carregando...';
 
 const [selic, ipca] = await Promise.all([fetchBCB(432), fetchBCB(13522)]);
@@ -1043,7 +1020,7 @@ dadosBCB.valido = false;
 dadosBCB.selic = cache.selic.valor; dadosBCB.selicData = cache.selic.data;
 dadosBCB.ipca  = cache.ipca.valor;  dadosBCB.ipcaData  = cache.ipca.data;
 
-dot.className = 'w-2 h-2 rounded-full bg-amber-400';
+dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-400';
 label.textContent = 'BCB offline (cache)';
 
 document.getElementById('ind-selic').textContent = cache.selic.valor.toFixed(2) + '%';
@@ -1058,7 +1035,7 @@ dadosBCB.valido = false;
 dadosBCB.selic = CFG.FALLBACK.selic; dadosBCB.selicData = null;
 dadosBCB.ipca  = CFG.FALLBACK.ipca;  dadosBCB.ipcaData  = null;
 
-dot.className = 'w-2 h-2 rounded-full bg-rose-400';
+dot.className = 'w-1.5 h-1.5 rounded-full bg-rose-400';
 label.textContent = 'BCB offline';
 
 document.getElementById('ind-selic').textContent = CFG.FALLBACK.selic.toFixed(2) + '%*';
@@ -1688,10 +1665,10 @@ document.getElementById('metric-saldo-selic').textContent = formatarMoeda(saldoS
 const sobraEl = document.getElementById('metric-sobra');
 const sobraSinalEl = document.getElementById('metric-sobra-sinal');
 sobraEl.textContent = formatarMoeda(Math.abs(sobraAnual)) + '/ano';
-sobraEl.className = 'text-base font-bold ' + (sobraAnual >= 0 ? 'text-emerald-400' : 'text-red-400');
+sobraEl.className = 'text-base font-bold ' + (sobraAnual >= 0 ? 'text-amber-400' : 'text-red-400');
 if (sobraSinalEl) {
 sobraSinalEl.textContent = sobraAnual >= 0 ? '+' : '−';
-sobraSinalEl.className = 'font-bold ' + (sobraAnual >= 0 ? 'text-emerald-400' : 'text-red-400');
+sobraSinalEl.className = 'font-bold ' + (sobraAnual >= 0 ? 'text-amber-400' : 'text-red-400');
 }
 
 document.getElementById('ir-aliquota').textContent = (aliqIR * 100).toFixed(1) + '%';
@@ -2359,17 +2336,6 @@ if (e.key === 'Enter') { e.preventDefault(); confirmarOnboarding(); }
 });
 });
 });
-</script>
-
-<script>
-(function(){
-var protegidos=["modal-onboarding","modal-limpar-dados"];
-var modais=[].slice.call(document.querySelectorAll('[id^="modal-"]'));
-modais.forEach(function(m){m.setAttribute("role","dialog");m.setAttribute("aria-modal","true");
-m.addEventListener("click",function(e){if(e.target===m&&protegidos.indexOf(m.id)===-1)m.classList.add("hidden");});});
-document.addEventListener("keydown",function(e){if(e.key!=="Escape")return;
-modais.forEach(function(m){if(protegidos.indexOf(m.id)===-1)m.classList.add("hidden");});});
-})();
 </script>
 </body>
 </html>
