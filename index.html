@@ -1661,14 +1661,11 @@ const avisoEl = document.getElementById('rec-saque-aviso');
 if (avisoEl) {
 const avisoDur = (() => {
 const c = saude.duracaoConserv, m = saude.duracaoModelo;
-const fmt = a => isFinite(a) ? '~' + Math.round(a) + ' anos' : '∞';
-if (isFinite(c) && c < CFG.HORIZONTE_ANOS && (!isFinite(m) || m < CFG.HORIZONTE_ANOS)) {
-return '⚠ Dura ' + fmt(m) + ' (modelo) · ' + fmt(c) + ' (conservador)';
-}
-if (isFinite(c) && c < CFG.HORIZONTE_ANOS) {
-return '⚠ Conservador: ' + fmt(c);
-}
-return '';
+const anos = a => isFinite(a) ? '~' + Math.round(a) + ' anos' : 'não acaba';
+if ((!isFinite(m) || m >= 100) && (!isFinite(c) || c >= 100)) return '';
+if (!isFinite(m) || m >= 100) return '⚠ Conservador: ' + anos(c);
+if (!isFinite(c) || c >= 100) return '⚠ Dura ' + anos(m) + ' (cenário atual)';
+return '⚠ Dura ' + anos(m) + ' (atual) · ' + anos(c) + ' (conservador)';
 })();
 if (avisoDur) {
 avisoEl.classList.remove('hidden');
@@ -1714,10 +1711,11 @@ if (d.saude.retornoReal < 0) A.push([1, 'rose', `Retorno real negativo (${d.saud
 if (d.sobraAnual < 0) A.push([1, 'rose', `Reduza o saque de ${fm(d.saqueMensal)} para no máximo ${fm(saqueCobre)}/mês: o rendimento não cobre o saque e você consome principal.`]);
 else if (d.consomeReal) A.push([2, 'amber', `Para manter o poder de compra, saque até ${fm(saquePreserva)}/mês (hoje ${fm(d.saqueMensal)}).`]);
 if (d.saude.taxaRetirada > CFG.TAXA_RETIRADA_SEGURA_40ANOS && d.sobraAnual >= 0) {
-const fmt = a => isFinite(a) ? '~' + Math.round(a) + ' anos' : 'indeterminado';
-const durTxt2 = (isFinite(d.saude.duracaoModelo) && d.saude.duracaoModelo >= CFG.HORIZONTE_ANOS)
-? `Dura: ${fmt(d.saude.duracaoModelo)} (modelo) · ${fmt(d.saude.duracaoConserv)} (conservador).`
-: `Dura: ${fmt(d.saude.duracaoModelo)} (modelo) · ${fmt(d.saude.duracaoConserv)} (conservador).`;
+const anos = a => isFinite(a) ? '~' + Math.round(a) + ' anos' : 'não acaba';
+const m = d.saude.duracaoModelo, c = d.saude.duracaoConserv;
+const durTxt2 = (!isFinite(m) || m >= 100)
+? `No cenário atual, não acaba. No conservador (${CFG.RETORNO_REAL_CONSERVADOR}% real), ${anos(c)}.`
+: `No cenário atual, ${anos(m)}. No conservador, ${anos(c)}.`;
 A.push([3, 'amber', `Retirada de ${d.saude.taxaRetirada.toFixed(1)}% a.a. ${durTxt2} Seguro: até ${fm(saqueRef)}/mês.`]);
 }
 if (d.saldoSelic < d.metaSelic) A.push([2, 'amber', `Reserva Selic ${fm(d.metaSelic - d.saldoSelic)} abaixo da meta. Não faça saque extraordinário até recompor e envie 100% do cupom de ${dt} (${fm(d.cupomLiq)}) para a Selic.`]);
@@ -1794,10 +1792,15 @@ const H = CFG.HORIZONTE_ANOS;
 const durConserv = saude?.duracaoConserv ?? Infinity;
 const durModelo  = saude?.duracaoModelo ?? Infinity;
 const durTxt = (() => {
-const fmt = a => isFinite(a) ? '~' + Math.round(a) + ' anos' : 'indeterminado';
-if (!isFinite(durConserv) || durConserv >= 100) return 'Dura: indeterminado.';
-if (durConserv >= H) return `Dura: ${fmt(durConserv)} (conservador).`;
-return `Dura: ${fmt(durModelo)} (modelo) · ${fmt(durConserv)} (conservador).`;
+const anos = a => isFinite(a) ? '~' + Math.round(a) + ' anos' : 'não acaba';
+if (!isFinite(durModelo) || durModelo >= 100) {
+if (!isFinite(durConserv) || durConserv >= 100) return 'No cenário atual e no conservador, não acaba.';
+return `No cenário atual, não acaba. No cenário conservador (retorno real ${CFG.RETORNO_REAL_CONSERVADOR}% a.a.), dura ${anos(durConserv)}.`;
+}
+if (!isFinite(durConserv) || durConserv >= 100) {
+return `No cenário atual, dura ${anos(durModelo)}. No conservador, não acaba.`;
+}
+return `No cenário atual, dura ${anos(durModelo)}. No cenário conservador (retorno real ${CFG.RETORNO_REAL_CONSERVADOR}% a.a.), ${anos(durConserv)}.`;
 })();
 
 if (sobraAnual < 0) {
