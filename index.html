@@ -1713,7 +1713,13 @@ const A = [];
 if (d.saude.retornoReal < 0) A.push([1, 'rose', `Retorno real negativo (${d.saude.retornoReal.toFixed(1)}% a.a.): a inflação corrói o patrimônio mesmo sem saque. Revise a alocação com o BTG antes de novos saques.`]);
 if (d.sobraAnual < 0) A.push([1, 'rose', `Reduza o saque de ${fm(d.saqueMensal)} para no máximo ${fm(saqueCobre)}/mês: o rendimento não cobre o saque e você consome principal.`]);
 else if (d.consomeReal) A.push([2, 'amber', `Para manter o poder de compra, saque até ${fm(saquePreserva)}/mês (hoje ${fm(d.saqueMensal)}).`]);
-if (d.saude.taxaRetirada > CFG.TAXA_RETIRADA_SEGURA_40ANOS && d.sobraAnual >= 0) A.push([3, 'amber', `Retirada de ${d.saude.taxaRetirada.toFixed(1)}% a.a., acima da referência de ${CFG.TAXA_RETIRADA_SEGURA_40ANOS}% p/ 40 anos. Para ficar na referência: até ${fm(saqueRef)}/mês (estimativa).`]);
+if (d.saude.taxaRetirada > CFG.TAXA_RETIRADA_SEGURA_40ANOS && d.sobraAnual >= 0) {
+const fmt = a => isFinite(a) ? '~' + Math.round(a) + ' anos' : 'indeterminado';
+const durTxt2 = (isFinite(d.saude.duracaoModelo) && d.saude.duracaoModelo >= CFG.HORIZONTE_ANOS)
+? `Dura: ${fmt(d.saude.duracaoModelo)} (modelo) · ${fmt(d.saude.duracaoConserv)} (conservador).`
+: `Dura: ${fmt(d.saude.duracaoModelo)} (modelo) · ${fmt(d.saude.duracaoConserv)} (conservador).`;
+A.push([3, 'amber', `Retirada de ${d.saude.taxaRetirada.toFixed(1)}% a.a. ${durTxt2} Seguro: até ${fm(saqueRef)}/mês.`]);
+}
 if (d.saldoSelic < d.metaSelic) A.push([2, 'amber', `Reserva Selic ${fm(d.metaSelic - d.saldoSelic)} abaixo da meta. Não faça saque extraordinário até recompor e envie 100% do cupom de ${dt} (${fm(d.cupomLiq)}) para a Selic.`]);
 else A.push([4, 'emerald', `Cupom de ${dt} (${fm(d.cupomLiq)}): deixe na conta BTG e reinvista; não transfira para a conta corrente.`]);
 if (!A.some(a => a[0] <= 3)) A.unshift([4, 'emerald', 'Nenhuma ação urgente. Veja abaixo o que muda se Selic ou IPCA mudarem.']);
