@@ -14,7 +14,7 @@
 <meta name="apple-mobile-web-app-title" content="Gestão">
 
 <link rel="manifest" href="./manifest.json">
-<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="./tailwind.css">
 <script src="./chart.js"></script>
 
 <style>
@@ -62,27 +62,6 @@ header.sticky{padding-top:calc(0.75rem + env(safe-area-inset-top,0px))}
 
 .bg-rose-700{background-color:#be123c!important}
 .bg-rose-700:hover{background-color:#9f1239!important}
-/* Visual refresh: interface enxuta, legível e responsiva sem alterar dados ou cálculos */
-:root{--ui-bg:#07111f;--ui-surface:#0d1b2e;--ui-surface-2:#11243a;--ui-line:rgba(148,163,184,.16);--ui-muted:#8fa3ba;--ui-accent:#34d399;--ui-focus:#60a5fa}
-*{box-sizing:border-box}
-body{background:radial-gradient(circle at 50% -10%,#16304b 0,#07111f 38%,#050b14 100%);color:#e5edf6;letter-spacing:-.01em}
-header.sticky{background:rgba(7,17,31,.88);backdrop-filter:blur(18px);border-bottom:1px solid var(--ui-line);box-shadow:0 8px 30px rgba(0,0,0,.2);padding-top:calc(.65rem + env(safe-area-inset-top,0px));padding-bottom:.65rem}
-header.sticky>div{max-width:1120px}
-header h1{font-size:clamp(.92rem,2vw,1.1rem)!important;letter-spacing:-.025em}
-main{max-width:1120px!important;margin-top:1rem!important;gap:1rem!important}
-.card-glass{background:linear-gradient(145deg,rgba(17,36,58,.92),rgba(10,24,41,.92));border:1px solid var(--ui-line);border-radius:1rem!important;box-shadow:0 12px 32px rgba(0,0,0,.14);backdrop-filter:blur(14px)}
-main>section{padding:1rem!important}
-main>section:first-child{border-left-width:3px;border-left-color:var(--ui-accent);padding:1.1rem 1rem!important}
-main>section h3{letter-spacing:-.02em}
-main>section [class*="bg-slate-900"]{background:rgba(5,14,26,.48);border-color:var(--ui-line)}
-input,select,textarea{background:#091727!important;border:1px solid var(--ui-line)!important;border-radius:.65rem!important;color:#e5edf6!important;min-height:2.35rem}
-input:focus,select:focus,textarea:focus{outline:2px solid rgba(96,165,250,.35);outline-offset:1px;border-color:var(--ui-focus)!important}
-button{border-radius:.65rem;transition:transform .16s ease,background .16s ease,border-color .16s ease}
-button:hover{transform:translateY(-1px)}
-button:focus-visible{outline:2px solid var(--ui-focus);outline-offset:2px}
-#bcb-banner{max-width:1120px;margin-left:auto;margin-right:auto}
-@media (min-width:900px){main{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));align-items:start}main>section{grid-column:span 6}main>section:first-child,main>#plano-acao,main>#painel-saude{grid-column:1/-1}main>section:nth-of-type(n+4){grid-column:span 6}}
-@media (max-width:640px){body{font-size:14px}main{padding-left:.75rem!important;padding-right:.75rem!important;margin-top:.75rem!important}main>section{padding:.85rem!important;border-radius:.85rem!important}header.sticky{padding-left:.75rem;padding-right:.75rem}.card-glass{box-shadow:0 8px 22px rgba(0,0,0,.16)} }
 </style>
 </head>
 <body class="pb-12">
