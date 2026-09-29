@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Gestão Patrimonial v2.23</title>
+<title>Gestão Patrimonial</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
 <link rel="apple-touch-icon" href="./icon-192.png">
 <meta name="theme-color" content="#0f172a">
@@ -73,7 +73,7 @@ header.sticky{padding-top:calc(0.75rem + env(safe-area-inset-top,0px))}
 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
 </div>
 <div class="min-w-0">
-<h1 class="font-bold text-base sm:text-lg leading-tight text-white truncate">Gestão Patrimonial <span class="text-emerald-400">v2.23</span></h1>
+<h1 class="...">Gestão Patrimonial <span class="text-emerald-400" id="app-version"></span></h1>
 <p class="text-[11px] text-slate-400 truncate">Base: <span id="header-base">R$ 45.000.000</span> · <span id="header-data">--/--/----</span></p>
 </div>
 </div>
@@ -677,6 +677,7 @@ taxaRetiradaSegura: 4.0
 }
 };
 
+const APP_VERSION = 'v2.24';
 const BCB_CACHE_KEY = 'gestao45m_bcb_last';
 const BCB_CACHE_MAX_AGE_DAYS = 30;
 const HIST_EXTRA_KEY = 'gestao45m_hist_extra';
@@ -2205,6 +2206,7 @@ document.getElementById('modal-onboarding').classList.add('hidden');
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+document.getElementById('app-version').textContent = APP_VERSION;   // <-- adicione aqui
 const dbEl = document.getElementById('input-data-base');
 if (!dbEl.value) dbEl.value = new Date().toISOString().slice(0,10);
 
