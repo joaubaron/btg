@@ -181,10 +181,10 @@ Fluxo Mensal
 </div>
 </div>
 <div class="bg-slate-900/40 border border-slate-800 p-4 rounded-xl">
-<h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Resgate Bruto vs Líquido <span class="text-[9px] text-emerald-400 font-normal normal-case">(IR só sobre rendimento)</span></h4>
+<h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Resgate Bruto vs Líquido <span class="text-[9px] text-emerald-400 font-normal normal-case">(IR já descontado no rend. líq.)</span></h4>
 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
 <div class="p-2 bg-slate-800/80 rounded-lg"><span class="text-[10px] text-slate-400 block">Alíquota IR</span><span class="text-sm font-bold text-rose-400" id="ir-aliquota">—</span></div>
-<div class="p-2 bg-slate-800/80 rounded-lg"><span class="text-[10px] text-slate-400 block">IR Mensal</span><span class="text-sm font-bold text-rose-400" id="ir-valor">—</span></div>
+<div class="p-2 bg-slate-800/80 rounded-lg"><span class="text-[10px] text-slate-400 block">IR (já no rend. líq.)</span><span class="text-sm font-bold text-rose-400" id="ir-valor">—</span></div>
 <div class="p-2 bg-slate-800/80 rounded-lg"><span class="text-[10px] text-slate-400 block">Custos BTG</span><span class="text-sm font-bold text-orange-400" id="custos-btg">—</span></div>
 <div class="p-2 bg-slate-800/80 rounded-lg"><span class="text-[10px] text-slate-400 block">Resgate Bruto</span><span class="text-sm font-bold text-white" id="resgate-bruto">—</span></div>
 </div>
@@ -225,7 +225,7 @@ Fluxo Mensal
 <div class="p-2 bg-slate-800/80 rounded-lg"><span class="text-[10px] text-slate-400 block">Destino</span><span class="text-[10px] font-bold text-emerald-400" id="cupom-destino">—</span></div>
 </div>
 
-<p class="text-[9px] text-slate-500 mt-2">Cupom semestral estimado a partir da taxa real IPCA+ configurada (ex.: 6% a.a. ≈ 2,956%/semestre), sobre o valor investido e líquido de IR. Aproximação: o valor real depende do VNA atualizado e das condições de compra.</p>
+<p class="text-[9px] text-slate-500 mt-2">Cupom semestral = taxa real ÷ 2 (ex.: 6% a.a. → 3%/semestre). Modelo linear, como no Tesouro IPCA+ com juros semestrais. Valor líquido de IR.</p>
 </div>
 <div class="relative h-44 w-full">
 <canvas id="chartPatrimonio"></canvas>
@@ -326,7 +326,7 @@ Saúde do Investimento — você está perdendo dinheiro?
 <section class="card-glass rounded-2xl p-5">
 <h3 class="font-bold text-slate-200 text-base border-b border-slate-700 pb-2 flex items-center gap-2">
 <svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>
-Projeção 24 meses (estimativa: Selic + Cupons − Saques)
+Projeção da Reserva Selic (24 meses)
 </h3>
 
 <div id="legenda-projecao" style="display:flex; gap:24px; align-items:center; justify-content:center; padding:8px 0; font-size:11px; color:#cbd5e1;">
@@ -343,7 +343,7 @@ Projeção 24 meses (estimativa: Selic + Cupons − Saques)
 <div class="relative h-56 w-full mt-3">
 <canvas id="chartProjecao"></canvas>
 </div>
-<p class="text-[10px] text-slate-500 mt-2">Projeção sob as premissas atuais (Selic/IPCA/reinvestimento). Não é garantia.</p>
+<p class="text-[10px] text-slate-500 mt-2">Projeção apenas da reserva Selic (não inclui IPCA+). Estimativa sob as premissas atuais. Não é garantia.</p>
 </section>
 </section>
 
@@ -1035,7 +1035,7 @@ function calcularIR(diasCorridos) {
 }
 function calcularCupomIPCA(valorIPCA, aliqIR, taxaRealAA) {
   const taxa = (taxaRealAA !== undefined && taxaRealAA !== null && !isNaN(taxaRealAA)) ? taxaRealAA : CFG.CUPOM_FIXO_AA;
-  const cupomSemestral = Math.pow(1 + taxa / 100, 0.5) - 1;
+  const cupomSemestral = (taxa / 100) / 2;
   return valorIPCA * cupomSemestral * (1 - (aliqIR || 0));
 }
 function proximoPagamentoCupom(dataBase) {
@@ -1276,9 +1276,7 @@ function calcularResgateBruto(saqueMensal, inputs, rendTotalLiq) {
   const rendMensalTotal = rend / 12;
   const patrimonio = inputs.patrimonioTotal || 0;
   const propRendimento = rendMensalTotal / (patrimonio + rendMensalTotal) || 0;
-  const rendimentoNoResgate = saqueMensal * propRendimento;
-  const irMensal = rendimentoNoResgate * aliq;
-  return { resgateBruto: saqueMensal + irMensal, irMensal, aliqIR: aliq };
+  return { resgateBruto: saqueMensal, irMensal: 0, aliqIR: aliq };
 }
 function calcularPreservacaoReal(patrimonioTotal, rendTotalLiq) {
   const ipca = (dadosBCB.ipca || CFG.FALLBACK.ipca) / 100;
