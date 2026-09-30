@@ -141,11 +141,25 @@ header.sticky{padding-top:calc(0.75rem + env(safe-area-inset-top,0px))}
 <h2 class="text-xl sm:text-2xl font-bold text-emerald-400 mt-1" id="action-title">Carregando...</h2>
 <p class="text-xs sm:text-sm text-slate-300 mt-1" id="action-desc">Aguarde...</p>
 </div>
-<div class="bg-slate-800/80 p-3 rounded-xl text-center border border-slate-700/50 min-w-[180px]">
-<span class="block text-[10px] text-slate-400 uppercase">Saque Atual</span>
-<span class="text-base sm:text-lg font-bold text-emerald-400" id="rec-saque">—</span>
-<span class="block text-[10px] text-slate-500 mt-0.5" id="rec-saque-bruto">bruto: —</span>
-<span id="rec-saque-aviso" class="hidden text-[10px] text-amber-400 mt-1 font-medium"></span>
+<div class="bg-slate-800/80 p-3 rounded-xl text-center border border-slate-700/50 min-w-[200px]">
+  <span class="block text-[10px] text-slate-400 uppercase">Saque Atual</span>
+  <span class="text-base sm:text-lg font-bold text-emerald-400" id="rec-saque">—</span>
+  <span class="block text-[10px] text-slate-500 mt-0.5" id="rec-saque-bruto">bruto: —</span>
+  <div class="mt-2 pt-2 border-t border-slate-700/50 space-y-0.5 text-left">
+    <div class="flex justify-between text-[10px]">
+      <span class="text-slate-400">Preserva poder de compra:</span>
+      <strong class="text-emerald-400" id="rec-preserva-real">—</strong>
+    </div>
+    <div class="flex justify-between text-[10px]">
+      <span class="text-slate-400">Preserva p/ 40 anos (3,5%):</span>
+      <strong class="text-amber-400" id="rec-preserva-40a">—</strong>
+    </div>
+    <div class="flex justify-between text-[10px]">
+      <span class="text-slate-400">Teto absoluto (rendimento):</span>
+      <strong class="text-sky-400" id="rec-teto-absoluto">—</strong>
+    </div>
+  </div>
+  <span id="rec-saque-aviso" class="hidden text-[10px] text-amber-400 mt-2 font-medium block"></span>
 </div>
 </div>
 </section>
@@ -1683,6 +1697,25 @@ function atualizarSimulacao() {
   renderizarSaude(saude, saldoSelicAtual, metaSelic);
 
   document.getElementById('rec-saque-bruto').textContent = 'bruto: ' + formatarMoeda(resgateBruto) + ' · ' + saude.taxaRetirada.toFixed(2) + '% a.a.';
+
+  const preservaRealMensal = pres.saqueMaxRealAnual / 12;
+  const preserva40aMensal = patrimonioTotal * (CFG.TAXA_RETIRADA_SEGURA_40ANOS / 100) / 12;
+  const tetoAbsolutoMensal = rendTotalLiq / 12;
+
+  const elPR = document.getElementById('rec-preserva-real');
+  if (elPR) { elPR.textContent = formatarMoeda(preservaRealMensal) + '/mês'; elPR.className = 'text-emerald-400'; }
+
+  const elP40 = document.getElementById('rec-preserva-40a');
+  if (elP40) {
+    elP40.textContent = formatarMoeda(preserva40aMensal) + '/mês';
+    elP40.className = saqueMensal <= preserva40aMensal ? 'text-emerald-400' : 'text-amber-400';
+  }
+
+  const elTA = document.getElementById('rec-teto-absoluto');
+  if (elTA) {
+    elTA.textContent = formatarMoeda(tetoAbsolutoMensal) + '/mês';
+    elTA.className = saqueMensal <= tetoAbsolutoMensal ? 'text-emerald-400' : 'text-rose-400';
+  }
   const avisoEl = document.getElementById('rec-saque-aviso');
   if (avisoEl) {
     const anos = a => isFinite(a) ? '~' + Math.round(a) + ' anos' : 'não acaba';
@@ -1820,17 +1853,31 @@ function avaliarRegraAcao(saqueMensal, sobraAnual, saldoSelic, metaSelic, resgat
     mostrarPainelAjuste('selic_abaixo', { def, saldoSelic, metaSelic, saqueMensal, sobraAnual, rendTotalLiq });
     return;
   }
-  const taxaAtual = (saqueMensal * 12) / patAcao * 100;
-  if (taxaAtual > CFG.TAXA_RETIRADA_SEGURA_40ANOS) {
+ const taxaAtual = (saqueMensal * 12) / patAcao * 100;
+if (taxaAtual > CFG.TAXA_RETIRADA_SEGURA_40ANOS) {
+  const saqueMaxReal = presAcao.saqueMaxRealAnual / 12;
+  const realmenteExcede = saqueMensal > saqueMaxReal;
+
+  if (realmenteExcede) {
     banner.className = 'card-glass rounded-2xl p-5 sm:p-6 shadow-xl border-l-4 border-amber-500 bg-amber-950/20';
     title.textContent = '⚠ RETIRADA ACIMA DO IDEAL';
     title.className = 'text-xl sm:text-2xl font-bold text-amber-400 mt-1';
     desc.innerHTML = `Retirada de ${taxaAtual.toFixed(2)}% a.a. ${fraseDur} ${frasePreserva}`;
-    rec.textContent = 'Preserva: ' + formatarMoeda(presAcao.saqueMaxRealAnual / 12) + '/mês';
+    rec.textContent = 'Preserva: ' + formatarMoeda(saqueMaxReal) + '/mês';
     rec.className = 'text-base sm:text-lg font-bold text-amber-400';
-    mostrarPainelAjuste('reduzir', { saqueMax: presAcao.saqueMaxRealAnual/12, saqueMensal, sobraAnual, rendTotalLiq });
+    mostrarPainelAjuste('reduzir', { saqueMax: saqueMaxReal, saqueMensal, sobraAnual, rendTotalLiq });
+    return;
+  } else {
+    banner.className = 'card-glass rounded-2xl p-5 sm:p-6 shadow-xl border-l-4 border-amber-500 bg-amber-950/20';
+    title.textContent = '⚠ RETIRADA ACIMA DA REFERÊNCIA';
+    title.className = 'text-xl sm:text-2xl font-bold text-amber-400 mt-1';
+    desc.innerHTML = `Retirada de ${taxaAtual.toFixed(2)}% a.a. acima da referência de ${CFG.TAXA_RETIRADA_SEGURA_40ANOS}% p/ 40 anos, mas o rendimento real cobre com folga (até ${formatarMoeda(saqueMaxReal)}/mês). ${fraseDur}`;
+    rec.textContent = 'Manter: ' + formatarMoeda(saqueMensal) + '/mês';
+    rec.className = 'text-base sm:text-lg font-bold text-emerald-400';
+    document.getElementById('painel-ajuste').classList.add('hidden');
     return;
   }
+}
   banner.className = 'card-glass rounded-2xl p-5 sm:p-6 shadow-xl border-l-4 border-emerald-500 bg-emerald-950/20';
   title.textContent = '✓ CENÁRIO ESTÁVEL';
   title.className = 'text-xl sm:text-2xl font-bold text-emerald-400 mt-1';
