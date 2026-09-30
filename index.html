@@ -2284,108 +2284,125 @@ atualizarSimulacao();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-document.getElementById('app-version').textContent = APP_VERSION;
-const dbEl = document.getElementById('input-data-base');
-if (!dbEl.value) dbEl.value = new Date().toISOString().slice(0,10);
+  document.getElementById('app-version').textContent = APP_VERSION;
+  const dbEl = document.getElementById('input-data-base');
+  if (!dbEl.value) dbEl.value = new Date().toISOString().slice(0,10);
 
-aplicarMascaraInputs([
-'input-patrimonio',
-'input-selic-inicial',
-'input-ipca-inicial',
-'input-saque-custom',
-'input-mesada-esposa',
-'input-mesada-marido',
-'input-piso-casa',
-'input-meta-selic',
-'input-extra-imovel',
-'input-extra-outros',
-'input-onboarding-patrimonio'
-]);
+  aplicarMascaraInputs([
+    'input-patrimonio',
+    'input-selic-inicial',
+    'input-ipca-inicial',
+    'input-saque-custom',
+    'input-mesada-esposa',
+    'input-mesada-marido',
+    'input-piso-casa',
+    'input-meta-selic',
+    'input-extra-imovel',
+    'input-extra-outros',
+    'input-onboarding-patrimonio'
+  ]);
 
-const salvo = carregarEstado();
-if (salvo) {
-aplicarInputs(salvo);
-estado = { flags: {
-rentSelicManual: !!salvo.rentSelicManual,
-rentIPCAManual: !!salvo.rentIPCAManual,
-divisaoManual: !!salvo.divisaoManual
-}, inputs: {} };
-if (salvo.rentSelicManual) { const t = document.getElementById('rent-selic-auto-tag'); if (t) { t.textContent = 'Manual (ajustado por você)'; t.className = 'text-[10px] block mt-0.5 auto-tag-normal'; } }
-}
-if (!carregarBaseline()) {
-mostrarOnboarding();
-}
+  const salvo = carregarEstado();
+  if (salvo) {
+    aplicarInputs(salvo);
+    estado = {
+      flags: {
+        rentSelicManual: !!salvo.rentSelicManual,
+        rentIPCAManual: !!salvo.rentIPCAManual,
+        divisaoManual: !!salvo.divisaoManual
+      },
+      inputs: {}
+    };
+    if (salvo.rentSelicManual) {
+      const t = document.getElementById('rent-selic-auto-tag');
+      if (t) {
+        t.textContent = 'Manual (ajustado por você)';
+        t.className = 'text-[10px] block mt-0.5 auto-tag-normal';
+      }
+    }
+  }
 
-const metaEl = document.getElementById('input-meta-selic');
-if (!metaEl.value || metaEl.value === '' || parseValor('input-meta-selic') === 0) {
-const pat = numOr('input-patrimonio', CFG.PATRIMONIO_TOTAL);
-setInputMoeda('input-meta-selic', Math.round(pat * CFG.PROPORCAO_META_SELIC / 100000) * 100000);
-}
+  // Sanity check: força valores corretos se estiverem fora de faixa
+  if (numDecimalOr('input-custo-btg', 0.3) > 1) setInputDecimal('input-custo-btg', 0.3);
+  if (numDecimalOr('input-ir-efetivo', 15) > 30) setInputDecimal('input-ir-efetivo', 15);
+  if (numDecimalOr('input-rent-selic', 11.4) > 20) setInputDecimal('input-rent-selic', 11.4);
+  if (numDecimalOr('input-rent-ipca', 8.6) > 20) setInputDecimal('input-rent-ipca', 8.6);
+  if (numDecimalOr('input-taxa-real-ipca', 6.0) > 15) setInputDecimal('input-taxa-real-ipca', 6.0);
 
-document.getElementById('select-saque').addEventListener('change', e => {
-sincronizarModoSaque();
-avaliarAvisosDesproporcionais();
-atualizarSimulacao();
-});
+  if (!carregarBaseline()) {
+    mostrarOnboarding();
+  }
 
-document.getElementById('toggle-divisao-manual').addEventListener('change', e => {
-estado.flags.divisaoManual = e.target.checked;
-sincronizarModoDivisao();
-atualizarSimulacao();
-});
+  const metaEl = document.getElementById('input-meta-selic');
+  if (!metaEl.value || metaEl.value === '' || parseValor('input-meta-selic') === 0) {
+    const pat = numOr('input-patrimonio', CFG.PATRIMONIO_TOTAL);
+    setInputMoeda('input-meta-selic', Math.round(pat * CFG.PROPORCAO_META_SELIC / 100000) * 100000);
+  }
 
-['input-patrimonio','input-selic-inicial','input-ipca-inicial','input-saque-custom',
-'input-rent-selic','input-rent-ipca','input-meta-selic',
-'input-taxa-real-ipca','input-custo-btg','input-ir-efetivo',
-'input-extra-imovel','input-extra-outros','input-data-base',
-'input-payout','input-mesada-esposa','input-mesada-marido','input-piso-casa'].forEach(id => {
-document.getElementById(id).addEventListener('input', () => {
-if (id === 'input-rent-selic') {
-estado.flags.rentSelicManual = true;
-const tagEl = document.getElementById('rent-selic-auto-tag');
-if (tagEl) { tagEl.textContent = 'Manual (ajustado por você)'; tagEl.className = 'text-[10px] block mt-0.5 auto-tag-normal'; }
-}
-if (id === 'input-rent-ipca') estado.flags.rentIPCAManual = true;
-if (id === 'input-taxa-real-ipca') recalcularIPCANominal(true);
-if (id === 'input-custo-btg' || id === 'input-ir-efetivo') {
-recalcularSelicLiquida();
-recalcularIPCANominal();
-}
-if (id === 'input-patrimonio') {
-recalcularDerivadosDoPatrimonio({ preservarAlocacao: false, preservarMeta: false });
-}
-if (id === 'input-selic-inicial' || id === 'input-ipca-inicial') {
-atualizarSomaAlocada();
-}
-document.getElementById('val-rent-selic').textContent = parseFloat(document.getElementById('input-rent-selic').value).toFixed(1) + '%';
-document.getElementById('val-rent-ipca').textContent = parseFloat(document.getElementById('input-rent-ipca').value).toFixed(1) + '%';
-atualizarSimulacao();
-});
-});
+  document.getElementById('select-saque').addEventListener('change', e => {
+    sincronizarModoSaque();
+    avaliarAvisosDesproporcionais();
+    atualizarSimulacao();
+  });
 
-sincronizarModoSaque();
-sincronizarModoDivisao();
-recalcularSelicLiquida();
-recalcularIPCANominal();
-initCharts();
-avaliarAvisosDesproporcionais();
-atualizarSimulacao();
-renderizarHistoricoExtra();
-registrarSW();
-atualizarDadosBCB();
+  document.getElementById('toggle-divisao-manual').addEventListener('change', e => {
+    estado.flags.divisaoManual = e.target.checked;
+    sincronizarModoDivisao();
+    atualizarSimulacao();
+  });
 
-if ('serviceWorker' in navigator) {
-navigator.serviceWorker.addEventListener('controllerchange', () => {
-if (confirm('Nova versão disponível. Recarregar agora?')) location.reload();
-});
-}
+  ['input-patrimonio','input-selic-inicial','input-ipca-inicial','input-saque-custom',
+   'input-rent-selic','input-rent-ipca','input-meta-selic',
+   'input-taxa-real-ipca','input-custo-btg','input-ir-efetivo',
+   'input-extra-imovel','input-extra-outros','input-data-base',
+   'input-payout','input-mesada-esposa','input-mesada-marido','input-piso-casa'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => {
+      if (id === 'input-rent-selic') {
+        estado.flags.rentSelicManual = true;
+        const tagEl = document.getElementById('rent-selic-auto-tag');
+        if (tagEl) { tagEl.textContent = 'Manual (ajustado por você)'; tagEl.className = 'text-[10px] block mt-0.5 auto-tag-normal'; }
+      }
+      if (id === 'input-rent-ipca') estado.flags.rentIPCAManual = true;
+      if (id === 'input-taxa-real-ipca') recalcularIPCANominal(true);
+      if (id === 'input-custo-btg' || id === 'input-ir-efetivo') {
+        recalcularSelicLiquida();
+        recalcularIPCANominal();
+      }
+      if (id === 'input-patrimonio') {
+        recalcularDerivadosDoPatrimonio({ preservarAlocacao: false, preservarMeta: false });
+      }
+      if (id === 'input-selic-inicial' || id === 'input-ipca-inicial') {
+        atualizarSomaAlocada();
+      }
+      document.getElementById('val-rent-selic').textContent = parseFloat(document.getElementById('input-rent-selic').value).toFixed(1) + '%';
+      document.getElementById('val-rent-ipca').textContent = parseFloat(document.getElementById('input-rent-ipca').value).toFixed(1) + '%';
+      atualizarSimulacao();
+    });
+  });
 
-['input-onboarding-patrimonio', 'input-onboarding-data'].forEach(id => {
-const el = document.getElementById(id);
-if (el) el.addEventListener('keydown', e => {
-if (e.key === 'Enter') { e.preventDefault(); confirmarOnboarding(); }
-});
-});
+  sincronizarModoSaque();
+  sincronizarModoDivisao();
+  recalcularSelicLiquida();
+  recalcularIPCANominal();
+  initCharts();
+  avaliarAvisosDesproporcionais();
+  atualizarSimulacao();
+  renderizarHistoricoExtra();
+  registrarSW();
+  atualizarDadosBCB();
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (confirm('Nova versão disponível. Recarregar agora?')) location.reload();
+    });
+  }
+
+  ['input-onboarding-patrimonio', 'input-onboarding-data'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); confirmarOnboarding(); }
+    });
+  });
 });
 </script>
 </body>
