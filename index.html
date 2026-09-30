@@ -27,6 +27,7 @@ body{background:#0f172a;color:#f8fafc;font-family:system-ui,-apple-system,BlinkM
 input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 input[type=number]{-moz-appearance:textfield}
 input[type="text"][inputmode="numeric"]{font-variant-numeric:tabular-nums;letter-spacing:.3px}
+input[type="text"][inputmode="decimal"]{font-variant-numeric:tabular-nums}
 .btn-fix{transition:all .2s ease}
 .btn-fix:hover{transform:translateY(-1px)}
 header.sticky{padding-top:calc(0.75rem + env(safe-area-inset-top,0px))}
@@ -363,17 +364,17 @@ Parâmetros
 <div class="pt-1 pb-2 border-b border-slate-700/50 space-y-3">
 <div>
 <label class="block text-xs font-medium text-slate-300 mb-1">Patrimônio Total (R$)</label>
-<input type="text" id="input-patrimonio" value="45000000" inputmode="numeric" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
+<input type="text" id="input-patrimonio" value="45.000.000" inputmode="numeric" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
 <span class="text-[10px] text-slate-400 block mt-0.5">Base total da carteira — tudo abaixo se adapta a este valor</span>
 </div>
 <div class="grid grid-cols-2 gap-2">
 <div>
 <label class="block text-xs font-medium text-slate-300 mb-1">Reserva Selic (R$)</label>
-<input type="text" id="input-selic-inicial" value="22500000" inputmode="numeric" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
+<input type="text" id="input-selic-inicial" value="22.500.000" inputmode="numeric" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
 </div>
 <div>
 <label class="block text-xs font-medium text-slate-300 mb-1">Tesouro IPCA+ (R$)</label>
-<input type="text" id="input-ipca-inicial" value="22500000" inputmode="numeric" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
+<input type="text" id="input-ipca-inicial" value="22.500.000" inputmode="numeric" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
 </div>
 </div>
 <div class="flex items-center justify-between text-[10px]">
@@ -398,7 +399,7 @@ Parâmetros
 </div>
 <div id="div-saque-custom" class="hidden">
 <label class="block text-xs font-medium text-slate-300 mb-1">Valor Personalizado (R$/mês)</label>
-<input type="text" id="input-saque-custom" value="135000" inputmode="numeric" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
+<input type="text" id="input-saque-custom" value="135.000" inputmode="numeric" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
 <span id="saque-custom-desproporcional" class="hidden text-[10px] text-amber-400 block mt-0.5"></span>
 </div>
 <div id="div-payout">
@@ -419,12 +420,12 @@ Parâmetros
 
 <div class="grid grid-cols-2 gap-2 mt-2">
 <div><span class="text-[10px] text-slate-400">Mesada Esposa (R$/mês)</span>
-<input type="text" id="input-mesada-esposa" value="16200" inputmode="numeric" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white readonly-field" readonly></div>
+<input type="text" id="input-mesada-esposa" value="16.200" inputmode="numeric" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white readonly-field" readonly></div>
 <div><span class="text-[10px] text-slate-400">Mesada Marido (R$/mês)</span>
-<input type="text" id="input-mesada-marido" value="16200" inputmode="numeric" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white readonly-field" readonly></div>
+<input type="text" id="input-mesada-marido" value="16.200" inputmode="numeric" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white readonly-field" readonly></div>
 </div>
 <div class="mt-2"><span class="text-[10px] text-slate-400">Piso da Casa (R$/mês, opcional)</span>
-<input type="text" id="input-piso-casa" value="0" inputmode="numeric" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white"></div>
+<input type="text" id="input-piso-casa" value="" inputmode="numeric" placeholder="0" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white"></div>
 <p class="text-[10px] text-slate-500 mt-1">💡 Modo automático aplica 76/12/12 sobre o saque. Ative o toggle para editar manualmente.</p>
 <button onclick="reajustarMesadasIPCA()" class="w-full text-[10px] py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 mt-2">Reajustar mesadas e piso pelo IPCA (12m, 1×/ano)</button>
 <button onclick="reajustarMesadasProporcional()" class="w-full text-[10px] py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 mt-1">Reajustar mesadas proporcionalmente ao saque atual</button>
@@ -457,17 +458,17 @@ Parâmetros
 <div class="grid grid-cols-2 gap-2">
 <div>
 <label class="block text-xs font-medium text-slate-300 mb-1">Custo BTG <span class="text-[9px]">(% a.a.)</span></label>
-<input type="number" id="input-custo-btg" value="0.3" step="0.05" inputmode="decimal" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
+<input type="text" id="input-custo-btg" value="0,3" inputmode="decimal" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
 </div>
 <div>
 <label class="block text-xs font-medium text-slate-300 mb-1">IR efetivo <span class="text-[9px]">(% s/ rend.)</span></label>
-<input type="number" id="input-ir-efetivo" value="15" step="0.5" inputmode="decimal" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
+<input type="text" id="input-ir-efetivo" value="15" inputmode="decimal" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
 <span class="text-[9px] text-slate-500 block">0 = automático</span>
 </div>
 </div>
 <div>
 <label class="block text-xs font-medium text-slate-300 mb-1">Meta Reserva Selic <span class="text-[9px] text-amber-400 font-normal">(proporcional ao patrimônio)</span></label>
-<input type="text" id="input-meta-selic" value="18000000" inputmode="numeric" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
+<input type="text" id="input-meta-selic" value="18.000.000" inputmode="numeric" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
 <span id="meta-aviso" class="text-[10px] text-amber-400 block mt-0.5">⚠ Meta final a confirmar com o BTG · proporção padrão: 40% do patrimônio</span>
 <div id="aviso-meta-desproporcional" class="hidden"></div>
 </div>
@@ -476,11 +477,11 @@ Parâmetros
 <div class="grid grid-cols-2 gap-2 mb-2">
 <div>
 <span class="text-[10px] text-slate-400">Imóvel (R$)</span>
-<input type="text" id="input-extra-imovel" value="0" inputmode="numeric" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white">
+<input type="text" id="input-extra-imovel" value="" inputmode="numeric" placeholder="0" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white">
 </div>
 <div>
 <span class="text-[10px] text-slate-400">Veículo/Outros (R$)</span>
-<input type="text" id="input-extra-outros" value="0" inputmode="numeric" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white">
+<input type="text" id="input-extra-outros" value="" inputmode="numeric" placeholder="0" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white">
 </div>
 </div>
 <div class="mb-2">
@@ -697,27 +698,16 @@ CONFIGURAÇÕES GLOBAIS — 100% ADAPTÁVEIS AO PATRIMÔNIO
 Nenhum valor absoluto hardcoded que dependa do patrimônio.
 ========================================================= */
 const CFG = {
-  // Apenas fallback para onboarding (localStorage manda)
   PATRIMONIO_TOTAL: 45000000,
   SELIC_INICIAL: 22500000,
   TESOURO_IPCA: 22500000,
-
-  // Proporções (escalam com qualquer patrimônio)
   PROPORCAO_SELIC_INICIAL: 0.50,
   PROPORCAO_META_SELIC: 0.40,
   PROPORCAO_META_SELIC_EMERGENCIA: 0.375,
   MESADA_PCT_SAQUE: 0.12,
-
-  // Teto de saque como proporção (não valor absoluto)
   TETO_TAXA_ANUAL: 0.045,
-
-  // Divisão
   DIVISAO: { casa: 0.76, esposa: 0.12, marido: 0.12 },
-
-  // Payout padrão
   PAYOUT_PADRAO: 36,
-
-  // Técnicos
   CUPOM_FIXO_AA: 6,
   CUSTO_BTG_AA: 0.003,
   IR_FAIXAS: [
@@ -775,6 +765,9 @@ function aplicarMascaraInputs(ids) {
   });
 }
 
+/* =========================================================
+PARSERS
+========================================================= */
 function parseValor(id) {
   const el = document.getElementById(id);
   if (!el) return NaN;
@@ -784,8 +777,27 @@ function parseValor(id) {
   const v = parseFloat(limpo);
   return isNaN(v) ? NaN : v;
 }
+function parseDecimal(id) {
+  const el = document.getElementById(id);
+  if (!el) return NaN;
+  const raw = String(el.value || '').trim();
+  if (!raw) return NaN;
+  const limpo = raw.replace(',', '.');
+  const v = parseFloat(limpo);
+  return isNaN(v) ? NaN : v;
+}
+function setInputDecimal(id, valor) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const n = Number(valor);
+  el.value = isNaN(n) ? '' : String(n).replace('.', ',');
+}
 function numOr(id, def) {
   const v = parseValor(id);
+  return isNaN(v) ? def : v;
+}
+function numDecimalOr(id, def) {
+  const v = parseDecimal(id);
   return isNaN(v) ? def : v;
 }
 function numInput(id, def, min, max) {
@@ -1082,9 +1094,9 @@ function recalcularSelicLiquida(forcarPorAcaoDoUsuario) {
     return;
   }
   const selicBrutaBCB = dadosBCB.selic || CFG.FALLBACK.selic;
-  const irInput = parseFloat(document.getElementById('input-ir-efetivo')?.value);
-  const aliqIR = (irInput > 0) ? irInput / 100 : calcularIR(800);
-  const custoBTG = parseFloat(document.getElementById('input-custo-btg')?.value) || 0.3;
+  const irInput = numDecimalOr('input-ir-efetivo', NaN);
+  const aliqIR = (!isNaN(irInput) && irInput > 0) ? irInput / 100 : calcularIR(800);
+  const custoBTG = numDecimalOr('input-custo-btg', 0.3);
   const liquidaOriginal = selicBrutaBCB * (1 - aliqIR) - custoBTG;
   const liquidaTruncada = Math.min(CFG.LIMITES_RENT.selicMax, Math.max(CFG.LIMITES_RENT.selicMin, liquidaOriginal));
   selicEl.value = liquidaTruncada.toFixed(1);
@@ -1114,9 +1126,9 @@ function recalcularIPCANominal(forcarPorAcaoDoUsuario) {
   const real = (parseFloat(realEl.value) || 6.0) / 100;
   const ipca = (dadosBCB.ipca || CFG.FALLBACK.ipca) / 100;
   const bruto = ((1 + real) * (1 + ipca) - 1) * 100;
-  const irInput = parseFloat(document.getElementById('input-ir-efetivo')?.value);
-  const aliqIR = (irInput > 0) ? irInput / 100 : calcularIR(800);
-  const custoBTG = parseFloat(document.getElementById('input-custo-btg')?.value) || 0.3;
+  const irInput = numDecimalOr('input-ir-efetivo', NaN);
+  const aliqIR = (!isNaN(irInput) && irInput > 0) ? irInput / 100 : calcularIR(800);
+  const custoBTG = numDecimalOr('input-custo-btg', 0.3);
   const nominalOriginal = bruto * (1 - aliqIR) - custoBTG;
   const nominalTruncado = Math.min(CFG.LIMITES_RENT.ipcaMax, Math.max(CFG.LIMITES_RENT.ipcaMin, nominalOriginal));
   nominalEl.value = nominalTruncado.toFixed(1);
@@ -1144,7 +1156,6 @@ function recalcularDerivadosDoPatrimonio(opcoes = {}) {
   if (pat <= 0) return;
 
   if (!preservarMeta) {
-    const metaEl = document.getElementById('input-meta-selic');
     const metaAtual = numOr('input-meta-selic', 0);
     const metaEsperada = pat * CFG.PROPORCAO_META_SELIC;
     if (Math.abs(metaAtual - metaEsperada) / (pat || 1) > 0.05) {
@@ -1306,8 +1317,7 @@ function reajustarMesadasIPCA() {
   const f = 1 + dadosBCB.ipca / 100;
   if (!confirm('Reajustar mesadas e piso da Casa em ' + dadosBCB.ipca.toFixed(2) + '% (IPCA 12m)?')) return;
   ['input-mesada-esposa', 'input-mesada-marido', 'input-piso-casa'].forEach(id => {
-    const el = document.getElementById(id);
-    const v = Math.round((parseValor(id) || 0) * f / 100) * 100;
+    const v = Math.round((numOr(id, 0)) * f / 100) * 100;
     setInputMoeda(id, v);
   });
   atualizarSimulacao();
@@ -1360,8 +1370,8 @@ function coletarInputs() {
     rentSelic: numOr('input-rent-selic', 10.5),
     rentIPCA: numOr('input-rent-ipca', 8.0),
     taxaRealIPCA: numOr('input-taxa-real-ipca', 6.0),
-    custoBTG: numOr('input-custo-btg', 0.3),
-    irEfetivo: numOr('input-ir-efetivo', 15),
+    custoBTG: numDecimalOr('input-custo-btg', 0.3),
+    irEfetivo: numDecimalOr('input-ir-efetivo', 15),
     metaSelic: numOr('input-meta-selic', CFG.PATRIMONIO_TOTAL * CFG.PROPORCAO_META_SELIC),
     extraImovel: numOr('input-extra-imovel', 0),
     extraOutros: numOr('input-extra-outros', 0),
@@ -1393,12 +1403,8 @@ function aplicarInputs(inp) {
     document.getElementById('input-taxa-real-ipca').value = inp.taxaRealIPCA ?? 6.0;
     document.getElementById('val-taxa-real-ipca').textContent = (inp.taxaRealIPCA ?? 6.0).toFixed(1) + '%';
   }
-  if (document.getElementById('input-custo-btg')) {
-    document.getElementById('input-custo-btg').value = (inp.custoBTG !== undefined && !isNaN(inp.custoBTG)) ? inp.custoBTG : 0.3;
-  }
-  if (document.getElementById('input-ir-efetivo')) {
-    document.getElementById('input-ir-efetivo').value = (inp.irEfetivo !== undefined && !isNaN(inp.irEfetivo)) ? inp.irEfetivo : 15;
-  }
+  setInputDecimal('input-custo-btg', (inp.custoBTG !== undefined && !isNaN(inp.custoBTG)) ? inp.custoBTG : 0.3);
+  setInputDecimal('input-ir-efetivo', (inp.irEfetivo !== undefined && !isNaN(inp.irEfetivo)) ? inp.irEfetivo : 15);
   const metaFallback = (inp.patrimonioTotal ?? CFG.PATRIMONIO_TOTAL) * CFG.PROPORCAO_META_SELIC;
   setInputMoeda('input-meta-selic', inp.metaSelic ?? metaFallback);
   setInputMoeda('input-extra-imovel', inp.extraImovel ?? 0);
@@ -2193,8 +2199,8 @@ function resetarTudo() {
   document.getElementById('input-rent-ipca').value = 8.0;
   document.getElementById('input-taxa-real-ipca').value = 6.0;
   document.getElementById('val-taxa-real-ipca').textContent = '6.0%';
-  document.getElementById('input-custo-btg').value = 0.3;
-  document.getElementById('input-ir-efetivo').value = 15;
+  setInputDecimal('input-custo-btg', 0.3);
+  setInputDecimal('input-ir-efetivo', 15);
   setInputMoeda('input-meta-selic', Math.round(patrimonioBase * CFG.PROPORCAO_META_SELIC / 100000) * 100000);
   setInputMoeda('input-extra-imovel', 0);
   setInputMoeda('input-extra-outros', 0);
@@ -2282,7 +2288,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const dbEl = document.getElementById('input-data-base');
   if (!dbEl.value) dbEl.value = new Date().toISOString().slice(0,10);
 
-  // Aplica máscara de moeda nos inputs de R$
   aplicarMascaraInputs([
     'input-patrimonio',
     'input-selic-inicial',
