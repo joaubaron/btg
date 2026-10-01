@@ -268,12 +268,12 @@ Saúde do Investimento — você está perdendo dinheiro?
 <span class="text-lg font-bold" id="saude-poder-compra">—</span>
 <span class="text-[10px] text-slate-500 block" id="saude-poder-compra-desc">—</span>
 </div>
-<div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800" title="Taxa de crescimento anual composta, projetada para 24 meses (Selic + IPCA+). Estimativa pelas premissas atuais.">
+<div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800" title="Rentabilidade anual composta projetada para 24 meses (Selic + IPCA+), antes dos saques (patrimônio final + saques acumulados). Estimativa pelas premissas atuais.">
 <span class="text-[10px] uppercase tracking-wider text-slate-400 block">CAGR (projetado 24m)</span>
 <span class="text-lg font-bold" id="saude-cagr">—</span>
 <span class="text-[10px] text-slate-500 block" id="saude-cagr-desc">—</span>
 </div>
-<div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800" title="Ganho total no período de 24 meses, sem anualizar (Selic + IPCA+). Estimativa.">
+<div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800" title="Ganho total em 24 meses, antes dos saques, sem anualizar (Selic + IPCA+). Estimativa.">
 <span class="text-[10px] uppercase tracking-wider text-slate-400 block">Rent. acumulada (24m)</span>
 <span class="text-lg font-bold" id="saude-rent-acum">—</span>
 <span class="text-[10px] text-slate-500 block" id="saude-rent-acum-desc">—</span>
@@ -729,7 +729,7 @@ ipcaMin: 6, ipcaMax: 14
 }
 };
 
-const APP_VERSION = 'v2.32';
+const APP_VERSION = 'v2.33';
 const BCB_CACHE_KEY = 'gestao45m_bcb_last';
 const BCB_CACHE_MAX_AGE_DAYS = 30;
 const HIST_EXTRA_KEY = 'gestao45m_hist_extra';
@@ -1011,6 +1011,18 @@ const idadeTxt = idade === 0 ? 'hoje' : idade === 1 ? '1 dia' : `${idade} dias`;
 el.className = 'on ' + classe;
 el.innerHTML = `${prefixo} <strong>Sem conexão com o BCB</strong> — usando Selic ${selicTxt}% e IPCA ${ipcaTxt}% de ${dataTxt} (${idadeTxt}${idade > BCB_CACHE_MAX_AGE_DAYS ? ' · <u>obsoleto</u>' : ''}).`;
 }
+
+function preencherIndicadoresDoCache() {
+  const cache = carregarBCBCache();
+  if (!cache) return;
+  dadosBCB.selic = cache.selic.valor; dadosBCB.selicData = cache.selic.data;
+  dadosBCB.ipca  = cache.ipca.valor;  dadosBCB.ipcaData  = cache.ipca.data;
+  document.getElementById('ind-selic').textContent = cache.selic.valor.toFixed(2) + '%';
+  document.getElementById('ind-selic-data').textContent = 'cache de ' + cache.selic.data;
+  document.getElementById('ind-ipca').textContent = cache.ipca.valor.toFixed(2) + '%';
+  document.getElementById('ind-ipca-data').textContent = 'cache de ' + cache.ipca.data;
+}
+
 async function atualizarDadosBCB() {
 const dot = document.getElementById('api-dot');
 const label = document.getElementById('api-label');
@@ -1518,8 +1530,9 @@ if (m % 6 === 0 && cupomParaSelic[m - 1]) saldoIPCA -= cupomSemestral;
 }
 const patrimonioFinal = serieSelic[MESES_PROJ] + saldoIPCA;
 const anosProj = MESES_PROJ / 12;
-const rentAcumulada = patrimonioTotal > 0 ? (patrimonioFinal / patrimonioTotal - 1) * 100 : 0;
-const cagr = patrimonioTotal > 0 ? (Math.pow(patrimonioFinal / patrimonioTotal, 1 / anosProj) - 1) * 100 : 0;
+const saquesAcum = resgateBrutoMensal * MESES_PROJ;
+const rentAcumulada = patrimonioTotal > 0 ? ((patrimonioFinal + saquesAcum) / patrimonioTotal - 1) * 100 : 0;
+const cagr = patrimonioTotal > 0 ? (Math.pow(1 + rentAcumulada / 100, 1 / anosProj) - 1) * 100 : 0;
 return { rentNominalLiq, retornoReal, taxaRetirada, duracaoConserv, duracaoModelo, poderCompra10, saqueAnual, cagr, rentAcumulada };
 }
 
@@ -1566,16 +1579,16 @@ document.getElementById('saude-rent-acum-desc').textContent =
 saude.rentAcumulada >= 12 ? 'Estimativa de ganho composto em 24 meses' :
 saude.rentAcumulada >= 6 ? 'Estimativa de ganho moderado' : 'Estimativa de ganho baixo';
 }
-const preservaPrincipal = saude.retornoReal >= 0 && saude.taxaRetirada <= CFG.TAXA_RETIRADA_SEGURA_40ANOS;
+const preservaPrincipal = saude.retornoReal >= 0 && saude.taxaRetirada <= saude.retornoReal + 0.005;
 const preservaReal = saude.retornoReal >= 2;
 const reservaOk = saldoSelic >= metaSelic;
 setCard('saude-card-principal', 'saude-dot-principal', 'saude-txt-principal',
 preservaPrincipal,
 preservaPrincipal
-? `Sim (estimativa). Retorno real ${saude.retornoReal.toFixed(1)}% e retirada ${saude.taxaRetirada.toFixed(1)}% — principal preservado sob as premissas.`
+? `Sim (estimativa). Retorno real ${saude.retornoReal.toFixed(1)}% cobre a retirada de ${saude.taxaRetirada.toFixed(1)}% — principal preservado em termos reais.` + (saude.taxaRetirada > CFG.TAXA_RETIRADA_SEGURA_40ANOS ? ` Obs.: acima da referência de ${CFG.TAXA_RETIRADA_SEGURA_40ANOS}% p/ 40 anos; depende de o retorno se manter.` : '')
 : saude.retornoReal < 0
 ? `Não (estimativa). Retorno real negativo (${saude.retornoReal.toFixed(1)}%) — você está consumindo o principal.`
-: `Risco (estimativa). Retirada de ${saude.taxaRetirada.toFixed(1)}% acima da referência p/ 40 anos (${CFG.TAXA_RETIRADA_SEGURA_40ANOS}%). Reduza o saque para preservar.`
+: `Risco (estimativa). Retirada de ${saude.taxaRetirada.toFixed(1)}% acima do retorno real (${saude.retornoReal.toFixed(1)}%) — o principal perde valor real. Reduza o saque.`
 );
 setCard('saude-card-real', 'saude-dot-real', 'saude-txt-real',
 preservaReal,
@@ -1597,7 +1610,7 @@ if (preservaPrincipal && preservaReal && reservaOk) {
 veredito.textContent = '✓ SAUDÁVEL';
 veredito.className = 'text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-700/50';
 explicacao.className = 'saude-explicacao ok';
-explicacao.innerHTML = `<strong class="text-emerald-300">Tudo em ordem (estimativa).</strong> Retorno real positivo, retirada dentro da faixa de referência p/ horizonte de 40 anos (≤ ${CFG.TAXA_RETIRADA_SEGURA_40ANOS}%) e reserva Selic na meta. Poder de compra e principal preservados <u>sob as premissas atuais</u>.`;
+explicacao.innerHTML = `<strong class="text-emerald-300">Tudo em ordem (estimativa).</strong> Retorno real de ${saude.retornoReal.toFixed(1)}% cobre a retirada de ${saude.taxaRetirada.toFixed(1)}% e a reserva Selic está na meta. Poder de compra e principal preservados <u>sob as premissas atuais</u>. Confira a durabilidade no cenário conservador.`;
 } else if (!preservaReal || !preservaPrincipal) {
 veredito.textContent = '⚠ ATENÇÃO';
 veredito.className = 'text-xs font-bold px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-700/50';
@@ -1606,10 +1619,10 @@ const taxa = saude.taxaRetirada.toFixed(1);
 const ret = saude.retornoReal.toFixed(1);
 if (saude.retornoReal < 0) {
 explicacao.innerHTML = `<strong class="text-amber-300">Atenção:</strong> retorno real negativo (${ret}% a.a.) — a inflação está corroendo o patrimônio, independente da taxa de retirada. <u>Estimativa sob as premissas atuais.</u>`;
-} else if (saude.taxaRetirada <= 5) {
-explicacao.innerHTML = `<strong class="text-amber-300">Atenção (estimativa):</strong> retirada de <strong>${taxa}% ao ano</strong> está na referência clássica (4–5%, calibrada p/ ~30 anos), mas o horizonte aqui é de ~40 anos — a referência ideal é ficar em até <strong>${CFG.TAXA_RETIRADA_SEGURA_40ANOS}%</strong>.`;
+} else if (saude.retornoReal < saude.taxaRetirada) {
+explicacao.innerHTML = `<strong class="text-amber-300">Atenção (estimativa):</strong> retirada de <strong>${taxa}% ao ano</strong> acima do retorno real de ${ret}% a.a. — o principal perde valor em termos reais. <strong>Sugestão:</strong> reduza o saque.`;
 } else {
-explicacao.innerHTML = `<strong class="text-amber-300">Atenção (estimativa):</strong> retirada de <strong>${taxa}% ao ano</strong> acima da referência p/ horizonte de 40 anos (até ${CFG.TAXA_RETIRADA_SEGURA_40ANOS}%). Retorno real de +${ret}% a.a. preserva o poder de compra, mas o principal é consumido em termos reais. <strong>Sugestão:</strong> reduza o saque ou aceite consumir principal.`;
+explicacao.innerHTML = `<strong class="text-amber-300">Atenção (estimativa):</strong> retorno real de apenas ${ret}% a.a. (margem pequena sobre a inflação), embora cubra a retirada de ${taxa}%.`;
 }
 } else {
 veredito.textContent = '⚠ REPOR RESERVA';
@@ -2288,6 +2301,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const dbEl = document.getElementById('input-data-base');
   if (!dbEl.value) dbEl.value = new Date().toISOString().slice(0,10);
 
+  preencherIndicadoresDoCache();
+  recalcularSelicLiquida();
+  recalcularIPCANominal();
+  initCharts();
+
   aplicarMascaraInputs([
     'input-patrimonio',
     'input-selic-inicial',
@@ -2382,9 +2400,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   sincronizarModoSaque();
   sincronizarModoDivisao();
-  recalcularSelicLiquida();
-  recalcularIPCANominal();
-  initCharts();
   avaliarAvisosDesproporcionais();
   atualizarSimulacao();
   renderizarHistoricoExtra();
