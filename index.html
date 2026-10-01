@@ -2068,7 +2068,7 @@ if (totalExtra > disponivel) {
 alert(`Saque extraordinário (${formatarMoeda(totalExtra)}) maior que o saldo disponível (${formatarMoeda(disponivel)}). Reduza o valor.`);
 return;
 }
-const origem = document.querySelector('input[name="origem-extra"]:checked')?.value || 'auto';;
+const origem = document.querySelector('input[name="origem-extra"]:checked')?.value || 'auto';
 const selicAtual = numOr('input-selic-inicial', 0);
 const ipcaAtual  = numOr('input-ipca-inicial', 0);
 const patAtual   = numOr('input-patrimonio', 0);
