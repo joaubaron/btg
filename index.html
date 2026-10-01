@@ -1703,15 +1703,17 @@ document.getElementById('saude-rent-acum-desc').textContent =
 saude.rentAcumulada >= 12 ? 'Estimativa de ganho composto em 24 meses' :
 saude.rentAcumulada >= 6 ? 'Estimativa de ganho moderado' : 'Estimativa de ganho baixo';
 }
-const preservaPrincipal = saude.retornoReal >= 0 && saude.taxaRetirada <= saude.retornoReal + 0.005;
+const preservaPrincipalConserv = saude.duracaoConserv >= H;
+const preservaPrincipalModelo  = saude.duracaoModelo  >= H;
 const preservaReal = saude.retornoReal >= 2;
 const reservaOk = saldoSelic >= metaSelic;
 setCard('saude-card-principal', 'saude-dot-principal', 'saude-txt-principal',
-preservaPrincipal,
-preservaPrincipal
-? `Sim (estimativa). Retorno real ${saude.retornoReal.toFixed(1)}% cobre a retirada de ${saude.taxaRetirada.toFixed(1)}% — principal projetado preservado em termos reais.` + (saude.taxaRetirada > CFG.TAXA_RETIRADA_SEGURA_40ANOS ? ` Obs.: acima da referência de ${CFG.TAXA_RETIRADA_SEGURA_40ANOS}% p/ 40 anos; depende de o retorno se manter.` : ''): saude.retornoReal < 0
-? `Não (estimativa). Retorno real negativo (${saude.retornoReal.toFixed(1)}%) — você está consumindo o principal.`
-: `Risco (estimativa). Retirada de ${saude.taxaRetirada.toFixed(1)}% acima do retorno real (${saude.retornoReal.toFixed(1)}%) — o principal perde valor real. Reduza o saque.`
+preservaPrincipalConserv,
+preservaPrincipalConserv
+? `Sim (conservador). Cobre os ${H} anos mesmo com retorno real de ${CFG.RETORNO_REAL_CONSERVADOR}% a.a. Modelo (${saude.retornoReal.toFixed(1)}% real): ${isFinite(saude.duracaoModelo) ? '~' + Math.round(saude.duracaoModelo) + ' anos' : 'não esgota'}.`
+: preservaPrincipalModelo
+? `Depende do retorno. No cenário conservador (retorno real de ${CFG.RETORNO_REAL_CONSERVADOR}% a.a.), dura ${isFinite(saude.duracaoConserv) ? '~' + Math.round(saude.duracaoConserv) + ' anos' : 'não esgota'} — não cobre os ${H} anos. Só cobre se o retorno real ficar acima de ${CFG.RETORNO_REAL_CONSERVADOR}%.`
+: `Não (estimativa). Não cobre os ${H} anos nem no cenário do modelo.`
 );
 setCard('saude-card-real', 'saude-dot-real', 'saude-txt-real',
 preservaReal,
@@ -1729,12 +1731,17 @@ reservaOk
 );
 const veredito = document.getElementById('saude-veredito');
 const explicacao = document.getElementById('saude-explicacao');
-if (preservaPrincipal && preservaReal && reservaOk) {
+if (preservaPrincipalConserv && preservaReal && reservaOk) {
 veredito.textContent = '✓ SAUDÁVEL';
 veredito.className = 'text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-700/50';
 explicacao.className = 'saude-explicacao ok';
-explicacao.innerHTML = `<strong class="text-emerald-300">Tudo em ordem (estimativa).</strong> Retorno real de ${saude.retornoReal.toFixed(1)}% cobre a retirada de ${saude.taxaRetirada.toFixed(1)}% e a reserva Selic está na meta. Poder de compra e principal <u>projetados como preservados</u> sob as premissas atuais. Confira a durabilidade no cenário conservador.`;
-} else if (!preservaReal || !preservaPrincipal) {
+explicacao.innerHTML = `<strong class="text-emerald-300">Tudo em ordem (estimativa conservadora).</strong> Cobre os ${H} anos mesmo com retorno real de ${CFG.RETORNO_REAL_CONSERVADOR}% a.a.; retorno real atual ${saude.retornoReal.toFixed(1)}% cobre a retirada de ${saude.taxaRetirada.toFixed(1)}% e a reserva Selic está na meta.`;
+} else if (preservaPrincipalModelo && !preservaPrincipalConserv) {
+veredito.textContent = '⚠ DEPENDE DO RETORNO';
+veredito.className = 'text-xs font-bold px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-700/50';
+explicacao.className = 'saude-explicacao';
+explicacao.innerHTML = `<strong class="text-amber-300">Depende do retorno (estimativa).</strong> No cenário conservador (retorno real de ${CFG.RETORNO_REAL_CONSERVADOR}% a.a.) o patrimônio ${isFinite(saude.duracaoConserv) ? 'dura ~' + Math.round(saude.duracaoConserv) + ' anos' : 'não esgota'}; com o retorno real atual de ${saude.retornoReal.toFixed(1)}% cobre os ${H} anos. Monitore anualmente.`;
+} else if (!preservaReal || !preservaPrincipalModelo) {
 veredito.textContent = '⚠ ATENÇÃO';
 veredito.className = 'text-xs font-bold px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-700/50';
 explicacao.className = 'saude-explicacao';
