@@ -1410,7 +1410,7 @@ function calcularPreservacaoReal(patrimonioTotal, rendTotalLiq) {
 const ipca = (dadosBCB.ipca || CFG.FALLBACK.ipca) / 100;
 const rendNominal = patrimonioTotal > 0 ? rendTotalLiq / patrimonioTotal : 0;
 const retReal = (1 + rendNominal) / (1 + ipca) - 1;
-const saqueMaxRealAnual = Math.max(0, patrimonioTotal * retReal);
+const saqueMaxRealAnual = Math.max(0, patrimonioTotal * (rendNominal - ipca));
 const payoutMaxReal = rendTotalLiq > 0 ? saqueMaxRealAnual / rendTotalLiq : 0;
 return { retReal, saqueMaxRealAnual, payoutMaxReal };
 }
