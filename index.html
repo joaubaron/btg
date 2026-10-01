@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Gestão">
- 
+
 <link rel="manifest" href="./manifest.json">
 <link rel="stylesheet" href="./tailwind.css">
 <script src="./chart.js"></script>
@@ -127,14 +127,14 @@ header.sticky{padding-top:calc(0.75rem + env(safe-area-inset-top,0px))}
 .text-rose-300 { color: #fda4af; }
 .text-slate-600 { color: #475569; }
 @media (hover: hover) {
-  .hover\:bg-amber-900\/50:hover { background-color: rgb(120 53 15 / .5); }
-  .hover\:bg-emerald-900\/40:hover { background-color: rgb(6 78 59 / .4); }
-  .hover\:bg-emerald-900\/50:hover { background-color: rgb(6 78 59 / .5); }
-  .hover\:bg-purple-900\/50:hover { background-color: rgb(88 28 135 / .5); }
-  .hover\:bg-sky-900\/50:hover { background-color: rgb(12 74 110 / .5); }
-  .hover\:bg-rose-600:hover { background-color: #e11d48; }
-  .hover\:text-rose-400:hover { color: #fb7185; }
-  .hover\:text-slate-300:hover { color: #cbd5e1; }
+.hover\:bg-amber-900\/50:hover { background-color: rgb(120 53 15 / .5); }
+.hover\:bg-emerald-900\/40:hover { background-color: rgb(6 78 59 / .4); }
+.hover\:bg-emerald-900\/50:hover { background-color: rgb(6 78 59 / .5); }
+.hover\:bg-purple-900\/50:hover { background-color: rgb(88 28 135 / .5); }
+.hover\:bg-sky-900\/50:hover { background-color: rgb(12 74 110 / .5); }
+.hover\:bg-rose-600:hover { background-color: #e11d48; }
+.hover\:text-rose-400:hover { color: #fb7185; }
+.hover\:text-slate-300:hover { color: #cbd5e1; }
 }
 </style>
 </head>
@@ -1106,14 +1106,14 @@ el.innerHTML = `${prefixo} <strong>Sem conexão com o BCB</strong> — usando Se
 }
 
 function preencherIndicadoresDoCache() {
-  const cache = carregarBCBCache();
-  if (!cache) return;
-  dadosBCB.selic = cache.selic.valor; dadosBCB.selicData = cache.selic.data;
-  dadosBCB.ipca  = cache.ipca.valor;  dadosBCB.ipcaData  = cache.ipca.data;
-  document.getElementById('ind-selic').textContent = cache.selic.valor.toFixed(2) + '%';
-  document.getElementById('ind-selic-data').textContent = 'cache de ' + cache.selic.data;
-  document.getElementById('ind-ipca').textContent = cache.ipca.valor.toFixed(2) + '%';
-  document.getElementById('ind-ipca-data').textContent = 'cache de ' + cache.ipca.data;
+const cache = carregarBCBCache();
+if (!cache) return;
+dadosBCB.selic = cache.selic.valor; dadosBCB.selicData = cache.selic.data;
+dadosBCB.ipca  = cache.ipca.valor;  dadosBCB.ipcaData  = cache.ipca.data;
+document.getElementById('ind-selic').textContent = cache.selic.valor.toFixed(2) + '%';
+document.getElementById('ind-selic-data').textContent = 'cache de ' + cache.selic.data;
+document.getElementById('ind-ipca').textContent = cache.ipca.valor.toFixed(2) + '%';
+document.getElementById('ind-ipca-data').textContent = 'cache de ' + cache.ipca.data;
 }
 
 async function atualizarDadosBCB() {
@@ -1846,8 +1846,8 @@ if (avisoEl) {
 const anos = a => isFinite(a) ? '~' + Math.round(a) + ' anos' : 'não esgota';
 const c = saude.duracaoConserv, m = saude.duracaoModelo;
 const avisoDur = (!isFinite(m) || m >= 100)
-  ? 'Nas premissas atuais, a simulação não indica esgotamento do patrimônio. No conservador: ' + anos(c) + '.'
-  : 'Dura ' + anos(m) + ' (atual) · ' + anos(c) + ' (conservador).';
+? 'Nas premissas atuais, a simulação não indica esgotamento do patrimônio. No conservador: ' + anos(c) + '.'
+: 'Dura ' + anos(m) + ' (atual) · ' + anos(c) + ' (conservador).';
 avisoEl.classList.remove('hidden');
 avisoEl.textContent = '⚠ ' + avisoDur;
 }
@@ -1943,8 +1943,8 @@ const anos = a => isFinite(a) ? '~' + Math.round(a) + ' anos' : 'não esgota';
 const durM = saude?.duracaoModelo ?? Infinity;
 const durC = saude?.duracaoConserv ?? Infinity;
 const fraseDur = (!isFinite(durM) || durM >= 100)
-  ? `Nas premissas atuais, a simulação não indica esgotamento do patrimônio. No conservador (retorno real ${CFG.RETORNO_REAL_CONSERVADOR}% a.a.), dura ${anos(durC)}.`
-  : `Dura ${anos(durM)} no cenário atual · ${anos(durC)} no conservador.`;
+? `Nas premissas atuais, a simulação não indica esgotamento do patrimônio. No conservador (retorno real ${CFG.RETORNO_REAL_CONSERVADOR}% a.a.), dura ${anos(durC)}.`
+: `Dura ${anos(durM)} no cenário atual · ${anos(durC)} no conservador.`;
 const frasePreserva = `Se sacar até ${formatarMoeda(presAcao.saqueMaxRealAnual / 12)}/mês, a simulação não indica esgotamento do patrimônio.`;
 
 if (sobraAnual < 0) {
@@ -2225,6 +2225,11 @@ atualizarSimulacao(); return;
 }
 
 function initCharts() {
+if (typeof Chart === 'undefined') {
+console.warn('[gestao] Chart.js não carregou — gráficos desabilitados.');
+return;
+}
+try {
 const ctx1 = document.getElementById('chartPatrimonio').getContext('2d');
 chartAlocacao = new Chart(ctx1, {
 type: 'bar',
@@ -2268,6 +2273,9 @@ x: { ticks: { color: '#94a3b8', maxTicksLimit: 12 }, grid: { display: false } }
 }
 }
 });
+} catch (e) {
+console.warn('[gestao] Erro ao inicializar gráficos:', e);
+}
 }
 
 function atualizarGrafico(saldoSelic, meta, selicBase, ipcaBase, patrimonioTotal, inputs, resgateBruto, cupomLiq) {
@@ -2417,132 +2425,132 @@ atualizarSimulacao();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('app-version').textContent = APP_VERSION;
-  const dbEl = document.getElementById('input-data-base');
-  if (!dbEl.value) dbEl.value = hojeISO();
+document.getElementById('app-version').textContent = APP_VERSION;
+const dbEl = document.getElementById('input-data-base');
+if (!dbEl.value) dbEl.value = hojeISO();
 
-  preencherIndicadoresDoCache();
-  recalcularSelicLiquida();
-  recalcularIPCANominal();
-  initCharts();
+preencherIndicadoresDoCache();
+recalcularSelicLiquida();
+recalcularIPCANominal();
+initCharts();
 
-  aplicarMascaraInputs([
-    'input-patrimonio',
-    'input-selic-inicial',
-    'input-ipca-inicial',
-    'input-saque-custom',
-    'input-mesada-esposa',
-    'input-mesada-marido',
-    'input-piso-casa',
-    'input-meta-selic',
-    'input-extra-imovel',
-    'input-extra-outros',
-    'input-onboarding-patrimonio'
-  ]);
+aplicarMascaraInputs([
+'input-patrimonio',
+'input-selic-inicial',
+'input-ipca-inicial',
+'input-saque-custom',
+'input-mesada-esposa',
+'input-mesada-marido',
+'input-piso-casa',
+'input-meta-selic',
+'input-extra-imovel',
+'input-extra-outros',
+'input-onboarding-patrimonio'
+]);
 
-  const salvo = carregarEstado();
-  if (salvo) {
-    aplicarInputs(salvo);
-    estado = {
-      flags: {
-        rentSelicManual: !!salvo.rentSelicManual,
-        rentIPCAManual: !!salvo.rentIPCAManual,
-        divisaoManual: !!salvo.divisaoManual
-      },
-      inputs: {}
-    };
-    if (salvo.rentSelicManual) {
-      const t = document.getElementById('rent-selic-auto-tag');
-      if (t) {
-        t.textContent = 'Manual (ajustado por você)';
-        t.className = 'text-[10px] block mt-0.5 auto-tag-normal';
-      }
-    }
-  }
+const salvo = carregarEstado();
+if (salvo) {
+aplicarInputs(salvo);
+estado = {
+flags: {
+rentSelicManual: !!salvo.rentSelicManual,
+rentIPCAManual: !!salvo.rentIPCAManual,
+divisaoManual: !!salvo.divisaoManual
+},
+inputs: {}
+};
+if (salvo.rentSelicManual) {
+const t = document.getElementById('rent-selic-auto-tag');
+if (t) {
+t.textContent = 'Manual (ajustado por você)';
+t.className = 'text-[10px] block mt-0.5 auto-tag-normal';
+}
+}
+}
 
-  // Sanity check: força valores corretos se estiverem fora de faixa
-  if (numDecimalOr('input-custo-btg', 0.3) > 1) setInputDecimal('input-custo-btg', 0.3);
-  if (numDecimalOr('input-ir-efetivo', 15) > 30) setInputDecimal('input-ir-efetivo', 15);
-  if (numDecimalOr('input-rent-selic', 11.4) > 20) setInputDecimal('input-rent-selic', 11.4);
-  if (numDecimalOr('input-rent-ipca', 8.6) > 20) setInputDecimal('input-rent-ipca', 8.6);
-  if (numDecimalOr('input-taxa-real-ipca', 6.0) > 15) setInputDecimal('input-taxa-real-ipca', 6.0);
-  if (numDecimalOr('input-cupom-ntnb', 6.0) > 20) setInputDecimal('input-cupom-ntnb', 6.0);
+// Sanity check: força valores corretos se estiverem fora de faixa
+if (numDecimalOr('input-custo-btg', 0.3) > 1) setInputDecimal('input-custo-btg', 0.3);
+if (numDecimalOr('input-ir-efetivo', 15) > 30) setInputDecimal('input-ir-efetivo', 15);
+if (numDecimalOr('input-rent-selic', 11.4) > 20) setInputDecimal('input-rent-selic', 11.4);
+if (numDecimalOr('input-rent-ipca', 8.6) > 20) setInputDecimal('input-rent-ipca', 8.6);
+if (numDecimalOr('input-taxa-real-ipca', 6.0) > 15) setInputDecimal('input-taxa-real-ipca', 6.0);
+if (numDecimalOr('input-cupom-ntnb', 6.0) > 20) setInputDecimal('input-cupom-ntnb', 6.0);
 
-  if (!carregarBaseline()) {
-    mostrarOnboarding();
-  }
+if (!carregarBaseline()) {
+mostrarOnboarding();
+}
 
-  const metaEl = document.getElementById('input-meta-selic');
-  if (!metaEl.value || metaEl.value === '' || parseValor('input-meta-selic') === 0) {
-    const pat = numOr('input-patrimonio', CFG.PATRIMONIO_TOTAL);
-    setInputMoeda('input-meta-selic', Math.round(pat * CFG.PROPORCAO_META_SELIC / 100000) * 100000);
-  }
+const metaEl = document.getElementById('input-meta-selic');
+if (!metaEl.value || metaEl.value === '' || parseValor('input-meta-selic') === 0) {
+const pat = numOr('input-patrimonio', CFG.PATRIMONIO_TOTAL);
+setInputMoeda('input-meta-selic', Math.round(pat * CFG.PROPORCAO_META_SELIC / 100000) * 100000);
+}
 
-  document.getElementById('select-saque').addEventListener('change', e => {
-    sincronizarModoSaque();
-    avaliarAvisosDesproporcionais();
-    atualizarSimulacao();
-  });
+document.getElementById('select-saque').addEventListener('change', e => {
+sincronizarModoSaque();
+avaliarAvisosDesproporcionais();
+atualizarSimulacao();
+});
 
-  document.getElementById('toggle-divisao-manual').addEventListener('change', e => {
-    estado.flags.divisaoManual = e.target.checked;
-    sincronizarModoDivisao();
-    atualizarSimulacao();
-  });
+document.getElementById('toggle-divisao-manual').addEventListener('change', e => {
+estado.flags.divisaoManual = e.target.checked;
+sincronizarModoDivisao();
+atualizarSimulacao();
+});
 
-  ['input-patrimonio','input-selic-inicial','input-ipca-inicial','input-saque-custom',
-   'input-rent-selic','input-rent-ipca','input-meta-selic',
-   'input-taxa-real-ipca','input-cupom-ntnb','input-custo-btg','input-ir-efetivo',
-   'input-extra-imovel','input-extra-outros','input-data-base',
-   'input-payout','input-mesada-esposa','input-mesada-marido','input-piso-casa'].forEach(id => {
-    document.getElementById(id).addEventListener('input', () => {
-      if (id === 'input-rent-selic') {
-        estado.flags.rentSelicManual = true;
-        const tagEl = document.getElementById('rent-selic-auto-tag');
-        if (tagEl) { tagEl.textContent = 'Manual (ajustado por você)'; tagEl.className = 'text-[10px] block mt-0.5 auto-tag-normal'; }
-      }
-      if (id === 'input-rent-ipca') estado.flags.rentIPCAManual = true;
-      if (id === 'input-taxa-real-ipca') recalcularIPCANominal(true);
-      if (id === 'input-custo-btg' || id === 'input-ir-efetivo') {
-        recalcularSelicLiquida();
-        recalcularIPCANominal();
-      }
-      if (id === 'input-patrimonio') {
-        recalcularDerivadosDoPatrimonio({ preservarAlocacao: false, preservarMeta: false });
-      }
-      if (id === 'input-selic-inicial' || id === 'input-ipca-inicial') {
-        atualizarSomaAlocada();
-      }
-      document.getElementById('val-rent-selic').textContent = parseFloat(document.getElementById('input-rent-selic').value).toFixed(1) + '%';
-      document.getElementById('val-rent-ipca').textContent = parseFloat(document.getElementById('input-rent-ipca').value).toFixed(1) + '%';
-      atualizarSimulacao();
-    });
-  });
+['input-patrimonio','input-selic-inicial','input-ipca-inicial','input-saque-custom',
+'input-rent-selic','input-rent-ipca','input-meta-selic',
+'input-taxa-real-ipca','input-cupom-ntnb','input-custo-btg','input-ir-efetivo',
+'input-extra-imovel','input-extra-outros','input-data-base',
+'input-payout','input-mesada-esposa','input-mesada-marido','input-piso-casa'].forEach(id => {
+document.getElementById(id).addEventListener('input', () => {
+if (id === 'input-rent-selic') {
+estado.flags.rentSelicManual = true;
+const tagEl = document.getElementById('rent-selic-auto-tag');
+if (tagEl) { tagEl.textContent = 'Manual (ajustado por você)'; tagEl.className = 'text-[10px] block mt-0.5 auto-tag-normal'; }
+}
+if (id === 'input-rent-ipca') estado.flags.rentIPCAManual = true;
+if (id === 'input-taxa-real-ipca') recalcularIPCANominal(true);
+if (id === 'input-custo-btg' || id === 'input-ir-efetivo') {
+recalcularSelicLiquida();
+recalcularIPCANominal();
+}
+if (id === 'input-patrimonio') {
+recalcularDerivadosDoPatrimonio({ preservarAlocacao: false, preservarMeta: true });
+}
+if (id === 'input-selic-inicial' || id === 'input-ipca-inicial') {
+atualizarSomaAlocada();
+}
+document.getElementById('val-rent-selic').textContent = parseFloat(document.getElementById('input-rent-selic').value).toFixed(1) + '%';
+document.getElementById('val-rent-ipca').textContent = parseFloat(document.getElementById('input-rent-ipca').value).toFixed(1) + '%';
+atualizarSimulacao();
+});
+});
 
-  sincronizarModoSaque();
-  sincronizarModoDivisao();
-  avaliarAvisosDesproporcionais();
-  atualizarSimulacao();
-  renderizarHistoricoExtra();
-  const swJaControlava = 'serviceWorker' in navigator && !!navigator.serviceWorker.controller;
-  registrarSW();
-  atualizarDadosBCB();
+sincronizarModoSaque();
+sincronizarModoDivisao();
+avaliarAvisosDesproporcionais();
+atualizarSimulacao();
+renderizarHistoricoExtra();
+const swJaControlava = 'serviceWorker' in navigator && !!navigator.serviceWorker.controller;
+registrarSW();
+atualizarDadosBCB();
 
-  if ('serviceWorker' in navigator) {
-    let swAvisado = false;
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (!swJaControlava || swAvisado) return;
-      swAvisado = true;
-      if (confirm('Nova versão disponível. Recarregar agora?')) location.reload();
-    });
-  }
+if ('serviceWorker' in navigator) {
+let swAvisado = false;
+navigator.serviceWorker.addEventListener('controllerchange', () => {
+if (!swJaControlava || swAvisado) return;
+swAvisado = true;
+if (confirm('Nova versão disponível. Recarregar agora?')) location.reload();
+});
+}
 
-  ['input-onboarding-patrimonio', 'input-onboarding-data'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.addEventListener('keydown', e => {
-      if (e.key === 'Enter') { e.preventDefault(); confirmarOnboarding(); }
-    });
-  });
+['input-onboarding-patrimonio', 'input-onboarding-data'].forEach(id => {
+const el = document.getElementById(id);
+if (el) el.addEventListener('keydown', e => {
+if (e.key === 'Enter') { e.preventDefault(); confirmarOnboarding(); }
+});
+});
 });
 </script>
 </body>
