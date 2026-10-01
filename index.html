@@ -1923,7 +1923,7 @@ el.innerHTML = A.slice(0, 5).map(([p, c, t], i) =>
 const ipcaAtual = d.ipcaProjetado;
 const liq = 1 - d.aliqIR;
 const cen = [['Selic −3 p.p.', -3, 0], ['IPCA +2 p.p.', 0, 2], ['Selic −3 e IPCA +2', -3, 2]];
-document.getElementById('plano-estresse').innerHTML = cen.map(([n, ds, di]) => {
+const linhasEstresse = cen.map(([n, ds, di]) => {
 const rs = Math.max(0, d.inputs.rentSelic + ds * liq);
 const ri = d.inputs.rentIPCA + di * liq;
 const rend = d.inputs.selicInicial * rs / 100 + d.inputs.ipcaInicial * ri / 100;
@@ -1932,7 +1932,20 @@ const max = Math.max(0, d.patrimonioTotal * ret / 12);
 const ok = d.saqueMensal <= max;
 const c = ok ? 'emerald' : 'amber';
 return `<div class="p-2 rounded-lg border ${CORES_AVISO[c]}"><strong>${n}:</strong> retorno real ${(ret * 100).toFixed(1)}% · preserva até ${fm(max)}/mês → ${ok ? 'mantém o saque' : 'reduza para ' + fm(arred(max)) + '/mês'}</div>`;
-}).join('');
+});
+
+// #9: stress de marcação a mercado — IPCA+ cai 10% no ano 3
+const queda = 0.10;
+const ipcaPosQueda = d.inputs.ipcaInicial * (1 - queda);
+const rendIPCAPosQueda = ipcaPosQueda * (d.inputs.rentIPCA / 100);
+const rendTotalPosQueda = d.inputs.selicInicial * (d.inputs.rentSelic / 100) + rendIPCAPosQueda;
+const retPosQueda = (1 + rendTotalPosQueda / d.patrimonioTotal) / (1 + ipcaAtual / 100) - 1;
+const maxPosQueda = Math.max(0, d.patrimonioTotal * retPosQueda / 12);
+const okQueda = d.saqueMensal <= maxPosQueda;
+const cQueda = okQueda ? 'emerald' : 'amber';
+const linhaQueda = `<div class="p-2 rounded-lg border ${CORES_AVISO[cQueda]}"><strong>IPCA+ −10% no ano 3 (marcação a mercado):</strong> retorno real ${(retPosQueda * 100).toFixed(1)}% · preserva até ${fm(maxPosQueda)}/mês → ${okQueda ? 'mantém o saque' : 'reduza para ' + fm(arred(maxPosQueda)) + '/mês'}. Se levar ao vencimento, a queda é temporária.</div>`;
+
+document.getElementById('plano-estresse').innerHTML = linhasEstresse.join('') + linhaQueda;
 }
 
 function renderizarProjecao(saldoSelic, meta, rendSelicAnual, cupomSemestral, saqueMensal, dataBase, inputs, resgateBruto) {
