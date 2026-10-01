@@ -297,7 +297,7 @@ Fluxo Mensal
 <div class="p-2 bg-slate-800/80 rounded-lg"><span class="text-[10px] text-slate-400 block">Destino</span><span class="text-[10px] font-bold text-emerald-400" id="cupom-destino">—</span></div>
 </div>
 
-<p class="text-[9px] text-slate-500 mt-2">Cupom semestral estimado = (1 + taxa real)^(1/2) − 1. Para 6% a.a., 2,9563% por semestre. Valor líquido de IR.</p>
+<p class="text-[9px] text-slate-500 mt-2">Cupom semestral = (1 + taxa do cupom)^(1/2) − 1, aplicado sobre o VNA. Padrão 6% a.a. → 2,9563% por semestre. Valor líquido de IR.</p>
 </div>
 <div class="relative h-44 w-full">
 <canvas id="chartPatrimonio"></canvas>
@@ -516,6 +516,11 @@ Parâmetros
 <span id="val-taxa-real-ipca" class="text-sm font-bold text-purple-400 w-14 text-right">6.0%</span>
 </div>
 <span class="text-[10px] text-slate-400 block mt-0.5">Bruto = (1+real)×(1+IPCA)−1 → <span id="ipca-nominal-calc" class="text-purple-300">—</span> (líquido de IR e custo abaixo)</span>
+</div>
+<div>
+<label class="block text-xs font-medium text-slate-300 mb-1">Cupom NTN-B <span class="text-[9px] text-purple-400">(% a.a. fixo sobre o VNA)</span></label>
+<input type="text" id="input-cupom-ntnb" value="6" inputmode="decimal" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
+<span class="text-[10px] text-slate-400 block mt-0.5">Taxa fixa do cupom semestral. Padrão: 6%.</span>
 </div>
 <div>
 <label class="block text-xs font-medium text-slate-300 mb-1">Rentabilidade IPCA+ <span class="text-[9px] text-emerald-400">(líquida % a.a. nominal)</span></label>
@@ -799,7 +804,7 @@ ipcaMin: 6, ipcaMax: 14
 }
 };
 
-const APP_VERSION = 'v2.37';
+const APP_VERSION = 'v2.38';
 function hojeISO() {
 const d = new Date();
 return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
@@ -916,6 +921,7 @@ saqueCustom:     num(inp.saqueCustom, 135000),
 rentSelic:       num(inp.rentSelic, 10.5),
 rentIPCA:        num(inp.rentIPCA, 8.0),
 taxaRealIPCA:    num(inp.taxaRealIPCA, 6.0),
+cupomNTNB:       num(inp.cupomNTNB, 6.0),
 custoBTG:        num(inp.custoBTG, 0.3),
 irEfetivo:       num(inp.irEfetivo, 15),
 metaSelic:       num(inp.metaSelic, CFG.PATRIMONIO_TOTAL * CFG.PROPORCAO_META_SELIC),
@@ -1171,8 +1177,8 @@ function calcularIR(diasCorridos) {
 for (const faixa of CFG.IR_FAIXAS) { if (diasCorridos <= faixa.maxDias) return faixa.aliq; }
 return 0.15;
 }
-function calcularCupomIPCA(valorIPCA, aliqIR, taxaRealAA) {
-const taxa = (taxaRealAA !== undefined && taxaRealAA !== null && !isNaN(taxaRealAA)) ? taxaRealAA : CFG.CUPOM_FIXO_AA;
+function calcularCupomIPCA(valorIPCA, aliqIR) {
+const taxa = numDecimalOr('input-cupom-ntnb', CFG.CUPOM_FIXO_AA);
 const cupomSemestral = Math.pow(1 + taxa / 100, 1/2) - 1;
 return valorIPCA * cupomSemestral * (1 - (aliqIR || 0));
 }
@@ -1474,6 +1480,7 @@ saqueCustom: numOr('input-saque-custom', 135000),
 rentSelic: numDecimalOr('input-rent-selic', 10.5),
 rentIPCA: numDecimalOr('input-rent-ipca', 8.0),
 taxaRealIPCA: numDecimalOr('input-taxa-real-ipca', 6.0),
+cupomNTNB: numDecimalOr('input-cupom-ntnb', 6.0),
 custoBTG: numDecimalOr('input-custo-btg', 0.3),
 irEfetivo: numDecimalOr('input-ir-efetivo', 15),
 metaSelic: numOr('input-meta-selic', CFG.PATRIMONIO_TOTAL * CFG.PROPORCAO_META_SELIC),
@@ -1507,6 +1514,7 @@ if (document.getElementById('input-taxa-real-ipca')) {
 document.getElementById('input-taxa-real-ipca').value = inp.taxaRealIPCA ?? 6.0;
 document.getElementById('val-taxa-real-ipca').textContent = (inp.taxaRealIPCA ?? 6.0).toFixed(1) + '%';
 }
+setInputDecimal('input-cupom-ntnb', (inp.cupomNTNB !== undefined && !isNaN(inp.cupomNTNB)) ? inp.cupomNTNB : 6.0);
 setInputDecimal('input-custo-btg', (inp.custoBTG !== undefined && !isNaN(inp.custoBTG)) ? inp.custoBTG : 0.3);
 setInputDecimal('input-ir-efetivo', (inp.irEfetivo !== undefined && !isNaN(inp.irEfetivo)) ? inp.irEfetivo : 15);
 const metaFallback = (inp.patrimonioTotal ?? CFG.PATRIMONIO_TOTAL) * CFG.PROPORCAO_META_SELIC;
@@ -1611,7 +1619,7 @@ saldo10 = Math.max(0, saldo10 * (1 + rMensal) - saqueMensal);
 const poderCompra10 = saldo10;
 const MESES_PROJ = 24;
 const aliqIRsaude = aliquotaIR(inputs);
-const cupomSemestral = calcularCupomIPCA(inputs.ipcaInicial, aliqIRsaude, inputs.taxaRealIPCA);
+const cupomSemestral = calcularCupomIPCA(inputs.ipcaInicial, aliqIRsaude);
 const rendSelicAnual = inputs.selicInicial * (inputs.rentSelic / 100);
 const { resgateBruto: resgateBrutoMensal } = calcularResgateBruto(saqueMensal, inputs, rendTotalLiq);
 const { serie: serieSelic, cupomParaSelic } = projetarSelic({
@@ -1775,7 +1783,7 @@ const saqueAnualBruto = resgateBruto * 12;
 const saqueAnualLiq = saqueMensal * 12;
 const sobraAnual = rendTotalLiq - saqueAnualBruto;
 const ipcaProjetado = dadosBCB.ipca || CFG.FALLBACK.ipca;
-const cupomLiq = calcularCupomIPCA(ipcaBase, aliqIR, inputs.taxaRealIPCA);
+const cupomLiq = calcularCupomIPCA(ipcaBase, aliqIR);
 const proxCupom = proximoPagamentoCupom(dataBase);
 const vEsposa = mesadaEsposa;
 const vMarido = mesadaMarido;
@@ -2325,6 +2333,7 @@ document.getElementById('input-rent-selic').value = 10.5;
 document.getElementById('input-rent-ipca').value = 8.0;
 document.getElementById('input-taxa-real-ipca').value = 6.0;
 document.getElementById('val-taxa-real-ipca').textContent = '6.0%';
+setInputDecimal('input-cupom-ntnb', 6.0);
 setInputDecimal('input-custo-btg', 0.3);
 setInputDecimal('input-ir-efetivo', 15);
 setInputMoeda('input-meta-selic', Math.round(patrimonioBase * CFG.PROPORCAO_META_SELIC / 100000) * 100000);
@@ -2459,6 +2468,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (numDecimalOr('input-rent-selic', 11.4) > 20) setInputDecimal('input-rent-selic', 11.4);
   if (numDecimalOr('input-rent-ipca', 8.6) > 20) setInputDecimal('input-rent-ipca', 8.6);
   if (numDecimalOr('input-taxa-real-ipca', 6.0) > 15) setInputDecimal('input-taxa-real-ipca', 6.0);
+  if (numDecimalOr('input-cupom-ntnb', 6.0) > 20) setInputDecimal('input-cupom-ntnb', 6.0);
 
   if (!carregarBaseline()) {
     mostrarOnboarding();
@@ -2484,7 +2494,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   ['input-patrimonio','input-selic-inicial','input-ipca-inicial','input-saque-custom',
    'input-rent-selic','input-rent-ipca','input-meta-selic',
-   'input-taxa-real-ipca','input-custo-btg','input-ir-efetivo',
+   'input-taxa-real-ipca','input-cupom-ntnb','input-custo-btg','input-ir-efetivo',
    'input-extra-imovel','input-extra-outros','input-data-base',
    'input-payout','input-mesada-esposa','input-mesada-marido','input-piso-casa'].forEach(id => {
     document.getElementById(id).addEventListener('input', () => {
