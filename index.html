@@ -1079,8 +1079,9 @@ const raw = localStorage.getItem(BCB_CACHE_KEY);
 if (!raw) return null;
 const parsed = JSON.parse(raw);
 if (!parsed?.selic?.valor || !parsed?.ipca?.valor) return null;
-const idadeDias = Math.floor((Date.now() - parsed.ts) / 86400000);
-return { ...parsed, idadeDias };
+const ts = Number.isFinite(parsed.ts) ? parsed.ts : null;
+const idadeDias = ts ? Math.floor((Date.now() - ts) / 86400000) : Infinity;
+return { ...parsed, ts, idadeDias };
 } catch { return null; }
 }
 function renderizarBannerBCB(cache) {
@@ -1098,11 +1099,12 @@ const ipcaTxt  = cache.ipca.valor.toFixed(2).replace('.', ',');
 const dataTxt  = escHTML(cache.selic.data);
 let classe = 'fresco';
 let prefixo = '📡';
-if (idade > BCB_CACHE_MAX_AGE_DAYS) { classe = 'obsoleto'; prefixo = '🚨'; }
+const idadeInvalida = !isFinite(idade);
+if (idadeInvalida || idade > BCB_CACHE_MAX_AGE_DAYS) { classe = 'obsoleto'; prefixo = '🚨'; }
 else if (idade >= 7)                { classe = 'atencao';  prefixo = '⚠'; }
-const idadeTxt = idade === 0 ? 'hoje' : idade === 1 ? '1 dia' : `${idade} dias`;
+const idadeTxt = idadeInvalida ? 'sem data' : (idade === 0 ? 'hoje' : idade === 1 ? '1 dia' : `${idade} dias`);
 el.className = 'on ' + classe;
-el.innerHTML = `${prefixo} <strong>Sem conexão com o BCB</strong> — usando Selic ${selicTxt}% e IPCA ${ipcaTxt}% de ${dataTxt} (${idadeTxt}${idade > BCB_CACHE_MAX_AGE_DAYS ? ' · <u>obsoleto</u>' : ''}).`;
+el.innerHTML = `${prefixo} <strong>Sem conexão com o BCB</strong> — usando Selic ${selicTxt}% e IPCA ${ipcaTxt}% de ${dataTxt} (${idadeTxt}${(idadeInvalida || idade > BCB_CACHE_MAX_AGE_DAYS) ? ' · <u>obsoleto</u>' : ''}).`;
 }
 
 function preencherIndicadoresDoCache() {
