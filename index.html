@@ -474,7 +474,7 @@ Parâmetros
 </div>
 <div id="div-payout">
 <label class="block text-xs font-medium text-slate-300 mb-1">Payout do rendimento líquido <span class="text-[9px] text-emerald-400">(% distribuído)</span></label>
-<input type="number" id="input-payout" value="36" min="0" max="100" step="1" inputmode="numeric" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
+<input type="text" id="input-payout" value="36" inputmode="decimal" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
 <span id="payout-info" class="text-[10px] text-slate-400 block mt-0.5">—</span>
 </div>
 
@@ -1487,7 +1487,7 @@ metaSelic: numOr('input-meta-selic', CFG.PATRIMONIO_TOTAL * CFG.PROPORCAO_META_S
 extraImovel: numOr('input-extra-imovel', 0),
 extraOutros: numOr('input-extra-outros', 0),
 dataBase: document.getElementById('input-data-base').value,
-payout: numInput('input-payout', CFG.PAYOUT_PADRAO, 0, 100),
+payout: Math.max(0, Math.min(100, numDecimalOr('input-payout', CFG.PAYOUT_PADRAO))),
 mesadaEsposa: numInput('input-mesada-esposa', 0, 0),
 mesadaMarido: numInput('input-mesada-marido', 0, 0),
 pisoCasa: numInput('input-piso-casa', 0, 0),
@@ -2475,6 +2475,7 @@ if (numDecimalOr('input-rent-selic', 11.4) > 20) setInputDecimal('input-rent-sel
 if (numDecimalOr('input-rent-ipca', 8.6) > 20) setInputDecimal('input-rent-ipca', 8.6);
 if (numDecimalOr('input-taxa-real-ipca', 6.0) > 15) setInputDecimal('input-taxa-real-ipca', 6.0);
 if (numDecimalOr('input-cupom-ntnb', 6.0) > 20) setInputDecimal('input-cupom-ntnb', 6.0);
+if (numDecimalOr('input-payout', CFG.PAYOUT_PADRAO) > 100) document.getElementById('input-payout').value = CFG.PAYOUT_PADRAO;
 
 if (!carregarBaseline()) {
 mostrarOnboarding();
