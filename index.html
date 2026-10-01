@@ -112,6 +112,7 @@ header.sticky{padding-top:calc(0.75rem + env(safe-area-inset-top,0px))}
 .bg-emerald-950\/20 { background-color: rgb(2 44 34 / .2); }
 .bg-red-950\/20 { background-color: rgb(69 10 10 / .2); }
 .bg-rose-950\/20 { background-color: rgb(76 5 25 / .2); }
+.bg-sky-950\/20 { background-color: rgb(8 47 73 / .2); }
 .border-red-500 { border-color: #ef4444; }
 .border-amber-700\/50 { border-color: rgb(180 83 9 / .5); }
 .border-emerald-700\/50 { border-color: rgb(4 120 87 / .5); }
@@ -120,6 +121,7 @@ header.sticky{padding-top:calc(0.75rem + env(safe-area-inset-top,0px))}
 .border-amber-800\/40 { border-color: rgb(146 64 14 / .4); }
 .border-rose-800\/40 { border-color: rgb(159 18 57 / .4); }
 .border-indigo-500\/30 { border-color: rgb(99 102 241 / .3); }
+.border-sky-500 { border-color: #0ea5e9; } 
 .text-emerald-500 { color: #10b981; }
 .text-red-400 { color: #f87171; }
 .text-rose-300 { color: #fda4af; }
@@ -1991,9 +1993,9 @@ rec.className = 'text-base sm:text-lg font-bold text-amber-400';
 mostrarPainelAjuste('reduzir', { saqueMax: saqueMaxReal, saqueMensal, sobraAnual, rendTotalLiq });
 return;
 } else {
-banner.className = 'card-glass rounded-2xl p-5 sm:p-6 shadow-xl border-l-4 border-amber-500 bg-amber-950/20';
+banner.className = 'card-glass rounded-2xl p-5 sm:p-6 shadow-xl border-l-4 border-sky-500 bg-sky-950/20';
 title.textContent = '⚠ RETIRADA ACIMA DA REFERÊNCIA';
-title.className = 'text-xl sm:text-2xl font-bold text-amber-400 mt-1';
+title.className = 'text-xl sm:text-2xl font-bold text-sky-400 mt-1';
 desc.innerHTML = `Retirada de ${taxaAtual.toFixed(2)}% a.a. acima da referência de ${CFG.TAXA_RETIRADA_SEGURA_40ANOS}% p/ 40 anos, mas o rendimento real cobre com folga (até ${formatarMoeda(saqueMaxReal)}/mês). ${fraseDur}`;
 rec.textContent = 'Manter: ' + formatarMoeda(saqueMensal) + '/mês';
 rec.className = 'text-base sm:text-lg font-bold text-emerald-400';
