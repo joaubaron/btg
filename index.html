@@ -1184,6 +1184,14 @@ const taxa = numDecimalOr('input-cupom-ntnb', CFG.CUPOM_FIXO_AA);
 const cupomSemestral = Math.pow(1 + taxa / 100, 1/2) - 1;
 return valorIPCA * cupomSemestral * (1 - (aliqIR || 0));
 }
+function proximoPagamentoCupom(dataBase) {
+const d = new Date(dataBase);
+const ano = d.getFullYear();
+const fev = new Date(ano, 1, 15), ago = new Date(ano, 7, 15), proxAnoFev = new Date(ano + 1, 1, 15);
+if (d <= fev) return fev;
+if (d <= ago) return ago;
+return proxAnoFev;
+}
 /* Meses (0-based a partir da data-base) em que há cupom (15/02 e 15/08). */
 function mesesDeCupom(dataBase, meses) {
 const set = new Set();
@@ -1204,6 +1212,7 @@ if (diff >= 0 && diff <= meses) set.add(diff);
 return set;
 }
 function recalcularSelicLiquida(forcarPorAcaoDoUsuario) {
+
 const selicEl = document.getElementById('input-rent-selic');
 const tagEl = document.getElementById('rent-selic-auto-tag');
 if (!selicEl) return;
