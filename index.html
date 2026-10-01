@@ -1596,17 +1596,18 @@ atualizarSimulacao();
 /* =========================================================
 PROJEÇÃO SELIC — CORRIGIDA: rendimento proporcional ao saldo
 ========================================================= */
-function projetarSelic({ saldoInicial, meta, rendSelicAnual, cupomSemestral, resgateMensal, meses }) {
+function projetarSelic({ saldoInicial, meta, rendSelicAnual, cupomSemestral, resgateMensal, meses, dataBase }) {
 const taxaAnual = saldoInicial > 0 ? rendSelicAnual / saldoInicial : 0;
 const taxaMensal = Math.pow(1 + taxaAnual, 1/12) - 1;
 const serie = [];
 const cupomParaSelic = [];
+const setCupom = mesesDeCupom(dataBase || hojeISO(), meses);
 let saldo = saldoInicial;
 let estourou = false;
 for (let m = 0; m <= meses; m++) {
 serie.push(Math.max(0, saldo));
 saldo *= (1 + taxaMensal);
-const desvia = (m % 6 === 5 && saldo < meta);
+const desvia = (setCupom.has(m) && saldo < meta);
 cupomParaSelic.push(desvia);
 if (desvia) saldo += cupomSemestral;
 saldo -= resgateMensal;
@@ -1638,15 +1639,18 @@ const aliqIRsaude = aliquotaIR(inputs);
 const cupomSemestral = calcularCupomIPCA(inputs.ipcaInicial, aliqIRsaude);
 const rendSelicAnual = inputs.selicInicial * (inputs.rentSelic / 100);
 const { resgateBruto: resgateBrutoMensal } = calcularResgateBruto(saqueMensal, inputs, rendTotalLiq);
+const dataBaseISO = inputs.dataBase || hojeISO();
 const { serie: serieSelic, cupomParaSelic } = projetarSelic({
 saldoInicial: saldoSelic, meta: metaSelic, rendSelicAnual,
-cupomSemestral, resgateMensal: resgateBrutoMensal, meses: MESES_PROJ
+cupomSemestral, resgateMensal: resgateBrutoMensal, meses: MESES_PROJ,
+dataBase: dataBaseISO
 });
 const rendIPCAMensal = Math.pow(1 + inputs.rentIPCA / 100, 1/12) - 1;
+const setCupomProj = mesesDeCupom(dataBaseISO, MESES_PROJ);
 let saldoIPCA = inputs.ipcaInicial;
 for (let m = 1; m <= MESES_PROJ; m++) {
 saldoIPCA *= (1 + rendIPCAMensal);
-if (m % 6 === 0 && cupomParaSelic[m - 1]) saldoIPCA -= cupomSemestral;
+if (setCupomProj.has(m) && cupomParaSelic[m]) saldoIPCA -= cupomSemestral;
 }
 const patrimonioFinal = serieSelic[MESES_PROJ] + saldoIPCA;
 const anosProj = MESES_PROJ / 12;
@@ -1937,9 +1941,13 @@ return;
 }
 const deficit = meta - saldoSelic;
 const sobraMensal = rendMensal - resgateBrutoMensal;
+const dataBaseISO = (dataBase instanceof Date && isFinite(dataBase.getTime()))
+? new Date(dataBase.getTime() - dataBase.getTimezoneOffset() * 60000).toISOString().slice(0, 10)
+: (inputs.dataBase || hojeISO());
 const { serie, estourou } = projetarSelic({
 saldoInicial: saldoSelic, meta, rendSelicAnual, cupomSemestral,
-resgateMensal: resgateBrutoMensal, meses: 120
+resgateMensal: resgateBrutoMensal, meses: 120,
+dataBase: dataBaseISO
 });
 const idxMeta = serie.findIndex(v => v >= meta);
 const recompoe = !estourou && idxMeta !== -1;
@@ -2300,7 +2308,8 @@ const rb = (typeof resgateBruto === 'number')
 : calcularResgateBruto(saqueMensal, inputs, rendTotalLiq).resgateBruto;
 const { serie } = projetarSelic({
 saldoInicial: saldoSelic, meta, rendSelicAnual,
-cupomSemestral: cupomLiq, resgateMensal: rb, meses: 24
+cupomSemestral: cupomLiq, resgateMensal: rb, meses: 24,
+dataBase: inputs.dataBase || hojeISO()
 });
 const labels = [];
 const dataBase = inputs.dataBase ? new Date(inputs.dataBase + 'T12:00:00') : new Date();
