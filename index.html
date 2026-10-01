@@ -1184,13 +1184,24 @@ const taxa = numDecimalOr('input-cupom-ntnb', CFG.CUPOM_FIXO_AA);
 const cupomSemestral = Math.pow(1 + taxa / 100, 1/2) - 1;
 return valorIPCA * cupomSemestral * (1 - (aliqIR || 0));
 }
-function proximoPagamentoCupom(dataBase) {
-const d = new Date(dataBase);
-const ano = d.getFullYear();
-const fev = new Date(ano, 1, 15), ago = new Date(ano, 7, 15), proxAnoFev = new Date(ano + 1, 1, 15);
-if (d <= fev) return fev;
-if (d <= ago) return ago;
-return proxAnoFev;
+/* Meses (0-based a partir da data-base) em que há cupom (15/02 e 15/08). */
+function mesesDeCupom(dataBase, meses) {
+const set = new Set();
+const d = new Date(dataBase + 'T12:00:00');
+if (!isFinite(d.getTime())) return set;
+const anoBase = d.getFullYear();
+const candidatos = [];
+for (let a = anoBase; a <= anoBase + Math.ceil(meses / 12) + 1; a++) {
+candidatos.push(new Date(a, 1, 15));
+candidatos.push(new Date(a, 7, 15));
+}
+candidatos.sort((a, b) => a - b);
+for (const c of candidatos) {
+if (c < d) continue;
+const diff = (c.getFullYear() - d.getFullYear()) * 12 + (c.getMonth() - d.getMonth());
+if (diff >= 0 && diff <= meses) set.add(diff);
+}
+return set;
 }
 function recalcularSelicLiquida(forcarPorAcaoDoUsuario) {
 const selicEl = document.getElementById('input-rent-selic');
@@ -2459,8 +2470,8 @@ t.className = 'text-[10px] block mt-0.5 auto-tag-normal';
 // Sanity check: força valores corretos se estiverem fora de faixa
 if (numDecimalOr('input-custo-btg', 0.3) > 1) setInputDecimal('input-custo-btg', 0.3);
 if (numDecimalOr('input-ir-efetivo', 15) > 30) setInputDecimal('input-ir-efetivo', 15);
-if (numDecimalOr('input-rent-selic', 11.4) > 20) setInputDecimal('input-rent-selic', 11.4);
-if (numDecimalOr('input-rent-ipca', 8.6) > 20) setInputDecimal('input-rent-ipca', 8.6);
+if (numDecimalOr('input-rent-selic', CFG.FALLBACK.rentSelicLiq) > CFG.LIMITES_RENT.selicMax) setInputDecimal('input-rent-selic', CFG.FALLBACK.rentSelicLiq);
+if (numDecimalOr('input-rent-ipca', CFG.FALLBACK.rentIPCALiq) > CFG.LIMITES_RENT.ipcaMax) setInputDecimal('input-rent-ipca', CFG.FALLBACK.rentIPCALiq);
 if (numDecimalOr('input-taxa-real-ipca', 6.0) > 15) setInputDecimal('input-taxa-real-ipca', 6.0);
 if (numDecimalOr('input-cupom-ntnb', 6.0) > 20) setInputDecimal('input-cupom-ntnb', 6.0);
 if (numDecimalOr('input-payout', CFG.PAYOUT_PADRAO) > 100) document.getElementById('input-payout').value = CFG.PAYOUT_PADRAO;
