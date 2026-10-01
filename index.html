@@ -67,6 +67,7 @@ header.sticky{padding-top:calc(0.75rem + env(safe-area-inset-top,0px))}
 .bg-rose-700{background-color:#be123c!important}
 .bg-rose-700:hover{background-color:#9f1239!important}
 
+/* Utilitários usados no HTML/JS que não estão no tailwind.css pré-compilado */
 @property --tw-translate-x { syntax: "*"; inherits: false; initial-value: 0; }
 @property --tw-translate-y { syntax: "*"; inherits: false; initial-value: 0; }
 .-translate-x-1\/2 { --tw-translate-x: -50%; translate: var(--tw-translate-x) var(--tw-translate-y); }
@@ -433,8 +434,8 @@ Parâmetros
 <div class="pt-1 pb-2 border-b border-slate-700/50 space-y-3">
 <div>
 <label class="block text-xs font-medium text-slate-300 mb-1">Patrimônio Total (R$)</label>
-<input type="text" id="input-patrimonio" value="45.000.000" inputmode="numeric" readonly class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white readonly-field">
-<span class="text-[10px] text-slate-400 block mt-0.5">= Reserva Selic + Tesouro IPCA+ (calculado automaticamente)</span>
+<input type="text" id="input-patrimonio" value="45.000.000" inputmode="numeric" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
+<span class="text-[10px] text-slate-400 block mt-0.5">Base total da carteira — tudo abaixo se adapta a este valor</span>
 </div>
 <div class="grid grid-cols-2 gap-2">
 <div>
@@ -473,7 +474,7 @@ Parâmetros
 </div>
 <div id="div-payout">
 <label class="block text-xs font-medium text-slate-300 mb-1">Payout do rendimento líquido <span class="text-[9px] text-emerald-400">(% distribuído)</span></label>
-<input type="text" id="input-payout" value="36" inputmode="decimal" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
+<input type="number" id="input-payout" value="36" min="0" max="100" step="1" inputmode="numeric" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
 <span id="payout-info" class="text-[10px] text-slate-400 block mt-0.5">—</span>
 </div>
 
@@ -533,7 +534,6 @@ Parâmetros
 <div>
 <label class="block text-xs font-medium text-slate-300 mb-1">Custo BTG <span class="text-[9px]">(% a.a.)</span></label>
 <input type="text" id="input-custo-btg" value="0,3" inputmode="decimal" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
-<!-- TODO(#10): separar custódia B3 da taxa BTG; confirmar valor vigente -->
 </div>
 <div>
 <label class="block text-xs font-medium text-slate-300 mb-1">IR efetivo <span class="text-[9px]">(% s/ rend.)</span></label>
@@ -845,11 +845,8 @@ function aplicarMascaraInputs(ids) {
 ids.forEach(id => {
 const el = document.getElementById(id);
 if (!el) return;
-el.addEventListener('input', () => {
-  if (el.readOnly) return;
-  mascaraMoeda(el);
-});
-if (!el.readOnly && el.value && !isNaN(parseFloat(String(el.value).replace(/\./g, '')))) {
+el.addEventListener('input', () => mascaraMoeda(el));
+if (el.value && !isNaN(parseFloat(String(el.value).replace(/\./g, '')))) {
 mascaraMoeda(el);
 }
 });
@@ -899,42 +896,8 @@ return v;
 }
 
 /* =========================================================
-PERSISTÊNCIA + SANITIZAÇÃO (compartilhada)
+PERSISTÊNCIA
 ========================================================= */
-function sanitizarInputs(inp) {
-if (!inp || typeof inp !== 'object' || Array.isArray(inp)) inp = {};
-const num = (v, def) => (typeof v === 'number' && isFinite(v)) ? v : def;
-const str = (v, def) => (typeof v === 'string' && v.length) ? v : def;
-const dataValida = (v, def) => {
-if (typeof v !== 'string' || !v) return def;
-const t = Date.parse(v + 'T12:00:00');
-return isFinite(t) ? v : def;
-};
-return {
-patrimonioTotal: num(inp.patrimonioTotal, CFG.PATRIMONIO_TOTAL),
-selicInicial:    num(inp.selicInicial,    CFG.SELIC_INICIAL),
-ipcaInicial:     num(inp.ipcaInicial,     CFG.TESOURO_IPCA),
-saqueSelect:     ['auto','custom'].includes(inp.saqueSelect) ? inp.saqueSelect : 'auto',
-saqueCustom:     num(inp.saqueCustom, 135000),
-rentSelic:       num(inp.rentSelic, CFG.FALLBACK.rentSelicLiq),
-rentIPCA:        num(inp.rentIPCA, CFG.FALLBACK.rentIPCALiq),
-taxaRealIPCA:    num(inp.taxaRealIPCA, 6.0),
-cupomNTNB:       num(inp.cupomNTNB, 6.0),
-custoBTG:        num(inp.custoBTG, 0.3),
-irEfetivo:       num(inp.irEfetivo, 15),
-metaSelic:       num(inp.metaSelic, CFG.PATRIMONIO_TOTAL * CFG.PROPORCAO_META_SELIC),
-extraImovel:     num(inp.extraImovel, 0),
-extraOutros:     num(inp.extraOutros, 0),
-dataBase:        dataValida(inp.dataBase, hojeISO()),
-payout:          Math.max(0, Math.min(100, num(inp.payout, CFG.PAYOUT_PADRAO))),
-mesadaEsposa:    num(inp.mesadaEsposa, 0),
-mesadaMarido:    num(inp.mesadaMarido, 0),
-pisoCasa:        num(inp.pisoCasa, 0),
-rentSelicManual: !!inp.rentSelicManual,
-rentIPCAManual:  !!inp.rentIPCAManual,
-divisaoManual:   !!inp.divisaoManual
-};
-}
 function salvarEstado() {
 try {
 localStorage.setItem(CFG.STORAGE_KEY, JSON.stringify({ inputs: coletarInputs(), ts: Date.now() }));
@@ -946,7 +909,33 @@ const raw = localStorage.getItem(CFG.STORAGE_KEY);
 if (!raw) return null;
 const parsed = JSON.parse(raw);
 if (!parsed || typeof parsed !== 'object' || !parsed.inputs || typeof parsed.inputs !== 'object') return null;
-return sanitizarInputs(parsed.inputs);
+const inp = parsed.inputs;
+const num = (v, def) => (typeof v === 'number' && isFinite(v)) ? v : def;
+const str = (v, def) => (typeof v === 'string' && v.length) ? v : def;
+return {
+patrimonioTotal: num(inp.patrimonioTotal, CFG.PATRIMONIO_TOTAL),
+selicInicial:    num(inp.selicInicial,    CFG.SELIC_INICIAL),
+ipcaInicial:     num(inp.ipcaInicial,     CFG.TESOURO_IPCA),
+saqueSelect:     ['auto','custom'].includes(inp.saqueSelect) ? inp.saqueSelect : 'auto',
+saqueCustom:     num(inp.saqueCustom, 135000),
+rentSelic:       num(inp.rentSelic, 10.5),
+rentIPCA:        num(inp.rentIPCA, 8.0),
+taxaRealIPCA:    num(inp.taxaRealIPCA, 6.0),
+cupomNTNB:       num(inp.cupomNTNB, 6.0),
+custoBTG:        num(inp.custoBTG, 0.3),
+irEfetivo:       num(inp.irEfetivo, 15),
+metaSelic:       num(inp.metaSelic, CFG.PATRIMONIO_TOTAL * CFG.PROPORCAO_META_SELIC),
+extraImovel:     num(inp.extraImovel, 0),
+extraOutros:     num(inp.extraOutros, 0),
+dataBase:        str(inp.dataBase, hojeISO()),
+payout:          num(inp.payout, CFG.PAYOUT_PADRAO),
+mesadaEsposa:    num(inp.mesadaEsposa, 0),
+mesadaMarido:    num(inp.mesadaMarido, 0),
+pisoCasa:        num(inp.pisoCasa, 0),
+rentSelicManual: !!inp.rentSelicManual,
+rentIPCAManual:  !!inp.rentIPCAManual,
+divisaoManual:   !!inp.divisaoManual
+};
 } catch { return null; }
 }
 function limparStorage() {
@@ -1002,9 +991,7 @@ if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('f
 if (data.inputs && (typeof data.inputs !== 'object' || Array.isArray(data.inputs))) throw new Error('inputs');
 if (data.historicoExtra && !Array.isArray(data.historicoExtra)) throw new Error('historico');
 const c = data.bcbCache;
-if (c && !(Number.isFinite(c.selic?.valor) && Number.isFinite(c.ipca?.valor) && Number.isFinite(c.ts))) {
-delete data.bcbCache;
-}
+if (c && !(Number.isFinite(c.selic?.valor) && Number.isFinite(c.ipca?.valor))) delete data.bcbCache;
 if (data.bcbCache) {
 try { localStorage.setItem(BCB_CACHE_KEY, JSON.stringify(data.bcbCache)); } catch {}
 }
@@ -1013,15 +1000,14 @@ try { localStorage.setItem(HIST_EXTRA_KEY, JSON.stringify(data.historicoExtra));
 renderizarHistoricoExtra();
 }
 if (data.inputs) {
-const inp = sanitizarInputs(data.inputs);
-aplicarInputs(inp);
+aplicarInputs(data.inputs);
 estado = { flags: {
-rentSelicManual: inp.rentSelicManual,
-rentIPCAManual: inp.rentIPCAManual,
-divisaoManual: inp.divisaoManual
+rentSelicManual: !!data.inputs.rentSelicManual,
+rentIPCAManual: !!data.inputs.rentIPCAManual,
+divisaoManual: !!data.inputs.divisaoManual
 }, inputs: {} };
-document.getElementById('rent-selic-auto-tag').textContent = inp.rentSelicManual ? 'Manual (ajustado por você)' : 'Auto: derivada da Selic BCB, IR e custo BTG';
-if (inp.divisaoManual) { document.getElementById('toggle-divisao-manual').checked = true; sincronizarModoDivisao(); }
+document.getElementById('rent-selic-auto-tag').textContent = data.inputs.rentSelicManual ? 'Manual (ajustado por você)' : 'Auto: derivada da Selic BCB, IR e custo BTG';
+if (data.inputs.divisaoManual) { document.getElementById('toggle-divisao-manual').checked = true; sincronizarModoDivisao(); }
 salvarEstado(); atualizarSimulacao(); alert('Importado com sucesso!');
 }
 } catch { alert('Arquivo inválido.'); }
@@ -1093,9 +1079,8 @@ const raw = localStorage.getItem(BCB_CACHE_KEY);
 if (!raw) return null;
 const parsed = JSON.parse(raw);
 if (!parsed?.selic?.valor || !parsed?.ipca?.valor) return null;
-const ts = Number.isFinite(parsed.ts) ? parsed.ts : null;
-const idadeDias = ts ? Math.floor((Date.now() - ts) / 86400000) : Infinity;
-return { ...parsed, ts, idadeDias };
+const idadeDias = Math.floor((Date.now() - parsed.ts) / 86400000);
+return { ...parsed, idadeDias };
 } catch { return null; }
 }
 function renderizarBannerBCB(cache) {
@@ -1113,11 +1098,11 @@ const ipcaTxt  = cache.ipca.valor.toFixed(2).replace('.', ',');
 const dataTxt  = escHTML(cache.selic.data);
 let classe = 'fresco';
 let prefixo = '📡';
-if (!isFinite(idade) || idade > BCB_CACHE_MAX_AGE_DAYS) { classe = 'obsoleto'; prefixo = '🚨'; }
+if (idade > BCB_CACHE_MAX_AGE_DAYS) { classe = 'obsoleto'; prefixo = '🚨'; }
 else if (idade >= 7)                { classe = 'atencao';  prefixo = '⚠'; }
-const idadeTxt = !isFinite(idade) ? 'sem data' : idade === 0 ? 'hoje' : idade === 1 ? '1 dia' : `${idade} dias`;
+const idadeTxt = idade === 0 ? 'hoje' : idade === 1 ? '1 dia' : `${idade} dias`;
 el.className = 'on ' + classe;
-el.innerHTML = `${prefixo} <strong>Sem conexão com o BCB</strong> — usando Selic ${selicTxt}% e IPCA ${ipcaTxt}% de ${dataTxt} (${idadeTxt}${(!isFinite(idade) || idade > BCB_CACHE_MAX_AGE_DAYS) ? ' · <u>obsoleto</u>' : ''}).`;
+el.innerHTML = `${prefixo} <strong>Sem conexão com o BCB</strong> — usando Selic ${selicTxt}% e IPCA ${ipcaTxt}% de ${dataTxt} (${idadeTxt}${idade > BCB_CACHE_MAX_AGE_DAYS ? ' · <u>obsoleto</u>' : ''}).`;
 }
 
 function preencherIndicadoresDoCache() {
@@ -1205,25 +1190,6 @@ if (d <= fev) return fev;
 if (d <= ago) return ago;
 return proxAnoFev;
 }
-/* Meses (0-based a partir da data-base) em que há cupom (15/02 e 15/08). */
-function mesesDeCupom(dataBase, meses) {
-const set = new Set();
-const d = new Date(dataBase + 'T12:00:00');
-if (!isFinite(d.getTime())) return set;
-const anoBase = d.getFullYear();
-const candidatos = [];
-for (let a = anoBase; a <= anoBase + Math.ceil(meses / 12) + 1; a++) {
-candidatos.push(new Date(a, 1, 15));
-candidatos.push(new Date(a, 7, 15));
-}
-candidatos.sort((a, b) => a - b);
-for (const c of candidatos) {
-if (c < d) continue;
-const diff = (c.getFullYear() - d.getFullYear()) * 12 + (c.getMonth() - d.getMonth());
-if (diff >= 0 && diff <= meses) set.add(diff);
-}
-return set;
-}
 function recalcularSelicLiquida(forcarPorAcaoDoUsuario) {
 const selicEl = document.getElementById('input-rent-selic');
 const tagEl = document.getElementById('rent-selic-auto-tag');
@@ -1289,13 +1255,11 @@ if (forcarPorAcaoDoUsuario) { estado.flags.rentIPCAManual = false; }
 /* =========================================================
 ADAPTAÇÃO AUTOMÁTICA AO PATRIMÔNIO
 ========================================================= */
-function patrimonioDerivado() {
-return numOr('input-selic-inicial', 0) + numOr('input-ipca-inicial', 0);
-}
 function recalcularDerivadosDoPatrimonio(opcoes = {}) {
-const { preservarMeta = false } = opcoes;
-const pat = patrimonioDerivado();
+const { preservarAlocacao = false, preservarMeta = false } = opcoes;
+const pat = numOr('input-patrimonio', CFG.PATRIMONIO_TOTAL);
 if (pat <= 0) return;
+
 if (!preservarMeta) {
 const metaAtual = numOr('input-meta-selic', 0);
 const metaEsperada = pat * CFG.PROPORCAO_META_SELIC;
@@ -1303,14 +1267,44 @@ if (Math.abs(metaAtual - metaEsperada) / (pat || 1) > 0.05) {
 setInputMoeda('input-meta-selic', Math.round(metaEsperada / 100000) * 100000);
 }
 }
+
+if (!preservarAlocacao) {
+const selicAtual = numOr('input-selic-inicial', 0);
+const ipcaAtual  = numOr('input-ipca-inicial', 0);
+const somaAtual = selicAtual + ipcaAtual;
+
+if (Math.abs(somaAtual - pat) > 1) {
+const propSelic = somaAtual > 0 ? selicAtual / somaAtual : CFG.PROPORCAO_SELIC_INICIAL;
+const novaSelic = Math.round(pat * propSelic);
+const novoIPCA  = Math.round(pat - novaSelic);
+setInputMoeda('input-selic-inicial', novaSelic);
+setInputMoeda('input-ipca-inicial', novoIPCA);
+}
+}
+
+avaliarAvisosDesproporcionais();
 atualizarSomaAlocada();
 }
 
 function avaliarAvisosDesproporcionais() {
-const pat = patrimonioDerivado();
+const pat = numOr('input-patrimonio', 0);
 const meta = numOr('input-meta-selic', 0);
 const selic = numOr('input-selic-inicial', 0);
 const ipca = numOr('input-ipca-inicial', 0);
+const soma = selic + ipca;
+
+const avisoAloc = document.getElementById('aviso-alocacao-desproporcional');
+if (avisoAloc) {
+if (pat > 0 && Math.abs(soma - pat) > 1) {
+const diff = pat - soma;
+avisoAloc.className = 'aviso-desproporcional';
+avisoAloc.innerHTML = `<span>⚠ Alocação (${formatarMoeda(soma)}) ${diff > 0 ? 'abaixo' : 'acima'} do patrimônio (${formatarMoeda(pat)}) — diferença de ${formatarMoeda(Math.abs(diff))}.</span>
+<button onclick="igualarAlocacaoTotal('${diff > 0 ? (selic < pat * CFG.PROPORCAO_SELIC_INICIAL ? 'selic' : 'ipca') : 'selic'}')">Ajustar</button>`;
+} else {
+avisoAloc.className = 'hidden';
+avisoAloc.innerHTML = '';
+}
+}
 
 const avisoMeta = document.getElementById('aviso-meta-desproporcional');
 if (avisoMeta) {
@@ -1351,7 +1345,7 @@ avisoSaque.textContent = '';
 }
 
 function ajustarMetaProporcional() {
-const pat = patrimonioDerivado();
+const pat = numOr('input-patrimonio', 0);
 if (pat <= 0) return;
 setInputMoeda('input-meta-selic', Math.round(pat * CFG.PROPORCAO_META_SELIC / 100000) * 100000);
 atualizarSimulacao();
@@ -1408,22 +1402,15 @@ return inputs.saqueCustom;
 }
 function calcularResgateBruto(saqueMensal, inputs, rendTotalLiq) {
 const aliq = aliquotaIR(inputs);
-// Modelo A: rendimento já é líquido; IR não é simulado de novo no resgate.
 return { resgateBruto: saqueMensal, irMensal: 0, aliqIR: aliq };
 }
 function calcularPreservacaoReal(patrimonioTotal, rendTotalLiq) {
 const ipca = (dadosBCB.ipca || CFG.FALLBACK.ipca) / 100;
 const rendNominal = patrimonioTotal > 0 ? rendTotalLiq / patrimonioTotal : 0;
 const retReal = (1 + rendNominal) / (1 + ipca) - 1;
-// Saque NOMINAL anual que preserva o poder de compra:
-//   ≈ patrimonioTotal × (rendNominal − ipca) = patrimonioTotal × retReal × (1+ipca)
-const saqueMaxPreservaAnual = Math.max(0, patrimonioTotal * (rendNominal - ipca));
-const payoutMaxPreserva = rendTotalLiq > 0 ? saqueMaxPreservaAnual / rendTotalLiq : 0;
-return {
-retReal,
-saqueMaxRealAnual: saqueMaxPreservaAnual,
-payoutMaxReal: payoutMaxPreserva
-};
+const saqueMaxRealAnual = Math.max(0, patrimonioTotal * retReal);
+const payoutMaxReal = rendTotalLiq > 0 ? saqueMaxRealAnual / rendTotalLiq : 0;
+return { retReal, saqueMaxRealAnual, payoutMaxReal };
 }
 function sincronizarModoSaque() {
 const m = document.getElementById('select-saque').value;
@@ -1485,13 +1472,13 @@ el.innerHTML = itens.map(([n, t]) => n === 'erro'
 function coletarInputs() {
 const sel = document.getElementById('select-saque').value;
 return {
-patrimonioTotal: patrimonioDerivado(),
+patrimonioTotal: numOr('input-patrimonio', CFG.PATRIMONIO_TOTAL),
 selicInicial: numOr('input-selic-inicial', CFG.SELIC_INICIAL),
 ipcaInicial: numOr('input-ipca-inicial', CFG.TESOURO_IPCA),
 saqueSelect: sel,
 saqueCustom: numOr('input-saque-custom', 135000),
-rentSelic: numDecimalOr('input-rent-selic', CFG.FALLBACK.rentSelicLiq),
-rentIPCA: numDecimalOr('input-rent-ipca', CFG.FALLBACK.rentIPCALiq),
+rentSelic: numDecimalOr('input-rent-selic', 10.5),
+rentIPCA: numDecimalOr('input-rent-ipca', 8.0),
 taxaRealIPCA: numDecimalOr('input-taxa-real-ipca', 6.0),
 cupomNTNB: numDecimalOr('input-cupom-ntnb', 6.0),
 custoBTG: numDecimalOr('input-custo-btg', 0.3),
@@ -1499,9 +1486,8 @@ irEfetivo: numDecimalOr('input-ir-efetivo', 15),
 metaSelic: numOr('input-meta-selic', CFG.PATRIMONIO_TOTAL * CFG.PROPORCAO_META_SELIC),
 extraImovel: numOr('input-extra-imovel', 0),
 extraOutros: numOr('input-extra-outros', 0),
-dataBase: document.getElementById('input-data-base').value || hojeISO(),
-// Bug #5: payout lido com parseDecimal (aceita 36,5) e clampado 0..100
-payout: Math.max(0, Math.min(100, numDecimalOr('input-payout', CFG.PAYOUT_PADRAO))),
+dataBase: document.getElementById('input-data-base').value,
+payout: numInput('input-payout', CFG.PAYOUT_PADRAO, 0, 100),
 mesadaEsposa: numInput('input-mesada-esposa', 0, 0),
 mesadaMarido: numInput('input-mesada-marido', 0, 0),
 pisoCasa: numInput('input-piso-casa', 0, 0),
@@ -1513,73 +1499,92 @@ divisaoManual: estado?.flags?.divisaoManual || false
 
 function aplicarInputs(inp) {
 if (!inp) return;
-const s = sanitizarInputs(inp);
-setInputMoeda('input-patrimonio', s.selicInicial + s.ipcaInicial);
-setInputMoeda('input-selic-inicial', s.selicInicial);
-setInputMoeda('input-ipca-inicial', s.ipcaInicial);
-document.getElementById('select-saque').value = s.saqueSelect;
-setInputMoeda('input-saque-custom', s.saqueCustom);
-document.getElementById('input-payout').value = s.payout;
-setInputMoeda('input-mesada-esposa', s.mesadaEsposa);
-setInputMoeda('input-mesada-marido', s.mesadaMarido);
-setInputMoeda('input-piso-casa', s.pisoCasa);
-document.getElementById('input-rent-selic').value = s.rentSelic;
-document.getElementById('input-rent-ipca').value = s.rentIPCA;
+setInputMoeda('input-patrimonio', inp.patrimonioTotal ?? CFG.PATRIMONIO_TOTAL);
+setInputMoeda('input-selic-inicial', inp.selicInicial ?? CFG.SELIC_INICIAL);
+setInputMoeda('input-ipca-inicial', inp.ipcaInicial ?? CFG.TESOURO_IPCA);
+document.getElementById('select-saque').value = inp.saqueSelect || 'auto';
+setInputMoeda('input-saque-custom', inp.saqueCustom ?? 135000);
+document.getElementById('input-payout').value = (inp.payout ?? CFG.PAYOUT_PADRAO);
+setInputMoeda('input-mesada-esposa', inp.mesadaEsposa ?? 0);
+setInputMoeda('input-mesada-marido', inp.mesadaMarido ?? 0);
+setInputMoeda('input-piso-casa', inp.pisoCasa ?? 0);
+document.getElementById('input-rent-selic').value = inp.rentSelic ?? 10.5;
+document.getElementById('input-rent-ipca').value = inp.rentIPCA ?? 8.0;
 if (document.getElementById('input-taxa-real-ipca')) {
-document.getElementById('input-taxa-real-ipca').value = s.taxaRealIPCA;
-document.getElementById('val-taxa-real-ipca').textContent = s.taxaRealIPCA.toFixed(1) + '%';
+document.getElementById('input-taxa-real-ipca').value = inp.taxaRealIPCA ?? 6.0;
+document.getElementById('val-taxa-real-ipca').textContent = (inp.taxaRealIPCA ?? 6.0).toFixed(1) + '%';
 }
-setInputDecimal('input-cupom-ntnb', s.cupomNTNB);
-setInputDecimal('input-custo-btg', s.custoBTG);
-setInputDecimal('input-ir-efetivo', s.irEfetivo);
-const metaFallback = (s.selicInicial + s.ipcaInicial) * CFG.PROPORCAO_META_SELIC;
-setInputMoeda('input-meta-selic', s.metaSelic || metaFallback);
-setInputMoeda('input-extra-imovel', s.extraImovel);
-setInputMoeda('input-extra-outros', s.extraOutros);
-if (s.dataBase) document.getElementById('input-data-base').value = s.dataBase;
+setInputDecimal('input-cupom-ntnb', (inp.cupomNTNB !== undefined && !isNaN(inp.cupomNTNB)) ? inp.cupomNTNB : 6.0);
+setInputDecimal('input-custo-btg', (inp.custoBTG !== undefined && !isNaN(inp.custoBTG)) ? inp.custoBTG : 0.3);
+setInputDecimal('input-ir-efetivo', (inp.irEfetivo !== undefined && !isNaN(inp.irEfetivo)) ? inp.irEfetivo : 15);
+const metaFallback = (inp.patrimonioTotal ?? CFG.PATRIMONIO_TOTAL) * CFG.PROPORCAO_META_SELIC;
+setInputMoeda('input-meta-selic', inp.metaSelic ?? metaFallback);
+setInputMoeda('input-extra-imovel', inp.extraImovel ?? 0);
+setInputMoeda('input-extra-outros', inp.extraOutros ?? 0);
+if (inp.dataBase) document.getElementById('input-data-base').value = inp.dataBase;
 sincronizarModoSaque();
-document.getElementById('val-rent-selic').textContent = s.rentSelic.toFixed(1) + '%';
-document.getElementById('val-rent-ipca').textContent = s.rentIPCA.toFixed(1) + '%';
-if (s.divisaoManual) { const t = document.getElementById('toggle-divisao-manual'); if (t) t.checked = true; }
+document.getElementById('val-rent-selic').textContent = (inp.rentSelic ?? 10.5).toFixed(1) + '%';
+document.getElementById('val-rent-ipca').textContent = (inp.rentIPCA ?? 8.0).toFixed(1) + '%';
+if (inp.divisaoManual) { const t = document.getElementById('toggle-divisao-manual'); if (t) t.checked = true; }
 sincronizarModoDivisao();
 atualizarSomaAlocada();
 avaliarAvisosDesproporcionais();
 }
 
 function atualizarSomaAlocada() {
+const total = numOr('input-patrimonio', 0);
 const selic = numOr('input-selic-inicial', 0);
 const ipca  = numOr('input-ipca-inicial', 0);
 const soma  = selic + ipca;
-// Espelha no campo readonly de patrimônio
-const elPat = document.getElementById('input-patrimonio');
-if (elPat) setInputMoeda('input-patrimonio', soma);
 document.getElementById('soma-alocada').textContent = formatarMoeda(soma);
 const elAviso = document.getElementById('aviso-soma');
 const elSug = document.getElementById('aviso-soma-sugestao');
+if (Math.abs(soma - total) < 1) {
 elAviso.textContent = '✓ ok'; elAviso.className = 'text-emerald-400';
 elSug.classList.add('hidden');
+} else if (soma > total) {
+elAviso.textContent = '⚠ excede total'; elAviso.className = 'text-rose-400';
+elSug.classList.add('hidden');
+} else {
+const diff = total - soma;
+elAviso.textContent = '⚠ falta ' + formatarMoeda(diff); elAviso.className = 'text-amber-400';
+const metaSelic = numOr('input-meta-selic', total * CFG.PROPORCAO_META_SELIC);
+if (selic < metaSelic) {
+elSug.textContent = `Sugestão: colocar em Selic — reserva ainda ${formatarMoeda(metaSelic - selic)} abaixo da meta.`;
+} else {
+elSug.textContent = 'Sugestão: colocar em IPCA+ — Selic já está na meta.';
+}
+elSug.classList.remove('hidden');
+}
 }
 function igualarAlocacaoTotal(destino) {
-// Mantido para compatibilidade; com patrimônio derivado, é no-op.
+const total = numOr('input-patrimonio', 0);
+const selic = numOr('input-selic-inicial', 0);
+const ipca  = numOr('input-ipca-inicial', 0);
+if (destino === 'selic') {
+setInputMoeda('input-selic-inicial', Math.round(Math.max(0, total - ipca)));
+} else {
+setInputMoeda('input-ipca-inicial', Math.round(Math.max(0, total - selic)));
+}
+avaliarAvisosDesproporcionais();
 atualizarSomaAlocada();
 atualizarSimulacao();
 }
 
 /* =========================================================
-PROJEÇÃO SELIC — cupons em datas reais (15/02 e 15/08)
+PROJEÇÃO SELIC — CORRIGIDA: rendimento proporcional ao saldo
 ========================================================= */
-function projetarSelic({ saldoInicial, meta, rendSelicAnual, cupomSemestral, resgateMensal, meses, dataBase }) {
+function projetarSelic({ saldoInicial, meta, rendSelicAnual, cupomSemestral, resgateMensal, meses }) {
 const taxaAnual = saldoInicial > 0 ? rendSelicAnual / saldoInicial : 0;
 const taxaMensal = Math.pow(1 + taxaAnual, 1/12) - 1;
 const serie = [];
 const cupomParaSelic = [];
-const setCupom = mesesDeCupom(dataBase || hojeISO(), meses);
 let saldo = saldoInicial;
 let estourou = false;
 for (let m = 0; m <= meses; m++) {
 serie.push(Math.max(0, saldo));
 saldo *= (1 + taxaMensal);
-const desvia = (setCupom.has(m) && saldo < meta);
+const desvia = (m % 6 === 5 && saldo < meta);
 cupomParaSelic.push(desvia);
 if (desvia) saldo += cupomSemestral;
 saldo -= resgateMensal;
@@ -1611,25 +1616,21 @@ const aliqIRsaude = aliquotaIR(inputs);
 const cupomSemestral = calcularCupomIPCA(inputs.ipcaInicial, aliqIRsaude);
 const rendSelicAnual = inputs.selicInicial * (inputs.rentSelic / 100);
 const { resgateBruto: resgateBrutoMensal } = calcularResgateBruto(saqueMensal, inputs, rendTotalLiq);
-const dataBaseISO = inputs.dataBase || hojeISO();
 const { serie: serieSelic, cupomParaSelic } = projetarSelic({
 saldoInicial: saldoSelic, meta: metaSelic, rendSelicAnual,
-cupomSemestral, resgateMensal: resgateBrutoMensal,
-meses: MESES_PROJ, dataBase: dataBaseISO
+cupomSemestral, resgateMensal: resgateBrutoMensal, meses: MESES_PROJ
 });
-const setCupomProj = mesesDeCupom(dataBaseISO, MESES_PROJ);
 const rendIPCAMensal = Math.pow(1 + inputs.rentIPCA / 100, 1/12) - 1;
 let saldoIPCA = inputs.ipcaInicial;
 for (let m = 1; m <= MESES_PROJ; m++) {
 saldoIPCA *= (1 + rendIPCAMensal);
-if (setCupomProj.has(m) && cupomParaSelic[m]) saldoIPCA -= cupomSemestral;
+if (m % 6 === 0 && cupomParaSelic[m - 1]) saldoIPCA -= cupomSemestral;
 }
 const patrimonioFinal = serieSelic[MESES_PROJ] + saldoIPCA;
 const anosProj = MESES_PROJ / 12;
 const saquesAcum = resgateBrutoMensal * MESES_PROJ;
 const rentAcumulada = patrimonioTotal > 0 ? ((patrimonioFinal + saquesAcum) / patrimonioTotal - 1) * 100 : 0;
 const cagr = patrimonioTotal > 0 ? (Math.pow(1 + rentAcumulada / 100, 1 / anosProj) - 1) * 100 : 0;
-// TODO(#9): adicionar stress de -10% no IPCA+ no ano 3 e risco de sequência.
 return { rentNominalLiq, retornoReal, taxaRetirada, duracaoConserv, duracaoModelo, poderCompra10, saqueAnual, cagr, rentAcumulada };
 }
 
@@ -1676,20 +1677,15 @@ document.getElementById('saude-rent-acum-desc').textContent =
 saude.rentAcumulada >= 12 ? 'Estimativa de ganho composto em 24 meses' :
 saude.rentAcumulada >= 6 ? 'Estimativa de ganho moderado' : 'Estimativa de ganho baixo';
 }
-
-// Bug #8: veredito usa cenário conservador; modelo vira informativo.
-const H = CFG.HORIZONTE_ANOS;
-const preservaPrincipalConserv = saude.duracaoConserv >= H;
-const preservaPrincipalModelo  = saude.duracaoModelo  >= H;
+const preservaPrincipal = saude.retornoReal >= 0 && saude.taxaRetirada <= saude.retornoReal + 0.005;
 const preservaReal = saude.retornoReal >= 2;
 const reservaOk = saldoSelic >= metaSelic;
 setCard('saude-card-principal', 'saude-dot-principal', 'saude-txt-principal',
-preservaPrincipalConserv,
-preservaPrincipalConserv
-? `Sim (conservador). Cobre os ${H} anos com retorno real de ${CFG.RETORNO_REAL_CONSERVADOR}%. Modelo: ${isFinite(saude.duracaoModelo) ? '~' + Math.round(saude.duracaoModelo) + ' anos' : 'não esgota'}.`
-: preservaPrincipalModelo
-? `Depende. Só cobre os ${H} anos se o retorno real ficar acima de ${CFG.RETORNO_REAL_CONSERVADOR}% (hoje ${saude.retornoReal.toFixed(1)}%). Conservador: ${isFinite(saude.duracaoConserv) ? '~' + Math.round(saude.duracaoConserv) + ' anos' : 'não esgota'}.`
-: `Não (estimativa). Não cobre os ${H} anos nem no cenário do modelo.`
+preservaPrincipal,
+preservaPrincipal
+? `Sim (estimativa). Retorno real ${saude.retornoReal.toFixed(1)}% cobre a retirada de ${saude.taxaRetirada.toFixed(1)}% — principal projetado preservado em termos reais.` + (saude.taxaRetirada > CFG.TAXA_RETIRADA_SEGURA_40ANOS ? ` Obs.: acima da referência de ${CFG.TAXA_RETIRADA_SEGURA_40ANOS}% p/ 40 anos; depende de o retorno se manter.` : ''): saude.retornoReal < 0
+? `Não (estimativa). Retorno real negativo (${saude.retornoReal.toFixed(1)}%) — você está consumindo o principal.`
+: `Risco (estimativa). Retirada de ${saude.taxaRetirada.toFixed(1)}% acima do retorno real (${saude.retornoReal.toFixed(1)}%) — o principal perde valor real. Reduza o saque.`
 );
 setCard('saude-card-real', 'saude-dot-real', 'saude-txt-real',
 preservaReal,
@@ -1707,17 +1703,12 @@ reservaOk
 );
 const veredito = document.getElementById('saude-veredito');
 const explicacao = document.getElementById('saude-explicacao');
-if (preservaPrincipalConserv && preservaReal && reservaOk) {
+if (preservaPrincipal && preservaReal && reservaOk) {
 veredito.textContent = '✓ SAUDÁVEL';
 veredito.className = 'text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-700/50';
 explicacao.className = 'saude-explicacao ok';
-explicacao.innerHTML = `<strong class="text-emerald-300">Tudo em ordem (estimativa conservadora).</strong> Cobre os ${H} anos mesmo com retorno real de ${CFG.RETORNO_REAL_CONSERVADOR}% a.a.; retorno real atual ${saude.retornoReal.toFixed(1)}% cobre a retirada de ${saude.taxaRetirada.toFixed(1)}% e a reserva Selic está na meta.`;
-} else if (preservaPrincipalModelo && !preservaPrincipalConserv) {
-veredito.textContent = '⚠ DEPENDE DO RETORNO';
-veredito.className = 'text-xs font-bold px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-700/50';
-explicacao.className = 'saude-explicacao';
-explicacao.innerHTML = `<strong class="text-amber-300">Depende do retorno (estimativa).</strong> No cenário conservador (retorno real de ${CFG.RETORNO_REAL_CONSERVADOR}% a.a.) o patrimônio ${isFinite(saude.duracaoConserv) ? 'dura ~' + Math.round(saude.duracaoConserv) + ' anos' : 'não esgota'}; com o retorno real atual de ${saude.retornoReal.toFixed(1)}% cobre os ${H} anos. Monitore anualmente.`;
-} else if (!preservaReal || !preservaPrincipalModelo) {
+explicacao.innerHTML = `<strong class="text-emerald-300">Tudo em ordem (estimativa).</strong> Retorno real de ${saude.retornoReal.toFixed(1)}% cobre a retirada de ${saude.taxaRetirada.toFixed(1)}% e a reserva Selic está na meta. Poder de compra e principal <u>projetados como preservados</u> sob as premissas atuais. Confira a durabilidade no cenário conservador.`;
+} else if (!preservaReal || !preservaPrincipal) {
 veredito.textContent = '⚠ ATENÇÃO';
 veredito.className = 'text-xs font-bold px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-700/50';
 explicacao.className = 'saude-explicacao';
@@ -1728,7 +1719,7 @@ explicacao.innerHTML = `<strong class="text-amber-300">Atenção:</strong> retor
 } else if (saude.retornoReal < saude.taxaRetirada) {
 explicacao.innerHTML = `<strong class="text-amber-300">Atenção (estimativa):</strong> retirada de <strong>${taxa}% ao ano</strong> acima do retorno real de ${ret}% a.a. — o principal perde valor em termos reais. <strong>Sugestão:</strong> reduza o saque.`;
 } else {
-explicacao.innerHTML = `<strong class="text-amber-300">Atenção (estimativa):</strong> retorno real de ${ret}% a.a. com margem pequena sobre a inflação, e/ou não cobre os ${H} anos no cenário conservador.`;
+explicacao.innerHTML = `<strong class="text-amber-300">Atenção (estimativa):</strong> retorno real de apenas ${ret}% a.a. (margem pequena sobre a inflação), embora cubra a retirada de ${taxa}%.`;
 }
 } else {
 veredito.textContent = '⚠ REPOR RESERVA';
@@ -1751,8 +1742,7 @@ estado.inputs = { ...inputs };
 atualizarSomaAlocada();
 avaliarAvisosDesproporcionais();
 
-// Patrimônio sempre = Selic + IPCA+ (fonte única da verdade)
-const patrimonioTotal = inputs.selicInicial + inputs.ipcaInicial;
+const patrimonioTotal = inputs.patrimonioTotal;
 const selicBase = inputs.selicInicial;
 const ipcaBase = inputs.ipcaInicial;
 const metaSelic = inputs.metaSelic;
@@ -1780,7 +1770,7 @@ if (elPayout) elPayout.textContent = '= ' + formatarMoeda(saqueMensal) + '/mês 
 
 const saldoSelicAtual = Math.max(0, selicBase);
 const dataBase = inputs.dataBase ? new Date(inputs.dataBase + 'T12:00:00') : new Date();
-const { resgateBruto, aliqIR } = calcularResgateBruto(saqueMensal, inputs, rendTotalLiq);
+const { resgateBruto, irMensal, aliqIR } = calcularResgateBruto(saqueMensal, inputs, rendTotalLiq);
 const custoMensal = patrimonioTotal * ((inputs.custoBTG ?? 0.3) / 100 / 12);
 const saqueAnualBruto = resgateBruto * 12;
 const saqueAnualLiq = saqueMensal * 12;
@@ -1910,7 +1900,6 @@ const ok = d.saqueMensal <= max;
 const c = ok ? 'emerald' : 'amber';
 return `<div class="p-2 rounded-lg border ${CORES_AVISO[c]}"><strong>${n}:</strong> retorno real ${(ret * 100).toFixed(1)}% · preserva até ${fm(max)}/mês → ${ok ? 'mantém o saque' : 'reduza para ' + fm(arred(max)) + '/mês'}</div>`;
 }).join('');
-// TODO(#9): adicionar linha de stress "−10% no IPCA+ no ano 3" e risco de sequência.
 }
 
 function renderizarProjecao(saldoSelic, meta, rendSelicAnual, cupomSemestral, saqueMensal, dataBase, inputs, resgateBruto) {
@@ -1926,13 +1915,9 @@ return;
 }
 const deficit = meta - saldoSelic;
 const sobraMensal = rendMensal - resgateBrutoMensal;
-const dataBaseISO = (dataBase instanceof Date && isFinite(dataBase.getTime()))
-? new Date(dataBase.getTime() - dataBase.getTimezoneOffset() * 60000).toISOString().slice(0, 10)
-: (inputs.dataBase || hojeISO());
 const { serie, estourou } = projetarSelic({
 saldoInicial: saldoSelic, meta, rendSelicAnual, cupomSemestral,
-resgateMensal: resgateBrutoMensal, meses: 120,
-dataBase: dataBaseISO
+resgateMensal: resgateBrutoMensal, meses: 120
 });
 const idxMeta = serie.findIndex(v => v >= meta);
 const recompoe = !estourou && idxMeta !== -1;
@@ -1951,7 +1936,7 @@ const desc = document.getElementById('action-desc');
 const rec = document.getElementById('rec-saque');
 document.getElementById('painel-ajuste').classList.add('hidden');
 const reservaAbaixo = saldoSelic < metaSelic;
-const patAcao = estado?.inputs?.patrimonioTotal || patrimonioDerivado();
+const patAcao = estado?.inputs?.patrimonioTotal || CFG.PATRIMONIO_TOTAL;
 const presAcao = calcularPreservacaoReal(patAcao, rendTotalLiq);
 const consomeReal = saqueMensal * 12 > presAcao.saqueMaxRealAnual + 1;
 const anos = a => isFinite(a) ? '~' + Math.round(a) + ' anos' : 'não esgota';
@@ -1994,18 +1979,30 @@ rec.className = 'text-base sm:text-lg font-bold text-amber-400';
 mostrarPainelAjuste('selic_abaixo', { def, saldoSelic, metaSelic, saqueMensal, sobraAnual, rendTotalLiq });
 return;
 }
-// Bug #4: ramo "realmenteExcede" era código morto (consomeReal já retornou acima).
-// Se chegou aqui, consomeReal === false. Só resta o caso "acima da referência, mas preserva".
 const taxaAtual = (saqueMensal * 12) / patAcao * 100;
 if (taxaAtual > CFG.TAXA_RETIRADA_SEGURA_40ANOS) {
 const saqueMaxReal = presAcao.saqueMaxRealAnual / 12;
+const realmenteExcede = saqueMensal > saqueMaxReal;
+
+if (realmenteExcede) {
+banner.className = 'card-glass rounded-2xl p-5 sm:p-6 shadow-xl border-l-4 border-amber-500 bg-amber-950/20';
+title.textContent = '⚠ RETIRADA ACIMA DO IDEAL';
+title.className = 'text-xl sm:text-2xl font-bold text-amber-400 mt-1';
+desc.innerHTML = `Retirada de ${taxaAtual.toFixed(2)}% a.a. ${fraseDur} ${frasePreserva}`;
+rec.textContent = 'Preserva: ' + formatarMoeda(saqueMaxReal) + '/mês';
+rec.className = 'text-base sm:text-lg font-bold text-amber-400';
+mostrarPainelAjuste('reduzir', { saqueMax: saqueMaxReal, saqueMensal, sobraAnual, rendTotalLiq });
+return;
+} else {
 banner.className = 'card-glass rounded-2xl p-5 sm:p-6 shadow-xl border-l-4 border-sky-500 bg-sky-950/20';
 title.textContent = '⚠ RETIRADA ACIMA DA REFERÊNCIA';
 title.className = 'text-xl sm:text-2xl font-bold text-sky-400 mt-1';
 desc.innerHTML = `Retirada de ${taxaAtual.toFixed(2)}% a.a. acima da referência de ${CFG.TAXA_RETIRADA_SEGURA_40ANOS}% p/ 40 anos, mas o rendimento real cobre com folga (até ${formatarMoeda(saqueMaxReal)}/mês). ${fraseDur}`;
 rec.textContent = 'Manter: ' + formatarMoeda(saqueMensal) + '/mês';
 rec.className = 'text-base sm:text-lg font-bold text-emerald-400';
+document.getElementById('painel-ajuste').classList.add('hidden');
 return;
+}
 }
 banner.className = 'card-glass rounded-2xl p-5 sm:p-6 shadow-xl border-l-4 border-emerald-500 bg-emerald-950/20';
 title.textContent = '✓ CENÁRIO ESTÁVEL';
@@ -2074,6 +2071,7 @@ return;
 const origem = document.querySelector('input[name="origem-extra"]:checked')?.value || 'auto';
 const selicAtual = numOr('input-selic-inicial', 0);
 const ipcaAtual  = numOr('input-ipca-inicial', 0);
+const patAtual   = numOr('input-patrimonio', 0);
 const meta       = numOr('input-meta-selic', 0);
 let tiraSelic = 0;
 let tiraIPCA  = 0;
@@ -2097,6 +2095,7 @@ tiraIPCA  = totalExtra - excedente;
 }
 setInputMoeda('input-selic-inicial', Math.max(0, selicAtual - tiraSelic));
 setInputMoeda('input-ipca-inicial', Math.max(0, ipcaAtual - tiraIPCA));
+setInputMoeda('input-patrimonio', Math.max(0, patAtual - totalExtra));
 setInputMoeda('input-extra-imovel', 0);
 setInputMoeda('input-extra-outros', 0);
 const finalidade = document.getElementById('input-extra-finalidade')?.value.trim() || '';
@@ -2195,8 +2194,7 @@ atualizarSimulacao(); return;
 if (tipo === 'saque') {
 const inputs = coletarInputs();
 const { rendTotalLiq } = calcularRendimentos(inputs);
-const pat = inputs.selicInicial + inputs.ipcaInicial;
-const pr = calcularPreservacaoReal(pat, rendTotalLiq);
+const pr = calcularPreservacaoReal(inputs.patrimonioTotal, rendTotalLiq);
 const maxMensal = Math.floor(pr.saqueMaxRealAnual / 12 / 1000) * 1000;
 document.getElementById('select-saque').value = 'custom';
 sincronizarModoSaque();
@@ -2205,7 +2203,7 @@ atualizarSimulacao(); return;
 }
 if (tipo === 'meta') {
 if (!confirm('Isso só baixa a meta: o alerta some, mas a reserva de liquidez não aumenta. Continuar?')) return;
-const pat = estado.inputs.patrimonioTotal || patrimonioDerivado();
+const pat = estado.inputs.patrimonioTotal || CFG.PATRIMONIO_TOTAL;
 setInputMoeda('input-meta-selic', Math.round(pat * CFG.PROPORCAO_META_SELIC_EMERGENCIA / 100000) * 100000);
 atualizarSimulacao(); return;
 }
@@ -2216,6 +2214,7 @@ if (!ult) { alert('Nenhum saque extraordinário registrado para desfazer.'); ret
 if (!confirm(`Desfazer o saque extraordinário de ${formatarMoeda(ult.valor)} (${ult.data})? O valor volta para a Selic/IPCA+ e o registro sai do histórico.`)) return;
 setInputMoeda('input-selic-inicial', numOr('input-selic-inicial', 0) + ult.tiraSelic);
 setInputMoeda('input-ipca-inicial', numOr('input-ipca-inicial', 0) + ult.tiraIPCA);
+setInputMoeda('input-patrimonio', numOr('input-patrimonio', 0) + ult.valor);
 lista.shift();
 salvarHistoricoExtra(lista);
 renderizarHistoricoExtra();
@@ -2291,11 +2290,9 @@ const saqueMensal = calcularSaqueMensal(inputs, rendTotalLiq);
 const rb = (typeof resgateBruto === 'number')
 ? resgateBruto
 : calcularResgateBruto(saqueMensal, inputs, rendTotalLiq).resgateBruto;
-const dataBaseISO = inputs.dataBase || hojeISO();
 const { serie } = projetarSelic({
 saldoInicial: saldoSelic, meta, rendSelicAnual,
-cupomSemestral: cupomLiq, resgateMensal: rb, meses: 24,
-dataBase: dataBaseISO
+cupomSemestral: cupomLiq, resgateMensal: rb, meses: 24
 });
 const labels = [];
 const dataBase = inputs.dataBase ? new Date(inputs.dataBase + 'T12:00:00') : new Date();
@@ -2325,21 +2322,21 @@ const patrimonioBase = baseline ? baseline.patrimonioTotal : CFG.PATRIMONIO_TOTA
 const selicBase = baseline ? baseline.selicInicial : CFG.SELIC_INICIAL;
 const ipcaBase = baseline ? baseline.ipcaInicial : CFG.TESOURO_IPCA;
 const dataBaseVal = baseline?.dataBase || hojeISO();
+setInputMoeda('input-patrimonio', patrimonioBase);
 setInputMoeda('input-selic-inicial', selicBase);
 setInputMoeda('input-ipca-inicial', ipcaBase);
-setInputMoeda('input-patrimonio', selicBase + ipcaBase);
 document.getElementById('select-saque').value = 'auto';
 setInputMoeda('input-saque-custom', 135000);
 document.getElementById('input-payout').value = CFG.PAYOUT_PADRAO;
-const rendReset = (selicBase * CFG.FALLBACK.rentSelicLiq / 100) + (ipcaBase * CFG.FALLBACK.rentIPCALiq / 100);
+const rendReset = (selicBase * 10.5 / 100) + (ipcaBase * 8.0 / 100);
 const saqueReset = rendReset * (CFG.PAYOUT_PADRAO / 100) / 12;
 const mesadaReset = Math.round(saqueReset * CFG.MESADA_PCT_SAQUE / 100) * 100;
 setInputMoeda('input-mesada-esposa', mesadaReset);
 setInputMoeda('input-mesada-marido', mesadaReset);
 setInputMoeda('input-piso-casa', 0);
 sincronizarModoSaque();
-document.getElementById('input-rent-selic').value = CFG.FALLBACK.rentSelicLiq;
-document.getElementById('input-rent-ipca').value = CFG.FALLBACK.rentIPCALiq;
+document.getElementById('input-rent-selic').value = 10.5;
+document.getElementById('input-rent-ipca').value = 8.0;
 document.getElementById('input-taxa-real-ipca').value = 6.0;
 document.getElementById('val-taxa-real-ipca').textContent = '6.0%';
 setInputDecimal('input-cupom-ntnb', 6.0);
@@ -2369,14 +2366,14 @@ const saque = calcularSaqueMensal(inp, rendTotalLiq);
 const p = rendTotalLiq > 0 ? Math.round(saque * 12 / rendTotalLiq * 100) : 0;
 document.querySelectorAll('.pv-payout').forEach(e => e.textContent = p);
 document.querySelectorAll('.pv-resto').forEach(e => e.textContent = Math.max(0, 100 - p));
-document.getElementById('pv-meta').textContent = formatarMoeda(numOr('input-meta-selic', patrimonioDerivado() * CFG.PROPORCAO_META_SELIC));
+document.getElementById('pv-meta').textContent = formatarMoeda(numOr('input-meta-selic', CFG.PATRIMONIO_TOTAL * CFG.PROPORCAO_META_SELIC));
 document.getElementById('modal-preservar').classList.remove('hidden');
 }
 function fecharComoPreservar() { document.getElementById('modal-preservar').classList.add('hidden'); }
 
 function mostrarOnboarding() {
 document.getElementById('input-onboarding-data').value = document.getElementById('input-data-base').value || hojeISO();
-const patrimonioAtual = numOr('input-selic-inicial', 0) + numOr('input-ipca-inicial', 0) || CFG.PATRIMONIO_TOTAL;
+const patrimonioAtual = numOr('input-patrimonio', CFG.PATRIMONIO_TOTAL);
 const btnPular = document.getElementById('btn-onboarding-pular');
 if (btnPular) btnPular.textContent = 'Usar valor já preenchido (' + formatarMoeda(patrimonioAtual) + ')';
 document.getElementById('modal-onboarding').classList.remove('hidden');
@@ -2386,12 +2383,12 @@ const selicInicial = Math.round(patrimonioTotal * CFG.PROPORCAO_SELIC_INICIAL);
 const ipcaInicial  = Math.round(patrimonioTotal - selicInicial);
 const metaSelic = Math.round(patrimonioTotal * CFG.PROPORCAO_META_SELIC / 100000) * 100000;
 salvarBaseline(patrimonioTotal, selicInicial, ipcaInicial, dataBase);
+setInputMoeda('input-patrimonio', patrimonioTotal);
 setInputMoeda('input-selic-inicial', selicInicial);
 setInputMoeda('input-ipca-inicial', ipcaInicial);
-setInputMoeda('input-patrimonio', selicInicial + ipcaInicial);
 setInputMoeda('input-meta-selic', metaSelic);
 document.getElementById('input-data-base').value = dataBase;
-const rendTotal = (selicInicial * CFG.FALLBACK.rentSelicLiq / 100) + (ipcaInicial * CFG.FALLBACK.rentIPCALiq / 100);
+const rendTotal = (selicInicial * 10.5 / 100) + (ipcaInicial * 8.0 / 100);
 const saqueInicial = rendTotal * (CFG.PAYOUT_PADRAO / 100) / 12;
 const mesadaInicial = Math.round(saqueInicial * CFG.MESADA_PCT_SAQUE / 100) * 100;
 setInputMoeda('input-mesada-esposa', mesadaInicial);
@@ -2410,12 +2407,12 @@ const dataBase = document.getElementById('input-onboarding-data').value || hojeI
 aplicarPatrimonioInicial(v, dataBase);
 }
 function pularOnboarding() {
-const patrimonioAtual = numOr('input-selic-inicial', 0) + numOr('input-ipca-inicial', 0) || CFG.PATRIMONIO_TOTAL;
+const patrimonioAtual = numOr('input-patrimonio', CFG.PATRIMONIO_TOTAL);
 const selicAtual = numOr('input-selic-inicial', CFG.SELIC_INICIAL);
 const ipcaAtual  = numOr('input-ipca-inicial', CFG.TESOURO_IPCA);
 const dataAtual  = document.getElementById('input-data-base').value || hojeISO();
 setInputMoeda('input-meta-selic', Math.round(patrimonioAtual * CFG.PROPORCAO_META_SELIC / 100000) * 100000);
-const rendTotal = (selicAtual * CFG.FALLBACK.rentSelicLiq / 100) + (ipcaAtual * CFG.FALLBACK.rentIPCALiq / 100);
+const rendTotal = (selicAtual * 10.5 / 100) + (ipcaAtual * 8.0 / 100);
 const saqueInicial = rendTotal * (CFG.PAYOUT_PADRAO / 100) / 12;
 const mesadaInicial = Math.round(saqueInicial * CFG.MESADA_PCT_SAQUE / 100) * 100;
 setInputMoeda('input-mesada-esposa', mesadaInicial);
@@ -2471,11 +2468,11 @@ t.className = 'text-[10px] block mt-0.5 auto-tag-normal';
 }
 }
 
-// Bug #7b: sanity checks usam CFG.LIMITES_RENT e CFG.FALLBACK (sem 11.4/8.6 desatualizados)
+// Sanity check: força valores corretos se estiverem fora de faixa
 if (numDecimalOr('input-custo-btg', 0.3) > 1) setInputDecimal('input-custo-btg', 0.3);
 if (numDecimalOr('input-ir-efetivo', 15) > 30) setInputDecimal('input-ir-efetivo', 15);
-if (numDecimalOr('input-rent-selic', CFG.FALLBACK.rentSelicLiq) > CFG.LIMITES_RENT.selicMax) setInputDecimal('input-rent-selic', CFG.FALLBACK.rentSelicLiq);
-if (numDecimalOr('input-rent-ipca', CFG.FALLBACK.rentIPCALiq) > CFG.LIMITES_RENT.ipcaMax) setInputDecimal('input-rent-ipca', CFG.FALLBACK.rentIPCALiq);
+if (numDecimalOr('input-rent-selic', 11.4) > 20) setInputDecimal('input-rent-selic', 11.4);
+if (numDecimalOr('input-rent-ipca', 8.6) > 20) setInputDecimal('input-rent-ipca', 8.6);
 if (numDecimalOr('input-taxa-real-ipca', 6.0) > 15) setInputDecimal('input-taxa-real-ipca', 6.0);
 if (numDecimalOr('input-cupom-ntnb', 6.0) > 20) setInputDecimal('input-cupom-ntnb', 6.0);
 
@@ -2485,7 +2482,7 @@ mostrarOnboarding();
 
 const metaEl = document.getElementById('input-meta-selic');
 if (!metaEl.value || metaEl.value === '' || parseValor('input-meta-selic') === 0) {
-const pat = patrimonioDerivado() || CFG.PATRIMONIO_TOTAL;
+const pat = numOr('input-patrimonio', CFG.PATRIMONIO_TOTAL);
 setInputMoeda('input-meta-selic', Math.round(pat * CFG.PROPORCAO_META_SELIC / 100000) * 100000);
 }
 
@@ -2501,8 +2498,7 @@ sincronizarModoDivisao();
 atualizarSimulacao();
 });
 
-// Bug #1: NÃO redistribuir patrimônio a cada tecla. Só no change (abaixo).
-['input-selic-inicial','input-ipca-inicial','input-saque-custom',
+['input-patrimonio','input-selic-inicial','input-ipca-inicial','input-saque-custom',
 'input-rent-selic','input-rent-ipca','input-meta-selic',
 'input-taxa-real-ipca','input-cupom-ntnb','input-custo-btg','input-ir-efetivo',
 'input-extra-imovel','input-extra-outros','input-data-base',
@@ -2519,19 +2515,17 @@ if (id === 'input-custo-btg' || id === 'input-ir-efetivo') {
 recalcularSelicLiquida();
 recalcularIPCANominal();
 }
+if (id === 'input-patrimonio') {
+recalcularDerivadosDoPatrimonio({ preservarAlocacao: false, preservarMeta: true });
+}
 if (id === 'input-selic-inicial' || id === 'input-ipca-inicial') {
 atualizarSomaAlocada();
 }
-const rs = parseFloat(document.getElementById('input-rent-selic').value);
-const ri = parseFloat(document.getElementById('input-rent-ipca').value);
-if (isFinite(rs)) document.getElementById('val-rent-selic').textContent = rs.toFixed(1) + '%';
-if (isFinite(ri)) document.getElementById('val-rent-ipca').textContent = ri.toFixed(1) + '%';
+document.getElementById('val-rent-selic').textContent = parseFloat(document.getElementById('input-rent-selic').value).toFixed(1) + '%';
+document.getElementById('val-rent-ipca').textContent = parseFloat(document.getElementById('input-rent-ipca').value).toFixed(1) + '%';
 atualizarSimulacao();
 });
 });
-
-// Patrimônio agora é readonly. Nada a escutar.
-document.getElementById('input-patrimonio').addEventListener('input', e => e.preventDefault());
 
 sincronizarModoSaque();
 sincronizarModoDivisao();
