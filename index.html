@@ -729,7 +729,7 @@ ipcaMin: 6, ipcaMax: 14
 }
 };
 
-const APP_VERSION = 'v2.34';
+const APP_VERSION = 'v2.35';
 const BCB_CACHE_KEY = 'gestao45m_bcb_last';
 const BCB_CACHE_MAX_AGE_DAYS = 30;
 const HIST_EXTRA_KEY = 'gestao45m_hist_extra';
@@ -1471,15 +1471,19 @@ atualizarSomaAlocada();
 atualizarSimulacao();
 }
 
+/* =========================================================
+PROJEÇÃO SELIC — CORRIGIDA: rendimento proporcional ao saldo
+========================================================= */
 function projetarSelic({ saldoInicial, meta, rendSelicAnual, cupomSemestral, resgateMensal, meses }) {
-const rendMensal = rendSelicAnual / 12;
+const taxaAnual = saldoInicial > 0 ? rendSelicAnual / saldoInicial : 0;
+const taxaMensal = Math.pow(1 + taxaAnual, 1/12) - 1;
 const serie = [];
 const cupomParaSelic = [];
 let saldo = saldoInicial;
 let estourou = false;
 for (let m = 0; m <= meses; m++) {
 serie.push(Math.max(0, saldo));
-saldo += rendMensal;
+saldo *= (1 + taxaMensal);
 const desvia = (m % 6 === 5 && saldo < meta);
 cupomParaSelic.push(desvia);
 if (desvia) saldo += cupomSemestral;
@@ -1807,7 +1811,8 @@ return `<div class="p-2 rounded-lg border bg-${c}-950/20 border-${c}-800/40 text
 
 function renderizarProjecao(saldoSelic, meta, rendSelicAnual, cupomSemestral, saqueMensal, dataBase, inputs, resgateBruto) {
 const el = document.getElementById('projecao-conteudo');
-const rendMensal = rendSelicAnual / 12;
+const taxaMensalProj = saldoSelic > 0 ? Math.pow(1 + rendSelicAnual / saldoSelic, 1/12) - 1 : 0;
+const rendMensal = saldoSelic * taxaMensalProj;
 const resgateBrutoMensal = (typeof resgateBruto === 'number')
 ? resgateBruto
 : calcularResgateBruto(saqueMensal, inputs).resgateBruto;
