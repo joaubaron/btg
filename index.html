@@ -227,7 +227,7 @@ Fluxo Mensal
 <div class="p-2 bg-slate-800/80 rounded-lg"><span class="text-[10px] text-slate-400 block">Destino</span><span class="text-[10px] font-bold text-emerald-400" id="cupom-destino">—</span></div>
 </div>
 
-<p class="text-[9px] text-slate-500 mt-2">Cupom semestral = taxa real ÷ 2 (ex.: 6% a.a. → 3%/semestre). Modelo linear, como no Tesouro IPCA+ com juros semestrais. Valor líquido de IR.</p>
+<p class="text-[9px] text-slate-500 mt-2">Cupom semestral estimado = (1 + taxa real)^(1/2) − 1. Para 6% a.a., 2,9563% por semestre. Valor líquido de IR.</p>
 </div>
 <div class="relative h-44 w-full">
 <canvas id="chartPatrimonio"></canvas>
@@ -1074,7 +1074,7 @@ return 0.15;
 }
 function calcularCupomIPCA(valorIPCA, aliqIR, taxaRealAA) {
 const taxa = (taxaRealAA !== undefined && taxaRealAA !== null && !isNaN(taxaRealAA)) ? taxaRealAA : CFG.CUPOM_FIXO_AA;
-const cupomSemestral = (taxa / 100) / 2;
+const cupomSemestral = Math.pow(1 + taxa / 100, 1/2) - 1;
 return valorIPCA * cupomSemestral * (1 - (aliqIR || 0));
 }
 function proximoPagamentoCupom(dataBase) {
@@ -1733,11 +1733,11 @@ elTA.className = saqueMensal <= tetoAbsolutoMensal ? 'text-emerald-400' : 'text-
 }
 const avisoEl = document.getElementById('rec-saque-aviso');
 if (avisoEl) {
-const anos = a => isFinite(a) ? '~' + Math.round(a) + ' anos' : 'não acaba';
+const anos = a => isFinite(a) ? '~' + Math.round(a) + ' anos' : 'não esgota';
 const c = saude.duracaoConserv, m = saude.duracaoModelo;
 const avisoDur = (!isFinite(m) || m >= 100)
-? 'No cenário atual, o dinheiro não acaba. No conservador: ' + anos(c) + '.'
-: 'Dura ' + anos(m) + ' (atual) · ' + anos(c) + ' (conservador).';
+  ? 'Nas premissas atuais, a simulação não indica esgotamento do patrimônio. No conservador: ' + anos(c) + '.'
+  : 'Dura ' + anos(m) + ' (atual) · ' + anos(c) + ' (conservador).';
 avisoEl.classList.remove('hidden');
 avisoEl.textContent = '⚠ ' + avisoDur;
 }
@@ -1828,13 +1828,13 @@ const reservaAbaixo = saldoSelic < metaSelic;
 const patAcao = estado?.inputs?.patrimonioTotal || CFG.PATRIMONIO_TOTAL;
 const presAcao = calcularPreservacaoReal(patAcao, rendTotalLiq);
 const consomeReal = saqueMensal * 12 > presAcao.saqueMaxRealAnual + 1;
-const anos = a => isFinite(a) ? '~' + Math.round(a) + ' anos' : 'não acaba';
+const anos = a => isFinite(a) ? '~' + Math.round(a) + ' anos' : 'não esgota';
 const durM = saude?.duracaoModelo ?? Infinity;
 const durC = saude?.duracaoConserv ?? Infinity;
 const fraseDur = (!isFinite(durM) || durM >= 100)
-? `No cenário atual, o dinheiro não acaba. No conservador (retorno real ${CFG.RETORNO_REAL_CONSERVADOR}% a.a.), dura ${anos(durC)}.`
-: `Dura ${anos(durM)} no cenário atual · ${anos(durC)} no conservador.`;
-const frasePreserva = `Se sacar até ${formatarMoeda(presAcao.saqueMaxRealAnual / 12)}/mês, o dinheiro não acaba.`;
+  ? `Nas premissas atuais, a simulação não indica esgotamento do patrimônio. No conservador (retorno real ${CFG.RETORNO_REAL_CONSERVADOR}% a.a.), dura ${anos(durC)}.`
+  : `Dura ${anos(durM)} no cenário atual · ${anos(durC)} no conservador.`;
+const frasePreserva = `Se sacar até ${formatarMoeda(presAcao.saqueMaxRealAnual / 12)}/mês, a simulação não indica esgotamento do patrimônio.`;
 
 if (sobraAnual < 0) {
 banner.className = 'card-glass rounded-2xl p-5 sm:p-6 shadow-xl border-l-4 border-red-500 bg-red-950/20';
