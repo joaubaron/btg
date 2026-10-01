@@ -257,7 +257,7 @@ Fluxo Mensal
 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
 <div class="p-2 bg-slate-800/80 rounded-lg"><span class="text-[10px] text-slate-400 block">Alíquota IR (referência)</span><span class="text-sm font-bold text-slate-400" id="ir-aliquota">—</span></div>
 <div class="p-2 bg-slate-800/80 rounded-lg"><span class="text-[10px] text-slate-400 block">IR (já no rend. líq.)</span><span class="text-sm font-bold text-rose-400" id="ir-valor">—</span></div>
-<div class="p-2 bg-slate-800/80 rounded-lg"><span class="text-[10px] text-slate-400 block">Custos BTG</span><span class="text-sm font-bold text-orange-400" id="custos-btg">—</span></div>
+<div class="p-2 bg-slate-800/80 rounded-lg"><span class="text-[10px] text-slate-400 block">Custo BTG est./mês</span><span class="text-sm font-bold text-orange-400" id="custos-btg">—</span></div>
 <div class="p-2 bg-slate-800/80 rounded-lg"><span class="text-[10px] text-slate-400 block">Resgate (= saque líq.)</span><span class="text-sm font-bold text-white" id="resgate-bruto">—</span></div>
 </div>
 </div>
@@ -1604,12 +1604,6 @@ const rentNominalLiq = patrimonioTotal > 0 ? rendTotalLiq / patrimonioTotal * 10
 const retornoReal = ((1 + rentNominalLiq/100) / (1 + ipcaProjetado/100) - 1) * 100;
 const taxaRetirada = patrimonioTotal > 0 ? saqueAnual / patrimonioTotal * 100 : 0;
 const rMensal = Math.pow(1 + retornoReal/100, 1/12) - 1;
-const MAX_MESES = 1200;
-let saldo = patrimonioTotal, mesesDur = 0;
-while (saldo > 0 && mesesDur < MAX_MESES) {
-saldo = saldo * (1 + rMensal) - saqueMensal;
-mesesDur++;
-}
 const duracaoConserv = duracaoAnos(patrimonioTotal, CFG.RETORNO_REAL_CONSERVADOR, saqueMensal);
 const duracaoModelo = duracaoAnos(patrimonioTotal, retornoReal, saqueMensal);
 let saldo10 = patrimonioTotal;
@@ -1689,8 +1683,7 @@ const reservaOk = saldoSelic >= metaSelic;
 setCard('saude-card-principal', 'saude-dot-principal', 'saude-txt-principal',
 preservaPrincipal,
 preservaPrincipal
-? `Sim (estimativa). Retorno real ${saude.retornoReal.toFixed(1)}% cobre a retirada de ${saude.taxaRetirada.toFixed(1)}% — principal preservado em termos reais.` + (saude.taxaRetirada > CFG.TAXA_RETIRADA_SEGURA_40ANOS ? ` Obs.: acima da referência de ${CFG.TAXA_RETIRADA_SEGURA_40ANOS}% p/ 40 anos; depende de o retorno se manter.` : '')
-: saude.retornoReal < 0
+? `Sim (estimativa). Retorno real ${saude.retornoReal.toFixed(1)}% cobre a retirada de ${saude.taxaRetirada.toFixed(1)}% — principal projetado preservado em termos reais.` + (saude.taxaRetirada > CFG.TAXA_RETIRADA_SEGURA_40ANOS ? ` Obs.: acima da referência de ${CFG.TAXA_RETIRADA_SEGURA_40ANOS}% p/ 40 anos; depende de o retorno se manter.` : ''): saude.retornoReal < 0
 ? `Não (estimativa). Retorno real negativo (${saude.retornoReal.toFixed(1)}%) — você está consumindo o principal.`
 : `Risco (estimativa). Retirada de ${saude.taxaRetirada.toFixed(1)}% acima do retorno real (${saude.retornoReal.toFixed(1)}%) — o principal perde valor real. Reduza o saque.`
 );
@@ -1714,7 +1707,7 @@ if (preservaPrincipal && preservaReal && reservaOk) {
 veredito.textContent = '✓ SAUDÁVEL';
 veredito.className = 'text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-700/50';
 explicacao.className = 'saude-explicacao ok';
-explicacao.innerHTML = `<strong class="text-emerald-300">Tudo em ordem (estimativa).</strong> Retorno real de ${saude.retornoReal.toFixed(1)}% cobre a retirada de ${saude.taxaRetirada.toFixed(1)}% e a reserva Selic está na meta. Poder de compra e principal preservados <u>sob as premissas atuais</u>. Confira a durabilidade no cenário conservador.`;
+explicacao.innerHTML = `<strong class="text-emerald-300">Tudo em ordem (estimativa).</strong> Retorno real de ${saude.retornoReal.toFixed(1)}% cobre a retirada de ${saude.taxaRetirada.toFixed(1)}% e a reserva Selic está na meta. Poder de compra e principal <u>projetados como preservados</u> sob as premissas atuais. Confira a durabilidade no cenário conservador.`;
 } else if (!preservaReal || !preservaPrincipal) {
 veredito.textContent = '⚠ ATENÇÃO';
 veredito.className = 'text-xs font-bold px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-700/50';
@@ -2070,7 +2063,12 @@ const extraImovel = numOr('input-extra-imovel', 0);
 const extraOutros = numOr('input-extra-outros', 0);
 const totalExtra = extraImovel + extraOutros;
 if (totalExtra <= 0) { alert('Informe um valor para o saque extraordinário.'); return; }
-const origem = document.querySelector('input[name="origem-extra"]:checked')?.value || 'auto';
+const disponivel = numOr('input-selic-inicial', 0) + numOr('input-ipca-inicial', 0);
+if (totalExtra > disponivel) {
+alert(`Saque extraordinário (${formatarMoeda(totalExtra)}) maior que o saldo disponível (${formatarMoeda(disponivel)}). Reduza o valor.`);
+return;
+}
+const origem = document.querySelector('input[name="origem-extra"]:checked')?.value || 'auto';;
 const selicAtual = numOr('input-selic-inicial', 0);
 const ipcaAtual  = numOr('input-ipca-inicial', 0);
 const patAtual   = numOr('input-patrimonio', 0);
