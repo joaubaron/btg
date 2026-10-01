@@ -804,7 +804,7 @@ ipcaMin: 6, ipcaMax: 14
 }
 };
 
-const APP_VERSION = 'v2.41';
+const APP_VERSION = 'v2.42';
 function hojeISO() {
 const d = new Date();
 return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
@@ -1984,27 +1984,13 @@ return;
 const taxaAtual = (saqueMensal * 12) / patAcao * 100;
 if (taxaAtual > CFG.TAXA_RETIRADA_SEGURA_40ANOS) {
 const saqueMaxReal = presAcao.saqueMaxRealAnual / 12;
-const realmenteExcede = saqueMensal > saqueMaxReal;
-
-if (realmenteExcede) {
-banner.className = 'card-glass rounded-2xl p-5 sm:p-6 shadow-xl border-l-4 border-amber-500 bg-amber-950/20';
-title.textContent = '⚠ RETIRADA ACIMA DO IDEAL';
-title.className = 'text-xl sm:text-2xl font-bold text-amber-400 mt-1';
-desc.innerHTML = `Retirada de ${taxaAtual.toFixed(2)}% a.a. ${fraseDur} ${frasePreserva}`;
-rec.textContent = 'Preserva: ' + formatarMoeda(saqueMaxReal) + '/mês';
-rec.className = 'text-base sm:text-lg font-bold text-amber-400';
-mostrarPainelAjuste('reduzir', { saqueMax: saqueMaxReal, saqueMensal, sobraAnual, rendTotalLiq });
-return;
-} else {
 banner.className = 'card-glass rounded-2xl p-5 sm:p-6 shadow-xl border-l-4 border-sky-500 bg-sky-950/20';
 title.textContent = '⚠ RETIRADA ACIMA DA REFERÊNCIA';
 title.className = 'text-xl sm:text-2xl font-bold text-sky-400 mt-1';
 desc.innerHTML = `Retirada de ${taxaAtual.toFixed(2)}% a.a. acima da referência de ${CFG.TAXA_RETIRADA_SEGURA_40ANOS}% p/ 40 anos, mas o rendimento real cobre com folga (até ${formatarMoeda(saqueMaxReal)}/mês). ${fraseDur}`;
 rec.textContent = 'Manter: ' + formatarMoeda(saqueMensal) + '/mês';
 rec.className = 'text-base sm:text-lg font-bold text-emerald-400';
-document.getElementById('painel-ajuste').classList.add('hidden');
 return;
-}
 }
 banner.className = 'card-glass rounded-2xl p-5 sm:p-6 shadow-xl border-l-4 border-emerald-500 bg-emerald-950/20';
 title.textContent = '✓ CENÁRIO ESTÁVEL';
