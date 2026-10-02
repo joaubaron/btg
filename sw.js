@@ -18,8 +18,7 @@ const CORE = [
 const OPTIONAL = [
 './manifest.json',
 './icon-192.png',
-'./icon-512.png',
-'./icon-512-maskable.png'
+'./icon-512.png'
 ];
 
 const NETWORK_TIMEOUT_MS = 4000;
