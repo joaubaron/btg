@@ -100,10 +100,11 @@ async function networkFirst(req) {
       networkPromise,
       new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), NETWORK_TIMEOUT_MS))
     ]);
-  } catch (err) {
+    } catch (err) {
+    const cache = await caches.open(CACHE);
     const cached =
-      (await caches.match(req, { ignoreSearch: true })) ||
-      (await caches.match('./index.html'));
+      (await cache.match(req, { ignoreSearch: true })) ||
+      (await cache.match('./index.html'));
     if (cached) {
       networkPromise.catch(() => {}); // evita erro não tratado; o cache será atualizado se a rede responder
       return cached;
