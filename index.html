@@ -1109,12 +1109,12 @@ dot.className = 'w-2 h-2 rounded-full ' + (ativo ? 'bg-emerald-400 ring-2 ring-e
 label.textContent = msg || (ativo ? 'sw on' : 'sw off');
 }
 async function registrarSW() {
-if (location.protocol === 'file:') { setSWStatus(false, 'sw off (file://)'); return; }
-if (!('serviceWorker' in navigator)) { setSWStatus(false, 'sw off'); return; }
-try {
-const reg = await navigator.serviceWorker.register('./sw.js', { scope: './' });
-setSWStatus(true, 'sw on');
-} catch (e) { setSWStatus(false, 'sw off'); }
+  if (location.protocol === 'file:') { setSWStatus(false, 'sw off (file://)'); return; }
+  if (!('serviceWorker' in navigator)) { setSWStatus(false, 'sw off'); return; }
+  try {
+    await navigator.serviceWorker.register('./sw.js', { scope: './' });
+    setSWStatus(true, 'sw on');
+  } catch (e) { setSWStatus(false, 'sw off'); }
 }
 function mostrarModalSW(texto) {
 document.getElementById('modal-sw-texto').textContent = texto;
