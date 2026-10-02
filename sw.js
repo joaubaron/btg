@@ -3,7 +3,7 @@
    (mantenha a linha CACHE_VERSION no formato abaixo: o deploy
    do GitHub Actions carimba esse valor)
 ========================================================= */
-const CACHE_VERSION = '02.10.2026-1107';
+const CACHE_VERSION = '02.10.2026-1109';
 const CACHE = 'gestao32m-' + CACHE_VERSION;
 const CACHE_PREFIX = 'gestao32m-';
 
@@ -118,20 +118,16 @@ async function networkFirst(req) {
 }
 
 async function cacheFirst(req) {
-  const cached = await caches.match(req);
+  const cache = await caches.open(CACHE);
+  const cached = await cache.match(req);
   if (cached) return cached;
   try {
     const response = await fetch(req);
     if (response && response.ok) {
-      const clone = response.clone();
-      caches.open(CACHE).then(c => c.put(req, clone)).catch(() => {});
+      cache.put(req, response.clone()).catch(() => {});
     }
     return response;
   } catch {
     return new Response('', { status: 503, statusText: 'Offline' });
   }
 }
-
-self.addEventListener('message', e => {
-  if (e.data === 'SKIP_WAITING') self.skipWaiting();
-});
