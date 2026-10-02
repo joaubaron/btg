@@ -3,7 +3,7 @@ Service Worker — Gestão Patrimonial
 (mantenha a linha CACHE_VERSION no formato abaixo: o deploy
 do GitHub Actions carimba esse valor)
 ========================================================= */
-const CACHE_VERSION = '02.10.2026-1404';
+const CACHE_VERSION = '02.10.2026-1410';
 const CACHE = 'gestao32m-' + CACHE_VERSION;
 const CACHE_PREFIX = 'gestao32m-';
 
