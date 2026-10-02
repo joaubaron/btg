@@ -663,10 +663,10 @@ Timeline Real (estimativa)
 
 </main>
 
-<div id="barra-resumo" class="fixed bottom-3 left-1/2 -translate-x-1/2 translate-y-24 transition-transform duration-300 z-40 max-w-[95vw] card-glass rounded-full border border-slate-700 shadow-2xl px-3 py-2 flex items-center gap-2 text-[10px] whitespace-nowrap">
+<div id="barra-resumo" class="fixed bottom-3 left-1/2 -translate-x-1/2 translate-y-24 transition-transform duration-300 z-40 max-w-[95vw] card-glass rounded-full border border-slate-700 shadow-2xl px-3 py-2 flex items-center justify-center gap-2 text-[10px] flex-wrap">
 <span class="text-white font-bold" data-mirror="header-base">—</span><span class="text-slate-600">|</span>
 <span class="text-slate-400">Saque <strong class="text-emerald-400" data-mirror="rec-saque">—</strong></span><span class="text-slate-600">|</span>
-<strong class="text-slate-200 shrink-0" data-mirror="saude-veredito">—</strong></div>
+<strong id="rodape-veredito" class="text-slate-200 text-center">—</strong></div>
 
 <button onclick="abrirComoPreservar()" class="w-full max-w-6xl mx-auto block mt-6 p-4 bg-emerald-950/40 border border-emerald-700/50 hover:bg-emerald-900/40 rounded-2xl text-left transition box-border" style="margin-left:auto;margin-right:auto;max-width:calc(100vw - 2rem);">
 <div class="flex items-center gap-3">
@@ -1873,16 +1873,19 @@ const veredito = document.getElementById('saude-veredito');
 const explicacao = document.getElementById('saude-explicacao');
 if (preservaPrincipalConserv && preservaReal && reservaOk) {
 veredito.textContent = '✓ SAUDÁVEL';
+document.getElementById('rodape-veredito').textContent = '✓ SAUDÁVEL';
 veredito.className = 'text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-700/50';
 explicacao.className = 'saude-explicacao ok';
 explicacao.innerHTML = `<strong class="text-emerald-300">Tudo em ordem (estimativa conservadora).</strong> Cobre os ${H} anos mesmo com retorno real de ${CFG.RETORNO_REAL_CONSERVADOR}% a.a.; retorno real atual ${saude.retornoReal.toFixed(1)}% cobre a retirada de ${saude.taxaRetirada.toFixed(1)}% e a reserva Selic está na meta.`;
 } else if (preservaPrincipalModelo && !preservaPrincipalConserv) {
 veredito.textContent = '⚠ DEPENDE DO RETORNO';
+document.getElementById('rodape-veredito').textContent = '⚠ DEPENDE';
 veredito.className = 'text-xs font-bold px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-700/50';
 explicacao.className = 'saude-explicacao';
 explicacao.innerHTML = `<strong class="text-amber-300">Depende do retorno (estimativa).</strong> No cenário conservador (retorno real de ${CFG.RETORNO_REAL_CONSERVADOR}% a.a.) o patrimônio ${isFinite(saude.duracaoConserv) ? 'dura ~' + Math.round(saude.duracaoConserv) + ' anos' : 'não esgota'}; com o retorno real atual de ${saude.retornoReal.toFixed(1)}% cobre os ${H} anos. Monitore anualmente.`;
 } else if (!preservaReal || !preservaPrincipalModelo) {
 veredito.textContent = '⚠ ATENÇÃO';
+document.getElementById('rodape-veredito').textContent = '⚠ ATENÇÃO';
 veredito.className = 'text-xs font-bold px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-700/50';
 explicacao.className = 'saude-explicacao';
 const taxa = saude.taxaRetirada.toFixed(1);
@@ -1896,6 +1899,7 @@ explicacao.innerHTML = `<strong class="text-amber-300">Atenção (estimativa):</
 }
 } else {
 veredito.textContent = '⚠ REPOR RESERVA';
+document.getElementById('rodape-veredito').textContent = '⚠ RESERVA';
 veredito.className = 'text-xs font-bold px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-700/50';
 explicacao.className = 'saude-explicacao';
 explicacao.innerHTML = `<strong class="text-amber-300">Reserva Selic abaixo da meta.</strong> Envie 100% dos próximos cupons IPCA+ para a Selic e evite saques extraordinários até recompor (veja "O que fazer agora").`;
@@ -2828,7 +2832,7 @@ if (e.key === 'Enter') { e.preventDefault(); confirmarOnboarding(); }
 var m = document.querySelectorAll('[data-mirror]');
 function sync(){m.forEach(function(e){var s=document.getElementById(e.dataset.mirror);if(s)e.textContent=s.textContent.trim();});}
 var mo=new MutationObserver(sync);
-['header-base','rec-saque','saude-veredito','metric-saldo-selic'].forEach(function(id){var s=document.getElementById(id);if(s)mo.observe(s,{childList:true,characterData:true,subtree:true});});
+['header-base','rec-saque','metric-saldo-selic'].forEach(function(id){var s=document.getElementById(id);if(s)mo.observe(s,{childList:true,characterData:true,subtree:true});});
 sync();
 var bar=document.getElementById('barra-resumo'),hero=document.getElementById('sec-patrimonio');
 if(bar&&hero&&'IntersectionObserver' in window){new IntersectionObserver(function(x){bar.classList.toggle('translate-y-24',x[0].isIntersecting);},{threshold:0.15}).observe(hero);}
