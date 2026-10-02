@@ -1745,7 +1745,7 @@ veredito.className = 'text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/20
 explicacao.className = 'saude-explicacao ok';
 explicacao.innerHTML = `<strong class="text-emerald-300">Tudo em ordem (estimativa conservadora).</strong> Cobre os ${H} anos mesmo com retorno real de ${CFG.RETORNO_REAL_CONSERVADOR}% a.a.; retorno real atual ${saude.retornoReal.toFixed(1)}% cobre a retirada de ${saude.taxaRetirada.toFixed(1)}% e a reserva Selic está na meta.`;
 } else if (preservaPrincipalModelo && !preservaPrincipalConserv) {
-veredito.textContent = '⚠ DEPENDE DO RETORNO';
+veredito.textContent = '⚠ DEPENDE';
 veredito.className = 'text-xs font-bold px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-700/50';
 explicacao.className = 'saude-explicacao';
 explicacao.innerHTML = `<strong class="text-amber-300">Depende do retorno (estimativa).</strong> No cenário conservador (retorno real de ${CFG.RETORNO_REAL_CONSERVADOR}% a.a.) o patrimônio ${isFinite(saude.duracaoConserv) ? 'dura ~' + Math.round(saude.duracaoConserv) + ' anos' : 'não esgota'}; com o retorno real atual de ${saude.retornoReal.toFixed(1)}% cobre os ${H} anos. Monitore anualmente.`;
