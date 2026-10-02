@@ -2763,12 +2763,12 @@ registrarSW();
 atualizarDadosBCB();
 
 if ('serviceWorker' in navigator) {
-let swAvisado = false;
-navigator.serviceWorker.addEventListener('controllerchange', () => {
-if (!swJaControlava || swAvisado) return;
-swAvisado = true;
-if (confirm('Nova versão disponível. Recarregar agora?')) location.reload();
-});
+  let swAvisado = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!swJaControlava || swAvisado) return;
+    swAvisado = true;
+    mostrarToast('🔄 Nova versão carregada. Recarregue quando puder.', 'rose');
+  });
 }
 
 ['input-onboarding-patrimonio', 'input-onboarding-data'].forEach(id => {
