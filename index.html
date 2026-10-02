@@ -101,6 +101,7 @@ header.sticky{padding-top:calc(0.75rem + env(safe-area-inset-top,0px))}
 @media (min-width: 40rem) { .sm\:text-4xl { font-size: 2.25rem; line-height: 2.5rem; } }
 .accent-amber-500 { accent-color: #f59e0b; }
 .accent-indigo-500 { accent-color: #6366f1; }
+.text-\[9px\],.text-\[10px\]:not(#barra-resumo){font-size:11px!important}
 .bg-amber-600 { background-color: #d97706; }
 .bg-black\/80 { background-color: rgb(0 0 0 / .8); }
 .bg-slate-800\/40 { background-color: rgb(30 41 59 / .4); }
@@ -804,7 +805,7 @@ ipcaMin: 6, ipcaMax: 14
 }
 };
 
-const APP_VERSION = 'v2.42';
+const APP_VERSION = 'v2.43';
 function hojeISO() {
 const d = new Date();
 return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
@@ -990,6 +991,8 @@ const data = JSON.parse(e.target.result);
 if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('formato');
 if (data.inputs && (typeof data.inputs !== 'object' || Array.isArray(data.inputs))) throw new Error('inputs');
 if (data.historicoExtra && !Array.isArray(data.historicoExtra)) throw new Error('historico');
+const NUM = ['patrimonioTotal','selicInicial','ipcaInicial','saqueCustom','rentSelic','rentIPCA','taxaRealIPCA','cupomNTNB','custoBTG','irEfetivo','metaSelic','payout','mesadaEsposa','mesadaMarido','pisoCasa'];
+if (data.inputs && NUM.some(k => data.inputs[k] !== undefined && !Number.isFinite(data.inputs[k]))) throw new Error('inputs');
 const c = data.bcbCache;
 if (c && !(Number.isFinite(c.selic?.valor) && Number.isFinite(c.ipca?.valor))) delete data.bcbCache;
 if (data.bcbCache) {
@@ -1882,7 +1885,10 @@ const avisoDur = (!isFinite(m) || m >= 100)
 ? 'Nas premissas atuais, a simulação não indica esgotamento do patrimônio. No conservador: ' + anos(c) + '.'
 : 'Dura ' + anos(m) + ' (atual) · ' + anos(c) + ' (conservador).';
 avisoEl.classList.remove('hidden');
-avisoEl.textContent = '⚠ ' + avisoDur;
+const okDur = c >= CFG.HORIZONTE_ANOS;
+avisoEl.classList.toggle('text-emerald-400', okDur);
+avisoEl.classList.toggle('text-amber-400', !okDur);
+avisoEl.textContent = (okDur ? '✓ ' : '⚠ ') + avisoDur;
 }
 
 renderizarAlertas({
@@ -1922,7 +1928,7 @@ el.innerHTML = A.slice(0, 5).map(([p, c, t], i) =>
 `<li class="p-2.5 rounded-lg border ${CORES_AVISO[c]}"><strong>${i + 1}.</strong> ${t}</li>`).join('');
 const ipcaAtual = d.ipcaProjetado;
 const liq = 1 - d.aliqIR;
-const cen = [['Selic −3 p.p.', -3, 0], ['IPCA +2 p.p.', 0, 2], ['Selic −3 e IPCA +2', -3, 2]];
+const cen = [['Cenário atual (referência)', 0, 0], ['Selic −3 p.p.', -3, 0], ['IPCA +2 p.p.', 0, 2], ['Selic −3 e IPCA +2', -3, 2]];
 const linhasEstresse = cen.map(([n, ds, di]) => {
 const rs = Math.max(0, d.inputs.rentSelic + ds * liq);
 const ri = d.inputs.rentIPCA + di * liq;
