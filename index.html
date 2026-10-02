@@ -2594,8 +2594,8 @@ calcularCupomIPCA(1_000_000, 6, 1) === 0);
 eq('Duração finita com saque > rendimento (1M, 2% real, 5k/mês)',
    isFinite(duracaoAnos(1_000_000, 2, 5000)));
 
-eq('Duração ~12–14 anos (1M, 2% real, 5k/mês)',
-   duracaoAnos(1_000_000, 2, 5000) > 11 && duracaoAnos(1_000_000, 2, 5000) < 15);
+eq('Duração ~19–22 anos (1M, 2% real, 5k/mês)',
+   duracaoAnos(1_000_000, 2, 5000) > 18 && duracaoAnos(1_000_000, 2, 5000) < 23);
 
 eq('Duração finita mesmo quando saque ≈ rendimento composto (1M, 6% real, 5k/mês)',
    isFinite(duracaoAnos(1_000_000, 6, 5000)));
